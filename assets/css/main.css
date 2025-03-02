@@ -1,0 +1,92 @@
+@import "tailwindcss";
+
+@theme {
+  --color-blue: '#1a1625';
+  --color-beige: '#2f2b3a';
+  --color-grey: '#ECE8DD';
+  --color-paper: '#121212';
+  --color-paperlight: '#2f2b3a';
+  --color-paperlighter: '#FFFDF8';
+  --color-greyblue: '#AEBDCA';
+  --color-darkblue: '#5e43f3';
+}
+
+:root {
+  --color-blue: '#1a1625';
+  --color-beige: '#2f2b3a';
+  --color-grey: '#ECE8DD';
+  --color-paper: '#121212';
+  --color-paperlight: '#2f2b3a';
+  --color-paperlighter: '#FFFDF8';
+  --color-greyblue: '#AEBDCA';
+  --color-darkblue: '#5e43f3';
+}
+
+body {
+  background-color: #1b1625;
+  color: white;
+  font-family: Tahoma, sans-serif;
+}
+
+a {
+  color: var(--color-darkblue);
+}
+
+p {
+    margin-top: .2em;
+    margin-bottom: .8em;
+}
+
+h1 {
+  @apply text-3xl mt-7 mb-6 font-bold text-center;
+}
+
+h2 {
+  font-size: 1.4em;
+  @apply mb-4 mt-12 font-bold;
+}
+
+h3 {
+  font-size: 1em;
+  @apply mb-2 mt-6 font-bold;
+}
+
+ul {
+  @apply list-disc ml-4 mt-2 mb-2;
+}
+
+table th,
+table td {
+  @apply border p-2;
+  font-size: 0.8em;
+}
+
+.bg-paper {
+  background: #121212;
+}
+
+.guide-link {
+  @apply font-bold shadow rounded-xl text-center;
+  background: #2F2B3A;
+  box-shadow: 2px 2px 4px rgba(0, 0, 0, 1);
+  height: 260px;
+  padding: 1em .4em 1em .4em;
+  color: white;
+}
+
+.guide-link img {
+  max-width: 150px;
+  margin: auto;
+  margin-bottom: .5em;
+}
+
+.guide-link:hover {
+  box-shadow: 3px 3px 8px rgba(0, 0, 0, 1);
+  transform: scale(1.05);
+  transition: all 0.5s ease;
+}
+
+.linkblock {
+  @apply font-bold shadow p-2 rounded-md border;
+  color: var(--color-darkblue)
+}
