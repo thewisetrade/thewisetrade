@@ -82,10 +82,8 @@ export default defineNuxtConfig({
   robots: {
     UserAgent: '*',
     Allow: '/',
-    Sitemap: 'https://thewise.trade/sitemap.xml',
-    Disallow: '/portfolio'
+    Sitemap: 'https://thewise.trade/sitemap.xml'
   },
   routeRules: {
-    '/portfolio': { robots: false },
   }
 })
