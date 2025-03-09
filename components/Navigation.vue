@@ -76,7 +76,4 @@
 </script>
 
 <style scoped>
-.text-blue {
-  color: red;
-}
 </style>
