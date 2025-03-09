@@ -18,10 +18,8 @@ const props = defineProps(['active', 'text'])
 .local-button {
   border: 1px solid #607CF6;
   font-size: 16px;
-  font-weight: 600;
   padding: 5px 8px;
   margin-left: 10px;
-  margin-right: 10px;
 }
 
 .active {
