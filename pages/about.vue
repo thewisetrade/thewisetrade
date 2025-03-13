@@ -49,16 +49,7 @@
       part to support personal needs.
     </p>
 
-    <h1 class="mt-12">Portfolio</h1>
-
-    <p>
-      I decided to be transparent. That's why, I am sharing with you my
-      portfolio. You can see how things evolve for me and know more about my
-      trades. A sum up of my holdings can be found on my
-      <NuxtLink to="/portfolio">portfolio</NuxtLink> page.
-    </p>
-
-    <h2>Tokens</h2>
+    <h2>My Tokens</h2>
 
     <a
       class="linkblock"
@@ -68,7 +59,7 @@
     </a>
 
 
-    <h2>Meteora activity</h2>
+    <h2>My Meteora DLMM activity</h2>
 
     <a
       class="linkblock"
