@@ -35,6 +35,13 @@
         />
         <h3>Multiday Positions</h3>
       </NuxtLink>
+      <NuxtLink class="guide-link" to="dlmm-guide-risk-management">
+        <img
+          class="mb-2"
+          src="~/assets/images/illustrations/dlmms-guide.png"
+        />
+        <h3>Risk Management</h3>
+      </NuxtLink>
       <NuxtLink class="guide-link" to="dlmm-pool-finder">
         <img
           class="mb-2"
