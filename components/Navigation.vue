@@ -19,6 +19,7 @@
         { to: '/dlmm-guide', label: 'DLMMs Guide' },
         { to: '/dlmm-guide-2', label: 'DLMMs Tools' },
         { to: '/dlmm-guide-multidays', label: 'DLMMs Multiday Positions' },
+        { to: '/dlmm-guide-risk-management', label: 'DLMMs Risk Management' },
         { to: '/dlmm-pool-finder', label: 'DLMMs Pool Finder' }
       ]"
     />
