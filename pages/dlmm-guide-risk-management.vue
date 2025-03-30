@@ -15,7 +15,7 @@
       <p>
         This guide was written by Chives, an
         active DLMMer on Meteora.
-        He has an approach to avoid most of the risk.
+        He has an approach to avoid most of the risks encountered in DLMMing.
         He gently allowed me to publish his guide on The Wise Trade.
       </p>
       <p>
@@ -286,8 +286,10 @@
 
 
     <div class="author-info mt-4">
-      <p>Written by Chives </p>
-      <p>Not affiliated with Meteora Team</p>
+      <p>
+        Written by Chives <br />
+        <em>(Not affiliated with Meteora Team)</em>
+      </p>
       <p>X: <a href="https://x.com/ChivesWork" target="_blank">@ChivesWork</a></p>
     </div>
 
