@@ -6,6 +6,7 @@
 
 <script setup>
 import { useRoute } from 'vue-router'
+
 function isActivePage (page) {
   const route = useRoute()
   return page === route.name
