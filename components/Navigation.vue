@@ -6,14 +6,14 @@
       class="text-blue hover:text-darkblue"
       to="/"
     >
-      <img class="logo" src="~/assets/images/logo.png" width="30" />
+      <img class="logo" src="~/assets/images/title.png" width="160" />
     </NuxtLink>
   </div>
 
-  <div class="flex flex-1 items-center justify-center">
+  <div class="flex flex-1 items-center justify-center menus">
 
     <DropdownMenu
-      class="ml-8"
+      class="menus-item"
       title="Liquidity Providing"
       :items="[
         { to: '/dlmm-guide', label: 'DLMMs Guide' },
@@ -25,7 +25,7 @@
     />
 
     <DropdownMenu
-      class="ml-8"
+      class="ml-8 menus-item"
       title="SOL Staking"
       :items="[
         { to: '/sanctum', label: 'Sanctum Staking' },
@@ -34,7 +34,7 @@
     />
 
     <DropdownMenu
-      class="ml-8"
+      class="ml-8 menus-item"
       title="Automation"
       :items="[
         { to: 'https://github.com/defilogist/sanctum-py', label: 'Sanctum Python Client', external: true },
@@ -43,7 +43,7 @@
     />
 
     <DropdownMenu
-      class="ml-8"
+      class="ml-8 menus-item"
       title="About"
       :items="[
         { to: '/why', label: 'Why' },
@@ -54,6 +54,7 @@
   </div>
 
   <div class="flex links">
+    <div class="flex-1"></div>
     <a
       class="mr-3"
       href="https://twitter.com/defilogist"
@@ -77,4 +78,13 @@
 </script>
 
 <style scoped>
+.links {
+  width: 160px;
+}
+
+@media screen and (max-width: 1100px) {
+  .menus-item {
+    display: none;
+  }
+}
 </style>
