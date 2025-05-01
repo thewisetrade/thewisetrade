@@ -2,6 +2,10 @@
   <section class="">
     <div>
 
+      <div class="text-center mt-8 mb-14">
+        <img class="m-auto" src="~/assets/images/title.png" width="500" />
+      </div>
+
       <h1>Why</h1>
 
       <p>
@@ -35,9 +39,8 @@
         portfolio efficiently while contributing to the ecosystem. That way,
         the capital will be more distributed and the economy more decentralized.
         It will enable real competition and more diverse investments which will
-        lead to a healthier marke: more innovative, resilient and fair.
+        lead to a healthier market: more innovative, resilient and fair.
       </p>
-
     </div>
   </section>
 </template>
