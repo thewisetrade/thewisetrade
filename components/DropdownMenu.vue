@@ -42,6 +42,6 @@ defineProps({
 .submenu {
   border: 3px solid #4e43A3;
   left: -20px;
-  z-index: 100;
+  z-index: 200;
 }
 </style>

@@ -14,11 +14,12 @@
     <div class="filters">
       <div class="toggle flex flex-row">
         <ToggleButtons
-          class="mr-5 filter"
+          class="mr-3 filter"
           label="Bin Step"
           :values="[
            { text: '250', value: 250 },
            { text: '200', value: 200 },
+           { text: '125', value: 125 },
            { text: '100', value: 100 },
            { text: '80', value: 80 },
            { text: '20', value: 20 },
@@ -26,7 +27,7 @@
           v-model="binStep"
         />
         <ToggleButtons
-          class="mr-5 filter"
+          class="mr-3 filter"
           label="Market Cap"
           :values="[
            { text: '> 1M', value: 1 },
@@ -36,7 +37,7 @@
           v-model="marketCap"
         />
         <ToggleButtons
-          class="mr-5 filter"
+          class="mr-3 filter"
           label="Liquidity"
           :values="[
            { text: '> 10k', value: 10 },
@@ -55,7 +56,13 @@
           ]"
           v-model="age"
         />
-     </div>
+        <button
+          class="button"
+          @click="loadPoolsData"
+        >
+          <ArrowPathIcon class="w-4 h-4" />
+        </button>
+      </div>
     </div>
 
     <div class="filter-headers">
@@ -69,37 +76,44 @@
 
     <div class="pools">
       <Loader v-if="isLoading" />
-      <a
-        :key="pool.id"
-        target="_blank"
-        :href="`https://app.meteora.ag/dlmm/${pool.meteora_address}`"
-        v-for="pool in displayedPools"
-      >
-        <div
-          class="pool flex flex-row gap-4 items-center rounded-xl"
+      <template v-else>
+        <a
+          :key="pool.id"
+          target="_blank"
+          :href="`https://v2.meteora.ag/dlmm/${pool.meteora_address}`"
+          v-for="pool in displayedPools"
         >
-          <span class="data pool-parameters">{{ pool.meteora_baseFeePercentage }}%</span>
-          <h2>{{ pool.meteora_name }}</h2>
-          <span class="fee-ratio font-bold">{{
-            pool.meteora_feeTvlRatio.h24.toFixed(2) }}%</span>
-          <span class="fee-ratio font-bold">{{
-            pool.meteora_feeTvlRatio.h2.toFixed(2) }}%</span>
-          <a
-            target="_blank"
-            :href="`https://www.birdeye.so/token/${pool.meteora_degenTokenAddress}?chain=solana`">
-            chart
-          </a>
-          <span class="flex-1"></span>
-          <span class="data">{{ Math.round(pool.meteora_liquidity / 1000) }}K</span>
-          <span class="data mc">{{ Math.round(pool.top_pair_mcap / 1_000_000) }}M</span>
-        </div>
-      </a>
+          <div
+            class="pool flex flex-row gap-4 items-center rounded-xl border-2"
+          >
+            <span class="data pool-parameters">{{ pool.meteora_baseFeePercentage }}%</span>
+            <h2>{{ pool.meteora_name }}</h2>
+            <span class="fee-ratio font-bold">{{
+              pool.meteora_feeTvlRatio.h24.toFixed(2) }}%</span>
+            <span class="fee-ratio font-bold">{{
+              pool.meteora_feeTvlRatio.h2.toFixed(2) }}%</span>
+            <a
+              target="_blank"
+              :href="`https://www.birdeye.so/token/${pool.meteora_degenTokenAddress}?chain=solana`">
+              chart
+            </a>
+            <span class="flex-1"></span>
+            <span class="data">{{ Math.round(pool.meteora_liquidity / 1000) }}K</span>
+            <span class="data mc">{{ Math.round(pool.top_pair_mcap / 1_000_000) }}M</span>
+          </div>
+        </a>
+      </template>
     </div>
   </div>
 
 </template>
 
 <script setup>
+import {
+  ArrowPathIcon,
+} from '@heroicons/vue/24/outline'
+
+
 definePageMeta({
   layout: 'app'
 })
@@ -123,7 +137,6 @@ const resetDisplayedPools = () => {
     .filter(p => p.meteora_liquidity >= liquidity.value * 1_000)
     .filter(p => p.oldest_pair_ageInHours >= age.value * 24)
     .sort((pa, pb) => pb.meteora_feeTvlRatio.h24 - pa.meteora_feeTvlRatio.h24)
-  console.log(displayedPools.value)
 }
 
 const loadPoolsData = () => {
@@ -144,6 +157,8 @@ const loadPoolsData = () => {
 }
 
 loadPoolsData()
+
+setInterval(loadPoolsData, 1000 * 60 * 5)
 
 watch(binStep, resetDisplayedPools)
 watch(marketCap, resetDisplayedPools)
@@ -188,8 +203,8 @@ useHead({
 }
 
 .pool {
-  border: 1px solid #2336A4;
   padding: .5em 1em;
+  border: 2px solid #334;
 }
 
 .fee-ratio {
@@ -271,5 +286,14 @@ useHead({
 .data.mc {
   min-width: 40px;
   text-align: right;
+}
+
+.button {
+  border: 1px solid #607CF6;
+  border-radius: 5px;
+  height: 36px;
+  margin-top: 23px;
+  padding: 10px;
+  cursor: pointer;
 }
 </style>

@@ -6,10 +6,6 @@
   <p>
   All contents are licensed under Creative Commons by-sa.
   </p>
-  <p>
-  If you like my content or API clients and wants to reward me,
-  you can tip me at: thewisetrade.sol
-  </p>
 </div>
 </template>
 <style>
