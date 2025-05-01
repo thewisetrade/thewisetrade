@@ -9,7 +9,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 200px;
+  height: 60px;
 }
 
 .loader {

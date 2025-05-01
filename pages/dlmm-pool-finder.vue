@@ -76,7 +76,7 @@
         v-for="pool in displayedPools"
       >
         <div
-          class="pool flex flex-row gap-4 items-center rounded-xl"
+          class="pool flex flex-row gap-4 items-center rounded-xl border-2"
         >
           <span class="data pool-parameters">{{ pool.meteora_baseFeePercentage }}%</span>
           <h2>{{ pool.meteora_name }}</h2>
@@ -123,7 +123,6 @@ const resetDisplayedPools = () => {
     .filter(p => p.meteora_liquidity >= liquidity.value * 1_000)
     .filter(p => p.oldest_pair_ageInHours >= age.value * 24)
     .sort((pa, pb) => pb.meteora_feeTvlRatio.h24 - pa.meteora_feeTvlRatio.h24)
-  console.log(displayedPools.value)
 }
 
 const loadPoolsData = () => {
@@ -144,6 +143,8 @@ const loadPoolsData = () => {
 }
 
 loadPoolsData()
+
+setInterval(loadPoolsData, 1000 * 60 * 10)
 
 watch(binStep, resetDisplayedPools)
 watch(marketCap, resetDisplayedPools)
@@ -188,8 +189,8 @@ useHead({
 }
 
 .pool {
-  border: 1px solid #2336A4;
   padding: .5em 1em;
+  border: 2px solid #334;
 }
 
 .fee-ratio {

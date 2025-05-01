@@ -806,20 +806,28 @@ approach behind this. It's a simple return on experience.
 <hr />
 
 <h2>
-Bonus chapter: The DED community
+Bonus chapter: Communities
 </h2>
 
 <p>
-Meteora hosts a meme token named $DED. The mission of its members is to promote
-DLMMs and to provide DLMM users with tooling. If you want to include DLMMs in
-your portfolio, the community can help. Same if you want to be more involved
-in any way with DLMMs. Feel free to join
-<a href="https://discord.com/invite/meteora">the Meteora Discord</a> and
-the #DED channel!
+Managing proper positions can be tedious. That's why I recommend you to join the following communities
+to get help and tips from other users:
 </p>
 
-<img class="illustration" src="~/assets/images/articles/dlmms/ded.gif" />
-
+<ul>
+  <li>
+    <a href="https://discord.com/invite/meteora">The Meteora Community</a>
+  </li>
+  <li>
+    <a href="https://discord.com/invite/ded">LP Army</a>
+  </li>
+  <li>
+    <a href="https://discord.com/invite/ded">DED DAO</a>
+  </li>
+  <li>
+    <a href="https://discord.com/invite/thewhalesnft">The Whales NFT</a>
+  </li>
+</ul>
 </template>
 
 <script setup>

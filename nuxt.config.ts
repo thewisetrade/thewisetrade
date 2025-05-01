@@ -3,10 +3,10 @@ import tailwindcss from "@tailwindcss/vite";
 
 export default defineNuxtConfig({
   target: 'static',
-  ssr: true,
+  ssr: false,
 
   devServer: {
-    port: 3010
+        port: 3010
   },
 
   app: {
@@ -43,23 +43,26 @@ export default defineNuxtConfig({
   },
 
   vite: {
+    resolve: {
+      extensions: ['.js', '.json', '.jsx', '.mjs', '.ts', '.tsx', '.vue']
+    },
     esbuild: {
       target: "esnext",
     },
     build: {
       target: "esnext",
-    },
-    optimizeDeps: {
-      esbuildOptions: {
-        target: "esnext",
+      commonjsOptions: {
+        transformMixedEsModules: true
       },
     },
     define: {
       "process.env.BROWSER": true,
+       'global': {}
     },
     plugins: [
       tailwindcss(),
     ],
+
     server: {
       fs: {
         allow: [
@@ -69,6 +72,10 @@ export default defineNuxtConfig({
       },
     },
   },
+
+  plugins: [
+    { src: '~/plugins/buffer', mode: 'client', ssr: false },
+  ],
 
   compatibilityDate: '2025-01-11',
   modules: ['@nuxtjs/seo'],

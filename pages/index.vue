@@ -27,21 +27,21 @@
     </div>
 
     <div class="links p-8 flex flex-col">
-      <h1 class="font-bold mt-12">Meteora Liquidity Providing</h1>
+      <h1 class="font-bold mt-12">Meteora DLMMs</h1>
       <div class="grid lg:grid-cols-5 md:grid-cols-4 gap-4">
         <NuxtLink class="guide-link" to="dlmm-guide">
         <img
           class="mb-2"
           src="~/assets/images/illustrations/dlmms-guide.png"
         />
-        <h3>Guide</h3>
+        <h3>Getting Started</h3>
       </NuxtLink>
       <NuxtLink class="guide-link" to="dlmm-guide-2">
         <img
           class="mb-2"
           src="~/assets/images/illustrations/dlmms-tools.png"
         />
-        <h3>Tools</h3>
+        <h3>DLMM Apps</h3>
       </NuxtLink>
       <NuxtLink class="guide-link" to="dlmm-guide-multidays">
         <img
