@@ -28,7 +28,7 @@
 
         <div>
         <div class="date-range " v-if="!loadingWalletTransactions">
-          Date range: {{ dateRange }}
+          {{ dateRange }}
         </div>
         <Loader v-if="loadingWalletTransactions" />
         <div
@@ -144,19 +144,7 @@
       <ToggleButtons
         class="filter"
         label="Time period"
-        :values="[
-          { text: 'All', value: 'all' },
-          { text: '1d', value: '1d' },
-          { text: '7d', value: '7d' },
-          { text: '30d', value: '30d' },
-          { text: '1y', value: '1y' },
-          { text: 'Week ' + currentWeek, value: 'week-' + currentWeek },
-          { text: 'Week ' + prevWeek, value: 'week-' + prevWeek },
-          { text: currentMonth, value: 'month-' + currentMonth },
-          { text: prevMonth, value: 'month-' + prevMonth },
-          { text: currentYear, value: 'year-' + currentYear },
-          { text: prevYear, value: 'year-' + prevYear },
-        ]"
+        :values="timePeriodOptions"
         v-model="timePeriod"
       />
     </div>
@@ -309,6 +297,7 @@ import {
   applySortOrder,
   getDateFromBlockTime,
   loadWalletTransactions,
+  resetDb,
 } from '@/utils/dlmm'
 
 definePageMeta({
@@ -318,30 +307,6 @@ definePageMeta({
 const RPC_ENDPOINT_URL =
   'https://hardworking-palpable-arrow.solana-mainnet.quiknode.pro/0213d582329af74486932e0ed98015d3e4f7ac52/'
 
-const loadingWalletAddress = ref(true)
-const loadingWalletTransactions = ref(false)
-
-const quoteToken = ref('SOL')
-const timePeriod = ref('all')
-const sortBy = ref('profit')
-const sortOrder = ref('asc')
-const groupBy = ref('position')
-
-const transactions = ref([])
-const positions = ref([])
-const collapsedPositions = ref({})
-
-const winRate = ref(0)
-const totalProfit = ref(0)
-const totalFees = ref(0)
-
-const currentWeek = ref(DateTime.now().localWeekNumber)
-const currentMonth = ref(DateTime.now().toFormat('MMMM'))
-const prevWeek = ref(DateTime.now().minus({ week: 1 }).localWeekNumber)
-const prevMonth = ref(DateTime.now().minus({ month: 1 }).toFormat('MMMM'))
-const currentYear = ref(DateTime.now().year)
-const prevYear = ref(DateTime.now().minus({ year: 1 }).year)
-
 const walletAddress = ref('')
 const currentWalletAddress = ref('')
 const domainName = ref('')
@@ -350,6 +315,116 @@ const errors = ref({
   invalidDomain: false,
 })
 const walletAddressInput = useTemplateRef('walletAddressInput')
+const loadingWalletAddress = ref(true)
+const loadingWalletTransactions = ref(false)
+
+const quoteToken = ref('SOL')
+const sortBy = ref('profit')
+const sortOrder = ref('asc')
+const groupBy = ref('position')
+
+let transactions = []
+const positions = shallowRef([])
+const collapsedPositions = ref({})
+
+const winRate = ref(0)
+const totalProfit = ref(0)
+const totalFees = ref(0)
+
+const allTimePeriod = {
+  name: 'All',
+  start: DateTime.fromISO('2023-01-01'),
+  end: DateTime.now(),
+}
+const timePeriod = ref(allTimePeriod)
+const timePeriodOptions = computed(() => {
+  return [
+    {
+      text: 'All',
+      value: allTimePeriod
+    },
+    {
+      text: '1d',
+      value: {
+        name: '1d',
+        start: DateTime.now().minus({ day: 1 }),
+        end: DateTime.now(),
+      }
+    },
+    {
+      text: '7d',
+      value: {
+        name: '7d',
+        start: DateTime.now().minus({ week: 1 }),
+        end: DateTime.now(),
+      }
+    },
+    {
+      text: '30d',
+      value: {
+        name: '30d',
+        start: DateTime.now().minus({ month: 1 }),
+        end: DateTime.now(),
+      }
+    },
+    {
+      text: '1y',
+      value: {
+        name: '1y',
+        start: DateTime.now().minus({ year: 1 }),
+        end: DateTime.now(),
+      }
+    },
+    {
+      text: 'Week ' + DateTime.now().localWeekNumber,
+      value: {
+        name: 'week ' + DateTime.now().localWeekNumber,
+        start: DateTime.now().startOf('week'),
+        end: DateTime.now().endOf('week'),
+      }
+    },
+    {
+      text: 'Week ' + DateTime.now().minus({ week: 1 }).localWeekNumber,
+      value: {
+        name: 'week ' + DateTime.now().minus({ week: 1 }).localWeekNumber,
+        start: DateTime.now().minus({ week: 1 }).startOf('week'),
+        end: DateTime.now().minus({ week: 1 }).endOf('week'),
+      }
+    },
+    {
+      text: DateTime.now().toFormat('MMMM'),
+      value: {
+        name: DateTime.now().toFormat('MMMM'),
+        start: DateTime.now().startOf('month'),
+        end: DateTime.now().endOf('month'),
+      }
+    },
+    {
+      text: DateTime.now().minus({ month: 1 }).toFormat('MMMM'),
+      value: {
+        name: DateTime.now().minus({ month: 1 }).toFormat('MMMM'),
+        start: DateTime.now().minus({ month: 1 }).startOf('month'),
+        end: DateTime.now().minus({ month: 1 }).endOf('month'),
+      }
+    },
+    {
+      text: DateTime.now().toFormat('yyyy'),
+      value: {
+        name: DateTime.now().toFormat('yyyy'),
+        start: DateTime.now().startOf('year'),
+        end: DateTime.now().endOf('year'),
+      }
+    },
+    {
+      text: DateTime.now().minus({ year: 1 }).toFormat('yyyy'),
+      value: {
+        name: DateTime.now().minus({ year: 1 }).toFormat('yyyy'),
+        start: DateTime.now().minus({ year: 1 }).startOf('year'),
+        end: DateTime.now().minus({ year: 1 }).endOf('year'),
+      }
+    }
+  ]
+})
 
 onMounted(async () => {
   const localWalletAddress = localStorage.getItem('walletAddress')
@@ -359,6 +434,18 @@ onMounted(async () => {
   walletAddressInput.value.focus()
   await updateWalletAddress()
   loadingWalletAddress.value = false
+})
+
+const isDataVisible = computed(() => {
+  console.log('isDataVisible', currentWalletAddress.value, loadingWalletTransactions.value)
+  return (
+    currentWalletAddress.value &&
+    !loadingWalletTransactions.value
+  )
+})
+
+const dateRange = computed(() => {
+  return timePeriod.value.start.toFormat('dd/MM/yy') + ' - ' + timePeriod.value.end.toFormat('dd/MM/yy')
 })
 
 const updateWalletAddress = async () => {
@@ -399,6 +486,7 @@ const useWallet = async () => {
     'walletAddress',
     domainName.value || currentWalletAddress.value,
   )
+  console.log('useWallet', currentWalletAddress.value, domainName.value)
   loadingWalletTransactions.value = true
   const { db, downloader } = await loadWalletTransactions(
     RPC_ENDPOINT_URL,
@@ -406,23 +494,34 @@ const useWallet = async () => {
   )
 
   console.log(downloader)
-  db.getAllTransactions()
+  db.getOwnerTransactions(currentWalletAddress.value)
     .then((metTransactions) => {
       console.log('transactions done', metTransactions)
-      transactions.value = metTransactions
-      resetPositions(transactions.value)
+      transactions = metTransactions
+      resetPositions()
       loadingWalletTransactions.value = false
     })
 
-  downloader.stats()
-    .then((stats) => {
-      console.log('stats', stats)
-    })
+
+  let previousTransactionsLength = 0
+  const statsInterval = setInterval(async () => {
+    const downloadedTransactions = await db.getOwnerTransactions(currentWalletAddress.value)
+    if (downloadedTransactions.length !== previousTransactionsLength) {
+      previousTransactionsLength = downloadedTransactions.length
+      const stats = await downloader.stats()
+      console.log('stats', stats, stats.downloadingComplete, downloadedTransactions.length)
+    } else {
+      clearInterval(statsInterval)
+      transactions = downloadedTransactions
+      resetPositions()
+      loadingWalletTransactions.value = false
+    }
+  }, 1000 * 5)
 }
 
 const resetPositions = () => {
-  console.log('resetPositions', transactions.value)
-  const dbPositions = getDbPositions(groupBy.value, transactions.value)
+  console.log('resetPositions', transactions)
+  const dbPositions = getDbPositions(groupBy.value, transactions)
   positions.value = applyFilters(dbPositions)
   winRate.value =
     positions.value.length > 0
@@ -442,16 +541,7 @@ const resetPositions = () => {
 
 const applyFilters = (positions) => {
   let filteredPositions = applyQuoteToken(quoteToken.value, positions)
-  filteredPositions = applyTimePeriod(
-    timePeriod.value,
-    currentWeek.value,
-    prevWeek.value,
-    currentMonth.value,
-    prevMonth.value,
-    currentYear.value,
-    prevYear.value,
-    filteredPositions,
-  )
+  filteredPositions = applyTimePeriod(timePeriod.value, filteredPositions)
   filteredPositions = applySortBy(sortBy.value, filteredPositions)
   filteredPositions = applySortOrder(sortOrder.value, filteredPositions)
   return filteredPositions
@@ -460,67 +550,6 @@ const applyFilters = (positions) => {
 const togglePosition = (signature) => {
   collapsedPositions.value[signature] = !collapsedPositions.value[signature]
 }
-
-const isDataVisible = computed(() => {
-  return (
-    currentWalletAddress.value &&
-    !loadingWalletTransactions.value
-  )
-})
-
-const dateRange = computed(() => {
-  if (timePeriod.value === 'all') {
-    return 'All time'
-  }
-  if (timePeriod.value === '1d') {
-    const startDate = DateTime.now().minus({ day: 1 }).toFormat('dd/MM/yy')
-    const endDate = DateTime.now().toFormat('dd/MM/yy')
-    return startDate + ' - ' + endDate
-  }
-  if (timePeriod.value === '7d') {
-    const startDate = DateTime.now().minus({ day: 7 }).toFormat('dd/MM/yy')
-    const endDate = DateTime.now().toFormat('dd/MM/yy')
-    return startDate + ' - ' + endDate
-  }
-  if (timePeriod.value === '30d') {
-    const startDate = DateTime.now().minus({ month: 1 }).toFormat('dd/MM/yy')
-    const endDate = DateTime.now().toFormat('dd/MM/yy')
-    return startDate + ' - ' + endDate
-  }
-  if (timePeriod.value === '1y') {
-    const startDate = DateTime.now().minus({ year: 1 }).toFormat('dd/MM/yy')
-    const endDate = DateTime.now().toFormat('dd/MM/yy')
-    return startDate + ' - ' + endDate
-  }
-  if (timePeriod.value === 'week-' + currentWeek.value) {
-    const startDate = DateTime.now().startOf('week').toFormat('dd/MM/yy')
-    const endDate = DateTime.now().endOf('week').toFormat('dd/MM/yy')
-    return `${startDate} - ${endDate}`
-  }
-  if (timePeriod.value === 'week-' + prevWeek.value) {
-    const startDate = DateTime.now().minus({ week: 1 }).startOf('week').toFormat('dd/MM/yy')
-    const endDate = DateTime.now().minus({ week: 1 }).endOf('week').toFormat('dd/MM/yy')
-    return `${startDate} - ${endDate}`
-  }
-  if (timePeriod.value.startsWith('month-') && timePeriod.value.split('-')[1] === currentMonth.value) {
-    const startDate = DateTime.now().startOf('month').toFormat('dd/MM/yy')
-    const endDate = DateTime.now().endOf('month').toFormat('dd/MM/yy')
-    return `${startDate} - ${endDate}`
-  }
-  if (timePeriod.value.startsWith('month-') && timePeriod.value.split('-')[1] === prevMonth.value) {
-    const startDate = DateTime.now().minus({ month: 1 }).startOf('month').toFormat('dd/MM/yy')
-    const endDate = DateTime.now().minus({ month: 1 }).endOf('month').toFormat('dd/MM/yy')
-    return `${startDate} - ${endDate}`
-  }
-
-  if (timePeriod.value.startsWith('year-')) {
-    const year = timePeriod.value.split('-')[1]
-    const startDate = DateTime.fromFormat(`01/01/${year}`, 'dd/MM/yyyy')
-    const endDate = DateTime.fromFormat(`31/12/${year}`, 'dd/MM/yyyy')
-    return `${startDate.toFormat('dd/MM/yy')} - ${endDate.toFormat('dd/MM/yy')}`
-  }
-  return 'All time'
-})
 
 watch(quoteToken, resetPositions)
 watch(timePeriod, resetPositions)

@@ -7,7 +7,7 @@
   <div class="flex flex-row justify-center gap-2">
     <ToggleButton
       :text="val.text"
-      :active="val.value === model"
+      :active="isActive(val.value)"
       @click="update(val.value)"
       v-for="val in props.values"
     />
@@ -21,6 +21,11 @@ const model = defineModel()
 
 const update = (value) => {
   model.value = value
+}
+
+const isActive = (value) => {
+  return value === model.value ||
+    (value.name && value.name === model.value.name)
 }
 </script>
 

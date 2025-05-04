@@ -64,7 +64,7 @@ const tokens = reactive({
   ],
   liquid: [
     { category: 'Solana', name: 'SOL', amount: 20 },
-    { category: 'Hyperliquid', name: 'HYPE', amount: 120 },
+    { category: 'Hyperliquid', name: 'HYPE', amount: 50 },
     { category: 'SUI', name: 'SUI', amount: 50 },
     { category: 'Stables', name: 'USDC', amount: 24000 }
   ],
@@ -78,7 +78,7 @@ const tokens = reactive({
     { category: 'Cosmos', name: 'TIA', amount: 50 },
   ],
   stableRep: [
-    { protocol: 'hyperliquid', amount: 4000 },
+    { protocol: 'hyperliquid', amount: 5500 },
     { protocol: 'Kamino', amount: 0 },
     { protocol: 'Abstract', amount: 1000 },
     { protocol: 'Navi/Bluefin', amount: 10700 },

@@ -71,62 +71,13 @@ const getDateFromBlockTime = (blockTime) => {
   return DateTime.fromMillis(blockTime * 1000).toFormat('yyyy-MM-dd HH:mm:ss')
 }
 
-const applyTimePeriod = (
-  timePeriod,
-  currentWeek,
-  prevWeek,
-  currentMonth,
-  prevMonth,
-  currentYear,
-  prevYear,
-  positions,
-) => {
-  return positions.filter((position) => {
-    const blockDate = DateTime.fromMillis(position.block_time * 1000)
-    if (timePeriod === 'all') {
-      return true
+const applyTimePeriod = (timePeriod, positions) => {
+  return positions.filter(position => {
+    const positionDate = DateTime.fromMillis(position.block_time * 1000)
+    if (!(positionDate >= timePeriod.start && positionDate <= timePeriod.end)) {
+      console.log('positionDate', position.quoteToken, positionDate, timePeriod.start, timePeriod.end, positionDate >= timePeriod.start, positionDate <= timePeriod.end)
     }
-    if (timePeriod === '1d') {
-      return blockDate >= DateTime.now().minus({ day: 1 })
-    }
-    if (timePeriod === '7d') {
-      return blockDate >= DateTime.now().minus({ week: 1 })
-    }
-    if (timePeriod === '30d') {
-      return blockDate >= DateTime.now().minus({ month: 1 })
-    }
-    if (timePeriod === '1y') {
-      return blockDate >= DateTime.now().minus({ year: 1 })
-    }
-    if (timePeriod === 'week-' + currentWeek) {
-      const weekStart = DateTime.now().startOf('week', { useLocaleWeeks: true })
-      return blockDate >= weekStart
-    }
-    if (timePeriod === 'week-' + prevWeek) {
-      const weekStart = DateTime.now()
-        .minus({ week: 1 })
-        .startOf('week', { useLocaleWeeks: true })
-      const weekEnd = weekStart.plus({ week: 1 })
-      return blockDate >= weekStart && blockDate < weekEnd
-    }
-    if (timePeriod === 'month-' + currentMonth) {
-      const monthStart = DateTime.now().startOf('month')
-      return blockDate >= monthStart
-    }
-    if (timePeriod === 'month-' + prevMonth) {
-      const monthStart = DateTime.now().minus({ month: 1 }).startOf('month')
-      const monthEnd = monthStart.plus({ month: 1 })
-      return blockDate >= monthStart && blockDate < monthEnd
-    }
-    if (timePeriod === 'year-' + currentYear) {
-      const yearStart = DateTime.now().startOf('year')
-      return blockDate >= yearStart
-    }
-    if (timePeriod === 'year-' + prevYear) {
-      const yearStart = DateTime.now().minus({ year: 1 }).startOf('year')
-      const yearEnd = yearStart.plus({ year: 1 })
-      return blockDate >= yearStart && blockDate < yearEnd
-    }
+    return positionDate >= timePeriod.start && positionDate <= timePeriod.end
   })
 }
 
@@ -154,6 +105,17 @@ const groupTransactionsByPosition = (groupBy, transactions) => {
   return grouped
 }
 
+const resetDb = async (db, downloader) => {
+  if (downloader) {
+    downloader.cancel()
+    downloader.cancel()
+  }
+  await db.waitForSave()
+  db = await MeteoraDlmmDb.create()
+  await db.save()
+  return { db }
+}
+
 export {
   getDbPositions,
   applyQuoteToken,
@@ -164,4 +126,5 @@ export {
   getDateFromBlockTime,
   loadDlmmDb,
   loadWalletTransactions,
+  resetDb,
 }
