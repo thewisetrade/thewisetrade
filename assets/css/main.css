@@ -67,9 +67,10 @@ table td {
 
 .guide-link {
   @apply font-bold shadow rounded-xl text-center;
-  background: #2F2B3A;
+  background: #2F2B4A;
   box-shadow: 2px 2px 4px rgba(0, 0, 0, 1);
   height: 260px;
+  min-width: 200px;
   padding: 1em .4em 1em .4em;
   color: white;
 }
