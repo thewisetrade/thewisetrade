@@ -27,8 +27,8 @@
     </div>
 
     <div class="links p-8 flex flex-col">
-      <h1 class="font-bold mt-12">Meteora DLMMs</h1>
-      <div class="grid lg:grid-cols-5 md:grid-cols-4 gap-4">
+      <h1 class="font-bold mt-12 m-auto">Meteora DLMM Guides</h1>
+      <div class="sections grid lg:grid-cols-4 md:grid-cols-4 gap-4 m-auto">
         <NuxtLink class="guide-link" to="dlmm-guide">
         <img
           class="mb-2"
@@ -39,35 +39,48 @@
       <NuxtLink class="guide-link" to="dlmm-guide-2">
         <img
           class="mb-2"
-          src="~/assets/images/illustrations/dlmms-tools.png"
+          src="~/assets/images/illustrations/dlmms-tools.svg"
         />
         <h3>DLMM Apps</h3>
       </NuxtLink>
       <NuxtLink class="guide-link" to="dlmm-guide-multidays">
         <img
           class="mb-2"
-          src="~/assets/images/illustrations/dlmms-guide.png"
+          src="~/assets/images/illustrations/dlmms-multiday-positions.svg"
         />
         <h3>Multiday Positions</h3>
       </NuxtLink>
       <NuxtLink class="guide-link" to="dlmm-guide-risk-management">
         <img
           class="mb-2"
-          src="~/assets/images/illustrations/dlmms-guide.png"
+          src="~/assets/images/illustrations/dlmms-risk-management.svg"
         />
         <h3>Risk Management</h3>
       </NuxtLink>
-      <NuxtLink class="guide-link" to="dlmm-pool-finder">
-        <img
-          class="mb-2"
-          src="~/assets/images/illustrations/dlmms-guide.png"
-        />
-        <h3>Pool Finder</h3>
-      </NuxtLink>
+   </div>
+
+    <h1 class="font-bold mt-12 m-auto">Meteora DLMM Helpers</h1>
+    <div class="flex">
+      <div class="sections grid lg:grid-cols-2 md:grid-cols-2 gap-4 m-auto">
+        <NuxtLink class="guide-link" to="dlmm-pool-finder">
+          <img
+            class="mb-2"
+            src="~/assets/images/illustrations/dlmms-pool-finder.svg"
+          />
+          <h3>Pool Finder</h3>
+        </NuxtLink>
+        <NuxtLink class="guide-link" to="dlmm-performance">
+          <img
+            class="mb-2"
+            src="~/assets/images/illustrations/dlmms-performance.svg"
+          />
+          <h3>Pool Performance</h3>
+        </NuxtLink>
+      </div>
     </div>
 
-    <h1 class="font-bold mt-12">Sanctum SOL Staking</h1>
-    <div class="grid lg:grid-cols-5 md:grid-cols-4 gap-4">
+    <h1 class="font-bold mt-12 m-auto">Sanctum SOL Staking</h1>
+    <div class="sections grid lg:grid-cols-2 md:grid-cols-2 gap-4 m-auto">
       <NuxtLink class="guide-link" to="sanctum">
         <img
           class="mb-2"
@@ -166,6 +179,12 @@ h1 {
   .illustration {
     max-width: 400px;
   }
+}
+
+.sections {
+  border: 1px solid #6666EEAA;
+  padding: 1em;
+  border-radius: 20px;
 }
 
 
