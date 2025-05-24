@@ -1,7 +1,7 @@
 import { Buffer } from 'buffer'
 
 globalThis.Buffer = Buffer
-globalThis.process = process
+// globalThis.process = process
 
 export default defineNuxtPlugin(() => {
   window.Buffer = Buffer
