@@ -14,12 +14,11 @@
     <div class="filters">
       <div class="toggle flex flex-row">
         <ToggleButtons
-          class="mr-3 filter"
+          class="mr-5 filter"
           label="Bin Step"
           :values="[
            { text: '250', value: 250 },
            { text: '200', value: 200 },
-           { text: '125', value: 125 },
            { text: '100', value: 100 },
            { text: '80', value: 80 },
            { text: '20', value: 20 },
@@ -27,7 +26,7 @@
           v-model="binStep"
         />
         <ToggleButtons
-          class="mr-3 filter"
+          class="mr-5 filter"
           label="Market Cap"
           :values="[
            { text: '> 1M', value: 1 },
@@ -37,7 +36,7 @@
           v-model="marketCap"
         />
         <ToggleButtons
-          class="mr-3 filter"
+          class="mr-5 filter"
           label="Liquidity"
           :values="[
            { text: '> 10k', value: 10 },
