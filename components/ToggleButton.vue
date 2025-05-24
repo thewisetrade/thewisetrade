@@ -20,7 +20,6 @@ const props = defineProps(['active', 'text'])
   font-weight: normal;
   font-size: 16px;
   padding: 5px 8px;
-  margin-right: 10px;
 }
 
 .active {
