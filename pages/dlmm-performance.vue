@@ -330,7 +330,7 @@ const walletAddress = ref('')
 const currentWalletAddress = ref('')
 const domainName = ref('')
 const walletAddressInput = useTemplateRef('walletAddressInput')
-const loadingWalletAddress = ref(true)
+const loadingWalletAddress = ref(false)
 const loadingWalletTransactions = ref(false)
 const errors = ref({
   invalidAddress: false,
