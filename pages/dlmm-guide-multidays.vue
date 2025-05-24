@@ -2,7 +2,7 @@
   <div class="text-center">
     <img
       class="m-auto max-w-sm"
-      src="~/assets/images/illustrations/dlmms-guide.png"
+      src="~/assets/images/illustrations/dlmms-multiday-positions.svg"
     />
   </div>
 

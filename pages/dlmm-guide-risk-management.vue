@@ -2,7 +2,7 @@
   <div class="text-center">
     <img
       class="m-auto max-w-sm"
-      src="~/assets/images/illustrations/dlmms-guide.png"
+      src="~/assets/images/illustrations/dlmms-risk-management.png"
     />
   </div>
 
@@ -316,6 +316,8 @@ useHead({
     { name: "og:description", content: description },
     { name: "og:image", content: "https://thewise.trade/illustrations/dlmms-guide.png" },
     { name: "og:type", content: "Website" },
+    { name: "twitter:site", content: "@defilogist" },
+    { name: "twitter:creator", content: "@defilogist" },
     { name: "twitter:title", content: title },
     { name: "twitter:description", content: description },
     { name: "twitter:image", content: "https://thewise.trade/illustrations/dlmms-guide.png" },
