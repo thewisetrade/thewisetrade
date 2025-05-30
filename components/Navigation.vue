@@ -29,7 +29,8 @@
       title="DLMMs Tools"
       :items="[
         { to: '/dlmm-pool-finder', label: 'DLMMs Pool Finder' },
-        { to: '/dlmm-performance', label: 'DLMMs Performance' }
+        { to: '/dlmm-performance', label: 'DLMMs Performance' },
+        { to: '/dlmm-opened-pools', label: 'DLMMs Opened Position' },
       ]"
     />
 

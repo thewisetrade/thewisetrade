@@ -25,6 +25,17 @@
             <span class="text-sm">Performance</span>
           </NuxtLink>
         </div>
+        <div class="flex flex-row gap-2 text-gray-500 hover:text-gray-100">
+          <NuxtLink
+            class="flex flex-row gap-2 items-center app-link"
+            to="/dlmm-opened-pools"
+            active-class="active"
+          >
+            <LockOpenIcon class="size-4" />
+            <span class="text-sm">Opened Position</span>
+          </NuxtLink>
+        </div>
+         
       </div>
       <div
         class="app-container container max-w-screen-md mx-auto p-8 bg-paper shadow-md rounded-lg mt-8"
@@ -37,7 +48,7 @@
 </template>
 
 <script setup>
-import { MagnifyingGlassIcon, ChartBarIcon } from '@heroicons/vue/24/solid'
+import { MagnifyingGlassIcon, ChartBarIcon, LockOpenIcon  } from '@heroicons/vue/24/solid'
 import { ModalsContainer } from 'vue-final-modal'
 </script>
 
