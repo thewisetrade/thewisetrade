@@ -76,6 +76,13 @@
           />
           <h3>Pool Performance</h3>
         </NuxtLink>
+        <NuxtLink class="guide-link" to="dlmm-opend-pools">
+          <img
+            class="mb-2"
+            src="~/assets/images/illustrations/dlmms-performance.svg"
+          />
+          <h3>Opened Positions</h3>
+        </NuxtLink>
       </div>
     </div>
 
