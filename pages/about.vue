@@ -49,16 +49,6 @@
       part to support personal needs.
     </p>
 
-    <h2>My Tokens</h2>
-
-    <a
-      class="linkblock"
-      href="https://portfolio.jup.ag/portfolio/wiseCUogbp8QkzrNF6ku8cfZrWkRtbTinYso1KQRH7i_CPYDZMorfh3q6rd8L67VvaF4x5gnD9e66HiZHvK7CyFV/-R9bWPhZHElT2Qi6c5HDj"
-    >
-      My Token list
-    </a>
-
-
     <h2>My Meteora DLMM activity</h2>
 
     <a
