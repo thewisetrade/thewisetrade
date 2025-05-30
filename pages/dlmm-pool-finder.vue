@@ -119,8 +119,8 @@ definePageMeta({
 
 const isLoading = ref(false)
 
-const pools = []
 const displayedPools = ref([])
+let pools = []
 
 const marketCap = ref(10)
 const binStep = ref(100)
@@ -140,6 +140,7 @@ const resetDisplayedPools = () => {
 
 const loadPoolsData = () => {
   isLoading.value = true
+  pools = []
   fetch("https://api.tokleo.com/api/public/pools", {
     headers: {
       'X-Public-Key': 'Daisy-Uncouth-Chrome-Demanding-Freight-Boxcar6'
