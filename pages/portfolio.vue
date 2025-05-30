@@ -5,6 +5,7 @@ r<template>
       <h2 class="portfolio-size">Portfolio Size: ${{ total.toFixed(0) }}</h2>
       <h4 class="cashed-out">Stables: ${{ stableTotal }}</h4>
       <h4 class="cashed-out">Cashed out: ${{ tokens.cashOut }}</h4>
+      <h4 class="invested">Invested: ${{ tokens.invested }}</h4>
 
       <div class="tokens" v-for="tokenType in ['liquid', 'nft', 'locked']">
         <h2>{{ tokenType }}: ${{ sums[tokenType].toFixed(0) }}</h2>
@@ -63,36 +64,36 @@ const tokens = reactive({
     { category: 'Stables', name: 'USDC', amount: 0 },
   ],
   liquid: [
-    { category: 'Solana', name: 'SOL', amount: 67 },
-    { category: 'Hyperliquid', name: 'HYPE', amount: 35 },
+    { category: 'Solana', name: 'SOL', amount: 84},
+    { category: 'Hyperliquid', name: 'HYPE', amount: 45 },
     { category: 'SUI', name: 'SUI', amount: 320 },
-    { category: 'Stables', name: 'USDC', amount: 24000 }
+    { category: 'Stables', name: 'USDC', amount: 0 }
   ],
   nft: [
     { category: 'Solana', name: 'SOL', amount: 20 },
   ],
   locked: [
     { category: 'Solana', name: 'JUP', amount: 30500 },
-    { category: 'Solana', name: 'CLOUD', amount: 450000 },
+    { category: 'Solana', name: 'CLOUD', amount: 376000 },
     { category: 'Cosmos', name: 'ATOM', amount: 200 },
     { category: 'Cosmos', name: 'TIA', amount: 50 },
   ],
   stableRep: [
-    { protocol: 'hyperliquid', amount: 5600 },
-    { protocol: 'Kamino/Marginfi', amount: 4500 },
+    { protocol: 'hyperliquid', amount: 6000 },
+    { protocol: 'Kamino/Marginfi', amount: 7100 },
     { protocol: 'Abstract', amount: 1000 },
     { protocol: 'Navi/Bluefin', amount: 9700 },
     { protocol: 'osmosis', amount: 200 },
     { protocol: 'Drift', amount: 0 },
     { protocol: 'loopscale', amount: 0 },
-    { protocol: 'Meteora', amount: 3200 },
+    { protocol: 'Meteora', amount: 8800 },
     { protocol: 'Humana', amount: 1000 },
   ],
-  cashOut: 40000
+  cashOut: 40000,
+  invested: 1200,
 })
 
 
-console.log(tokens, tokens.stableRep)
 const stableTotal = tokens.stableRep.reduce(
   (acc, token) => acc + token.amount, 0
 )
@@ -214,6 +215,7 @@ td.name {
   margin-bottom: 0em;
 }
 
+.invested,
 .cashed-out {
   font-size: 0.8em;
 }
