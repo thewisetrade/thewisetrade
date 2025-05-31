@@ -15,18 +15,18 @@
           <span>Value</span>
           <div class="sort-icon" :class="getSortClass('value')"></div>
         </div>
-        <div class="header-cell sortable" @click="sort('collectedFee')">
+        <!--div class="header-cell sortable" @click="sort('collectedFee')">
           <span>Collected Fee</span>
           <div class="sort-icon" :class="getSortClass('collectedFee')"></div>
-        </div>
+        </div-->
         <div class="header-cell sortable" @click="sort('uncolFee')">
           <span>Uncol. Fee</span>
           <div class="sort-icon" :class="getSortClass('uncolFee')"></div>
         </div>
-        <div class="header-cell sortable" @click="sort('upnl')">
+        <!--div class="header-cell sortable" @click="sort('upnl')">
           <span>uPnL</span>
           <div class="sort-icon" :class="getSortClass('upnl')"></div>
-        </div>
+        </div-->
         <div class="header-cell sortable" @click="sort('range')">
           <span>Range</span>
           <div class="sort-icon" :class="getSortClass('range')"></div>
@@ -53,14 +53,29 @@
 
         <!-- Data Rows -->
         <div v-else class="table-rows">
-          <div class="table-row" v-for="position in sortedPositions" :key="position.id">
+          <div
+            class="table-row"
+            v-for="position in sortedPositions"
+            :key="position.id"
+          >
             <div class="cell position-cell">
               <div class="token-pair">
                 <div class="token-icons">
-                  <img :src="position.token1.icon" :alt="position.token1.symbol" class="token-icon">
-                  <img :src="position.token2.icon" :alt="position.token2.symbol" class="token-icon token-icon-overlap">
+                  <img
+                    :src="position.token1.icon"
+                    :alt="position.token1.symbol"
+                    class="token-icon"
+                  />
+                  <img
+                    :src="position.token2.icon"
+                    :alt="position.token2.symbol"
+                    class="token-icon token-icon-overlap"
+                  />
                 </div>
-                <span class="pair-name">{{ position.token1.symbol }} / {{ position.token2.symbol }}</span>
+                <span class="pair-name"
+                  >{{ position.token1.symbol }} /
+                  {{ position.token2.symbol }}</span
+                >
               </div>
             </div>
 
@@ -70,36 +85,58 @@
 
             <div class="cell value-cell">
               <span class="value-amount">{{ position.value }}</span>
-              <img :src="position.token2.icon" :alt="position.token2.symbol" class="value-icon">
+              <img
+                :src="position.token2.icon"
+                :alt="position.token2.symbol"
+                class="value-icon"
+              />
             </div>
 
-            <div class="cell fee-cell">
+            <!--div class="cell fee-cell">
               <div class="fee-amount">{{ position.collectedFee.amount }}</div>
               <div class="fee-percentage">{{ position.collectedFee.percentage }}</div>
-            </div>
+            </div-->
 
             <div class="cell fee-cell">
-              <div class="fee-amount" :class="position.uncolFee.color">{{ position.uncolFee.amount }}</div>
-              <div class="fee-percentage" :class="position.uncolFee.color">{{ position.uncolFee.percentage }}</div>
+              <div class="fee-amount" :class="position.uncolFee.color">
+                {{ parseFloat(position.uncolFee.amount || 0).toFixed(2) }}
+              </div>
+              <div class="fee-percentage" :class="position.uncolFee.color">
+                {{ position.uncolFee.percentage }}
+              </div>
             </div>
 
-            <div class="cell upnl-cell">
+            <!--div class="cell upnl-cell">
               <div class="fee-amount" :class="position.upnl.color">{{ position.upnl.amount }}</div>
               <div class="fee-percentage" :class="position.upnl.color">{{ position.upnl.percentage }}</div>
-            </div>
+            </div-->
 
             <div class="cell range-cell">
               <div class="range-bar">
                 <div class="range-track">
-                  <div class="range-fill" :style="{
-                    left: position.range.startPercent + '%',
-                    width: (position.range.endPercent - position.range.startPercent) + '%'
-                  }"></div>
+                  <div
+                    class="range-fill"
+                    :style="{
+                      left: position.range.startPercent + '%',
+                      width:
+                        position.range.endPercent -
+                        position.range.startPercent +
+                        '%',
+                    }"
+                  ></div>
                   <div class="range-indicators">
-                    <div class="range-indicator range-start" :style="{ left: position.range.startPercent + '%' }"></div>
-                    <div class="range-indicator range-current" :style="{ left: position.range.currentPercent + '%' }">
-                    </div>
-                    <div class="range-indicator range-end" :style="{ left: position.range.endPercent + '%' }"></div>
+                    <div
+                      class="range-indicator range-start"
+                      :style="{ left: position.range.startPercent + '%' }"
+                    ></div>
+                    <div
+                      class="range-indicator range-current"
+                      :style="{ left: position.range.currentPercent + '%' }"
+                    ></div>
+                    <div
+                      class="range-indicator range-end"
+                      :style="{ left: position.range.endPercent + '%' }"
+                    ></div>
                   </div>
                 </div>
                 <div class="range-labels">
@@ -115,543 +152,385 @@
   </div>
 </template>
 
-<script>
-class TokenService {
-  constructor() {
-    this.cache = new Map();
-    this.jupiterTokens = null;
-    this.isLoading = false;
-  }
+<script setup>
+import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
+import { getTokenService } from '@/utils/tokens'
 
-  async init() {
-    if (this.jupiterTokens || this.isLoading) return;
 
-    this.isLoading = true;
-    try {
-      console.log('Loading Jupiter token list...');
-      const response = await fetch('https://token.jup.ag/all');
-      const tokens = await response.json();
+const sortField = ref('uncolFee')
+const sortDirection = ref('asc')
 
-      this.jupiterTokens = new Map();
-      tokens.forEach(token => {
-        this.jupiterTokens.set(token.address, {
-          symbol: token.symbol,
-          name: token.name,
-          icon: token.logoURI,
-          decimals: token.decimals,
-          verified: token.verified || false
-        });
-      });
+const loading = ref(false)
+const isInitialLoad = ref(true)
+const error = ref(null)
+const positionsData = ref([])
+const tempPositionsData = ref([])
 
-      console.log(`Loaded ${this.jupiterTokens.size} tokens from Jupiter`);
-    } catch (error) {
-      console.error('Failed to load Jupiter tokens:', error);
-      this.jupiterTokens = new Map();
-    } finally {
-      this.isLoading = false;
-    }
-  }
+const refreshInterval = ref(null)
+const tokenService = ref(null)
+const tokenCache = ref({})
 
-  async getTokenInfo(address) {
-    if (!address) return this.getDefaultToken();
 
-    // Check cache first
-    if (this.cache.has(address)) {
-      return this.cache.get(address);
-    }
+onMounted(async () => {
+  tokenService.value = getTokenService()
+  await tokenService.value.init()
+  await loadData()
 
-    // Ensure Jupiter tokens are loaded
-    await this.init();
+  console.log('just using refresh')
+  setTimeout(() => {
+    console.log('reload data after 10min')
+    startAutoRefresh()
+  }, 600000)
+})
 
-    // Check Jupiter cache
-    if (this.jupiterTokens.has(address)) {
-      const token = this.jupiterTokens.get(address);
-      this.cache.set(address, token);
-      return token;
-    }
+onBeforeUnmount(() => {
+  stopAutoRefresh()
+})
 
-    // Try individual API call
-    const token = await this.fetchFromAPI(address);
-    if (token) {
-      this.cache.set(address, token);
-      return token;
-    }
+const formattedPositions = computed(() => {
+  const dataToUse = tempPositionsData.value.length > 0
+    ? tempPositionsData.value
+    : positionsData.value
 
-    // Return default
-    const defaultToken = this.getDefaultToken(address);
-    this.cache.set(address, defaultToken);
-    return defaultToken;
-  }
+  return dataToUse.map((position, index) => {
+    console.log('icon for token1::::', position.token1.icon)
+    console.log('icon for token2::::', position.token2.icon)
 
-  async fetchFromAPI(address) {
-    // Try Jupiter individual API
-    try {
-      const response = await fetch(`https://token.jup.ag/token/${address}`);
-      if (response.ok) {
-        const data = await response.json();
-        return {
-          symbol: data.symbol,
-          name: data.name,
-          icon: data.logoURI,
-          decimals: data.decimals,
-          verified: data.verified || false
-        };
-      }
-    } catch (error) {
-      console.warn('Jupiter individual API failed:', error);
-    }
+    // Calculate fees first
+    const collectedFeeAmount = position.collectedFeesValue || 0
+    const uncolFeeAmount = position.unCollectedFeesValue || 0
+    const positionValue = position.value || 0
 
-    // Try Solscan as backup
-    try {
-      const response = await fetch(`https://api.solscan.io/token/meta?token=${address}`);
-      if (response.ok) {
-        const data = await response.json();
-        return {
-          symbol: data.symbol,
-          name: data.name,
-          icon: data.icon,
-          decimals: data.decimals,
-          verified: false
-        };
-      }
-    } catch (error) {
-      console.warn('Solscan API failed:', error);
-    }
+    // Calculate total fees for uPnL
+    const totalFees = collectedFeeAmount + uncolFeeAmount
+    const upnlPercentage = positionValue > 0 ? (totalFees / positionValue) * 100 : 0
 
-    return null;
-  }
-
-  async getMultipleTokens(addresses) {
-    await this.init();
-
-    const results = {};
-    const promises = addresses.map(async address => {
-      const token = await this.getTokenInfo(address);
-      results[address] = token;
-    });
-
-    await Promise.all(promises);
-    return results;
-  }
-
-  getDefaultToken(address = null) {
     return {
-      symbol: address ? address.slice(0, 6) + '...' : 'UNKNOWN',
-      name: 'Unknown Token',
-      icon: this.getDefaultIcon(),
-      decimals: 9,
-      verified: false
-    };
+      id: `position-${index}`,
+      token1: position.token1,
+      token2: position.token2,
+      age: formatAge(position.age),
+      ageValue: getAgeInHours(position.age),
+      value: positionValue.toFixed(2),
+      valueNum: positionValue,
+      collectedFee: {
+        amount: formatFeeAmount(collectedFeeAmount),
+        percentage: formatPercentage(collectedFeeAmount, positionValue),
+        sortValue: collectedFeeAmount
+      },
+      uncolFee: {
+        amount: formatFeeAmount(uncolFeeAmount),
+        percentage: formatPercentage(uncolFeeAmount, positionValue),
+        color: uncolFeeAmount > 0 ? 'positive' : 'neutral',
+        sortValue: uncolFeeAmount
+      },
+      upnl: {
+        amount: formatFeeAmount(totalFees),
+        percentage: formatUpnlPercentage(upnlPercentage),
+        color: getUpnlColor(upnlPercentage),
+        sortValue: upnlPercentage
+      },
+      range: {
+        min: position.priceRange?.minPrice?.toFixed(6) || '0.000000',
+        max: position.priceRange?.maxPrice?.toFixed(6) || '0.000000',
+        ...calculateRangePositions(position.priceRange, position.isInRange),
+        sortValue: position.priceRange?.minPrice || 0,
+        currentPrice: position.priceRange?.currentPrice
+      }
+    }
+  })
+})
+
+const sortedPositions = computed(() => {
+  if (!sortField.value) {
+    return formattedPositions.value
   }
 
-  getDefaultIcon() {
-    return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iMTIiIGZpbGw9IiM2NjY2NjYiLz4KPHR0ZXh0IHg9IjUwJSIgeT0iNTAlIiBkb21pbmFudC1iYXNlbGluZT0iY2VudHJhbCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0id2hpdGUiIGZvbnQtc2l6ZT0iMTAiPj88L3RleHQ+Cjwvc3ZnPg==';
-  }
+  return [...formattedPositions.value].sort((a, b) => {
+    let aValue, bValue
 
-  clearCache() {
-    this.cache.clear();
+    switch (sortField.value) {
+      case 'pair':
+        aValue = `${a.token1.symbol}/${a.token2.symbol}`
+        bValue = `${b.token1.symbol}/${b.token2.symbol}`
+        break
+      case 'age':
+        aValue = a.ageValue
+        bValue = b.ageValue
+        break
+      case 'value':
+        aValue = a.valueNum
+        bValue = b.valueNum
+        break
+      case 'collectedFee':
+        aValue = a.collectedFee.sortValue
+        bValue = b.collectedFee.sortValue
+        break
+      case 'uncolFee':
+        aValue = a.uncolFee.sortValue
+        bValue = b.uncolFee.sortValue
+        break
+      case 'upnl':
+        aValue = a.upnl.sortValue
+        bValue = b.upnl.sortValue
+        break
+      case 'range':
+        aValue = a.range.sortValue
+        bValue = b.range.sortValue
+        break
+      default:
+        return 0
+    }
+
+    if (typeof aValue === 'string') {
+      const comparison = aValue.localeCompare(bValue)
+      return sortDirection.value === 'asc' ? comparison : -comparison
+    } else {
+      const comparison = aValue - bValue
+      return sortDirection.value === 'asc' ? comparison : -comparison
+    }
+  })
+})
+
+
+// Functions
+const loadData = async () => {
+  try {
+    if (isInitialLoad.value) {
+      loading.value = true
+    }
+    error.value = null
+
+    let data = await fetchPositionsData()
+
+    positionsData.value = data
+    tempPositionsData.value = [...data]
+    const updatedPositions = await Promise.all(
+      tempPositionsData.value.map(async (position) => {
+        const token1 = await getTokenInfoInternal(position.tokenX.toString())
+        const token2 = await getTokenInfoInternal(position.tokenY.toString())
+
+        return {
+          ...position,
+          token1,
+          token2
+        }
+      })
+    )
+
+    tempPositionsData.value = updatedPositions
+    console.log('🚀 ~ loadData ~ tempPositionsData:', tempPositionsData.value)
+
+    if (isInitialLoad.value) {
+      isInitialLoad.value = false
+    }
+  } catch (err) {
+    console.error('Error loading positions:', err)
+    error.value = err.message || 'Failed to load positions'
+  } finally {
+    loading.value = false
   }
 }
-export default {
-  name: 'LiquidityPoolTable',
-  props: {
-    dataFunction: {
-      type: Function,
-      default: null
-    },
-    getTokenInfo: {
-      type: Function,
-      default: null
+
+const preloadTokenInfo = async (positions) => {
+  const tokenAddresses = new Set()
+
+  positions.forEach((position) => {
+    const tokenX = position.tokenX
+    const tokenY = position.tokenY
+
+    if (tokenX) tokenAddresses.add(tokenX)
+    if (tokenY) tokenAddresses.add(tokenY)
+  })
+
+  console.log(`Pre-loading info for ${tokenAddresses.size} unique tokens...`)
+  const addresses = Array.from(tokenAddresses)
+  const tokenInfos = await tokenService.value.getMultipleTokens(addresses)
+
+  tokenCache.value = { ...tokenCache.value, ...tokenInfos }
+
+  console.log('Token info pre-loading completed')
+}
+
+const fetchPositionsData = async () => {
+  const { main } = await import('~/utils/src/index.ts')
+  const data = await main()
+  console.log('data------>', data)
+  return data.positions || []
+}
+
+const getTokenInfoInternal = async (tokenAddress) => {
+  console.log(tokenAddress)
+  let icon
+  if (tokenAddress === 'So11111111111111111111111111111111111111112') {
+    icon = 'https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png'
+  }
+  icon = `https://dd.dexscreener.com/ds-data/tokens/solana/${tokenAddress}.png`
+  try {
+    const response = await fetch(
+      `https://api.dexscreener.com/latest/dex/tokens/${tokenAddress}`
+    )
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
     }
-  },
-  data() {
+
+    const data = await response.json()
+
+    if (!data.pairs || data.pairs.length === 0) {
+      console.log('No pairs found for this token')
+      return null
+    }
+
+    const pair = data.pairs[0]
+    let symbol, name
+
+    if (pair.baseToken.address.toLowerCase() === tokenAddress.toLowerCase()) {
+      symbol = pair.baseToken.symbol
+      name = pair.baseToken.name
+    } else {
+      symbol = pair.quoteToken.symbol
+      name = pair.quoteToken.name
+    }
+
+    if (tokenAddress === 'So11111111111111111111111111111111111111112') {
+      icon = 'https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png'
+    }
+
     return {
-      sortField: null,
-      sortDirection: 'asc',
-      positionsData: [],
-      tempPositionsData: [],
-      loading: false,
-      isInitialLoad: true,
-      error: null,
-      refreshInterval: null,
-      tokenService: null,
-      tokenCache: {}
+      symbol,
+      name,
+      icon,
+      address: tokenAddress
     }
-  },
-  computed: {
-    formattedPositions() {
-      const dataToUse = this.tempPositionsData.length > 0 ? this.tempPositionsData : this.positionsData;
+  } catch (error) {
+    console.error('Error fetching token info:', error)
+    return null
+  }
+}
 
-      return dataToUse.map((position, index) => {
+const getDefaultTokenInfo = (tokenAddress) => ({
+  symbol: tokenAddress ? tokenAddress.slice(0, 6) + '...' : 'UNKNOWN',
+  name: 'Unknown Token',
+  icon: getDefaultIcon(),
+  decimals: 9,
+  verified: false
+})
 
-        console.log("icon for token1::::", position.token1.icon);
-        console.log("icon for token2::::", position.token2.icon);
+const getDefaultIcon = () => 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iMTIiIGZpbGw9IiM2NjY2NjYiLz4KPHR0ZXh0IHg9IjUwJSIgeT0iNTAlIiBkb21pbmFudC1iYXNlbGluZT0iY2VudHJhbCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0id2hpdGUiIGZvbnQtc2l6ZT0iMTAiPj88L3RleHQ+Cjwvc3ZnPg=='
 
-        // Calculate fees first
-        const collectedFeeAmount = position.collectedFeesValue || 0;
-        const uncolFeeAmount = position.unCollectedFeesValue || 0;
-        const positionValue = position.value || 0;
+const handleImageError = (event) => {
+  event.target.src = getDefaultIcon()
+}
 
-        // Calculate total fees for uPnL
-        const totalFees = collectedFeeAmount + uncolFeeAmount;
-        const upnlPercentage = positionValue > 0 ? (totalFees / positionValue) * 100 : 0;
-        const url = `https://`
-        return {
-          id: `position-${index}`,
-          token1: position.token1,
-          token2: position.token2,
-          age: this.formatAge(position.age),
-          ageValue: this.getAgeInHours(position.age),
-          value: positionValue.toFixed(2),
-          valueNum: positionValue,
-          collectedFee: {
-            amount: this.formatFeeAmount(collectedFeeAmount),
-            percentage: this.formatPercentage(collectedFeeAmount, positionValue),
-            sortValue: collectedFeeAmount
-          },
-          uncolFee: {
-            amount: this.formatFeeAmount(uncolFeeAmount),
-            percentage: this.formatPercentage(uncolFeeAmount, positionValue),
-            color: uncolFeeAmount > 0 ? 'positive' : 'neutral',
-            sortValue: uncolFeeAmount
-          },
-          upnl: {
-            amount: this.formatFeeAmount(totalFees),
-            percentage: this.formatUpnlPercentage(upnlPercentage),
-            color: this.getUpnlColor(upnlPercentage),
-            sortValue: upnlPercentage
-          },
-          range: {
-            min: position.priceRange?.minPrice?.toFixed(6) || '0.000000',
-            max: position.priceRange?.maxPrice?.toFixed(6) || '0.000000',
-            ...this.calculateRangePositions(position.priceRange, position.isInRange),
-            sortValue: position.priceRange?.minPrice || 0,
-            currentPrice: position.priceRange?.currentPrice
-          }
-        };
-      });
-    },
-    sortedPositions() {
-      if (!this.sortField) {
-        return this.formattedPositions;
-      }
+const formatAge = (age) => {
+  if (!age) return '0m'
 
-      return [...this.formattedPositions].sort((a, b) => {
-        let aValue, bValue;
+  if (age.days > 0) {
+    return `${age.days}d ${age.hours}h`
+  } else if (age.hours > 0) {
+    return `${age.hours}h ${age.minutes}m`
+  } else {
+    return `${age.minutes}m`
+  }
+}
 
-        switch (this.sortField) {
-          case 'pair':
-            aValue = `${a.token1.symbol}/${a.token2.symbol}`;
-            bValue = `${b.token1.symbol}/${b.token2.symbol}`;
-            break;
-          case 'age':
-            aValue = a.ageValue;
-            bValue = b.ageValue;
-            break;
-          case 'value':
-            aValue = a.valueNum;
-            bValue = b.valueNum;
-            break;
-          case 'collectedFee':
-            aValue = a.collectedFee.sortValue;
-            bValue = b.collectedFee.sortValue;
-            break;
-          case 'uncolFee':
-            aValue = a.uncolFee.sortValue;
-            bValue = b.uncolFee.sortValue;
-            break;
-          case 'upnl':
-            aValue = a.upnl.sortValue;
-            bValue = b.upnl.sortValue;
-            break;
-          case 'range':
-            aValue = a.range.sortValue;
-            bValue = b.range.sortValue;
-            break;
-          default:
-            return 0;
-        }
+const getAgeInHours = (age) => {
+  if (!age) return 0
+  return age.days * 24 + age.hours + age.minutes / 60
+}
 
-        if (typeof aValue === 'string') {
-          const comparison = aValue.localeCompare(bValue);
-          return this.sortDirection === 'asc' ? comparison : -comparison;
-        } else {
-          const comparison = aValue - bValue;
-          return this.sortDirection === 'asc' ? comparison : -comparison;
-        }
-      });
+const formatFeeAmount = (amount) => {
+  if (!amount || amount === 0) return '0 SOL'
+  if (amount < 0.01) return '< 0.01 SOL'
+  return `${amount.toFixed(4)} SOL`
+}
+
+const formatPercentage = (fee, total) => {
+  if (!fee || !total || total === 0) return '0%'
+  const percentage = (fee / total) * 100
+  if (percentage < 0.01) return '< 0.01%'
+  return `${percentage.toFixed(2)}%`
+}
+
+const formatUpnlPercentage = (percentage) => {
+  if (!percentage || percentage === 0) return '0%'
+  if (Math.abs(percentage) < 0.01) {
+    return percentage > 0 ? '< 0.01%' : '< -0.01%'
+  }
+  return `${percentage.toFixed(2)}%`
+}
+
+const getUpnlColor = (percentage) => {
+  if (!percentage || percentage === 0) return 'neutral'
+  return percentage > 0 ? 'positive' : 'negative'
+}
+
+const calculateRangePositions = (priceRange, isInRange) => {
+  if (!priceRange) {
+    return {
+      startPercent: 0,
+      currentPercent: 50,
+      endPercent: 100
     }
-  },
-  async mounted() {
-    await this.loadData();
-    console.log("just using refresh")
-    setTimeout(() => {
-      console.log("reload data after 10min")
-      this.startAutoRefresh();
+  }
 
-    }, 60000);
-  },
-  beforeUnmount() {
-    this.stopAutoRefresh();
-  },
-  async created() {
-    this.tokenService = getTokenService();
-    await this.tokenService.init();
-  },
-  methods: {
-    async loadData() {
-      try {
-        if (this.isInitialLoad) {
-          this.loading = true;
-        }
-        this.error = null;
+  const { minPrice, maxPrice, currentPrice } = priceRange
+  const range = maxPrice - minPrice
 
-        let data;
-        if (this.dataFunction) {
-          data = await this.dataFunction();
-        } else {
-          data = await this.fetchPositionsData();
-        }
+  let currentPercent = 50
+  if (range > 0) {
+    currentPercent = ((currentPrice - minPrice) / range) * 100
+    currentPercent = Math.max(0, Math.min(100, currentPercent))
+  }
 
-        this.positionsData = data;
-        this.tempPositionsData = [...data];
-        const updatedPositions = await Promise.all(
-          this.tempPositionsData.map(async (position) => {
-            const token1 = await this.getTokenInfoInternal(position.tokenX.toString());
-            const token2 = await this.getTokenInfoInternal(position.tokenY.toString());
+  let startPercent = 20
+  let endPercent = 80
 
-            return {
-              ...position,
-              token1,
-              token2
-            };
-          })
-        );
+  if (isInRange === 'low') {
+    currentPercent = Math.min(currentPercent, 15)
+  } else if (isInRange === 'high') {
+    currentPercent = Math.max(currentPercent, 85)
+  }
 
-        this.tempPositionsData = updatedPositions;
-        console.log("🚀 ~ loadData ~ this.tempPositionsData:", this.tempPositionsData)
+  return {
+    startPercent,
+    currentPercent,
+    endPercent
+  }
+}
 
-        if (this.isInitialLoad) {
-          this.isInitialLoad = false;
-        }
+const sort = (field) => {
+  if (sortField.value === field) {
+    sortDirection.value = sortDirection.value === 'asc' ? 'desc' : 'asc'
+  } else {
+    sortField.value = field
+    sortDirection.value = 'asc'
+  }
+}
 
-      } catch (error) {
-        console.error('Error loading positions:', error);
-        this.error = error.message || 'Failed to load positions';
-      } finally {
-        this.loading = false;
-      }
-    },
-    async preloadTokenInfo(positions) {
-      // Collect all unique token addresses
-      const tokenAddresses = new Set();
+const getSortClass = (field) => {
+  if (sortField.value !== field) {
+    return 'sort-inactive'
+  }
+  return sortDirection.value === 'asc' ? 'sort-asc' : 'sort-desc'
+}
 
-      positions.forEach(position => {
-        const tokenX = position.tokenX;
-        const tokenY = position.tokenY;
+const refreshData = async () => {
+  await loadData()
+}
 
-        if (tokenX) tokenAddresses.add(tokenX);
-        if (tokenY) tokenAddresses.add(tokenY);
-      });
+const startAutoRefresh = () => {
+  console.log('now start reload data per 10 min')
+  refreshInterval.value = setInterval(async () => {
+    await refreshData()
+  }, 60000)
+}
 
-      console.log(`Pre-loading info for ${tokenAddresses.size} unique tokens...`);
-
-      // Fetch all token info in batch
-      const addresses = Array.from(tokenAddresses);
-      const tokenInfos = await this.tokenService.getMultipleTokens(addresses);
-
-      // Cache the results
-      this.tokenCache = { ...this.tokenCache, ...tokenInfos };
-
-      console.log('Token info pre-loading completed');
-    },
-    async fetchPositionsData() {
-      const { main } = await import('~/utils/src/index.js');
-      const data = await main();
-      console.log("data------>", data);
-      return data.positions || [];
-    },
-
-    async getTokenInfoInternal(tokenAddress) {
-      console.log(tokenAddress);
-      let icon;
-      if (tokenAddress === "So11111111111111111111111111111111111111112") { icon = 'https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png' }
-      icon = `https://dd.dexscreener.com/ds-data/tokens/solana/${tokenAddress}.png`;
-      try {
-        // ✅ Actually fetch the data from the API
-        const response = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${tokenAddress}`);
-
-        // Check if the request was successful
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        // Parse the JSON response
-        const data = await response.json();
-
-        // console.log('API Response:', data);
-        // console.log('Pairs:', data.pairs);
-
-        // Check if pairs exist
-        if (!data.pairs || data.pairs.length === 0) {
-          console.log('No pairs found for this token');
-          return null;
-        }
-
-        const pair = data.pairs[0];
-
-        let symbol;
-        let name;
-
-        // ✅ Use strict equality and toLowerCase for better comparison
-        if (pair.baseToken.address.toLowerCase() === tokenAddress.toLowerCase()) {
-          symbol = pair.baseToken.symbol;
-          name = pair.baseToken.name;
-        } else {
-          symbol = pair.quoteToken.symbol;
-          name = pair.quoteToken.name;
-        }
-        if (tokenAddress == "So11111111111111111111111111111111111111112") { icon = 'https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png' }
-        return {
-          symbol,
-          name,
-          icon,
-          address: tokenAddress,
-        };
-
-      } catch (error) {
-        console.error('Error fetching token info:', error);
-        return null;
-      }
-    },
-
-    getDefaultTokenInfo(tokenAddress) {
-      return {
-        symbol: tokenAddress ? tokenAddress.slice(0, 6) + '...' : 'UNKNOWN',
-        name: 'Unknown Token',
-        icon: this.getDefaultIcon(),
-        decimals: 9,
-        verified: false
-      };
-    },
-
-    getDefaultIcon() {
-      return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iMTIiIGZpbGw9IiM2NjY2NjYiLz4KPHR0ZXh0IHg9IjUwJSIgeT0iNTAlIiBkb21pbmFudC1iYXNlbGluZT0iY2VudHJhbCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0id2hpdGUiIGZvbnQtc2l6ZT0iMTAiPj88L3RleHQ+Cjwvc3ZnPg==';
-    },
-
-    handleImageError(event) {
-      event.target.src = this.getDefaultIcon();
-    },
-    formatAge(age) {
-      if (!age) return '0m';
-
-      if (age.days > 0) {
-        return `${age.days}d ${age.hours}h`;
-      } else if (age.hours > 0) {
-        return `${age.hours}h ${age.minutes}m`;
-      } else {
-        return `${age.minutes}m`;
-      }
-    },
-
-    getAgeInHours(age) {
-      if (!age) return 0;
-      return age.days * 24 + age.hours + age.minutes / 60;
-    },
-
-    formatFeeAmount(amount) {
-      if (!amount || amount === 0) return '0 SOL';
-      if (amount < 0.01) return '< 0.01 SOL';
-      return `${amount.toFixed(4)} SOL`;
-    },
-
-    formatPercentage(fee, total) {
-      if (!fee || !total || total === 0) return '0%';
-      const percentage = (fee / total) * 100;
-      if (percentage < 0.01) return '< 0.01%';
-      return `${percentage.toFixed(2)}%`;
-    },
-
-    formatUpnlPercentage(percentage) {
-      if (!percentage || percentage === 0) return '0%';
-      if (Math.abs(percentage) < 0.01) {
-        return percentage > 0 ? '< 0.01%' : '< -0.01%';
-      }
-      return `${percentage.toFixed(2)}%`;
-    },
-
-    getUpnlColor(percentage) {
-      if (!percentage || percentage === 0) return 'neutral';
-      return percentage > 0 ? 'positive' : 'negative';
-    },
-
-    calculateRangePositions(priceRange, isInRange) {
-      if (!priceRange) {
-        return {
-          startPercent: 0,
-          currentPercent: 50,
-          endPercent: 100
-        };
-      }
-
-      const { minPrice, maxPrice, currentPrice } = priceRange;
-      const range = maxPrice - minPrice;
-
-      let currentPercent = 50;
-      if (range > 0) {
-        currentPercent = ((currentPrice - minPrice) / range) * 100;
-        currentPercent = Math.max(0, Math.min(100, currentPercent));
-      }
-
-      let startPercent = 20;
-      let endPercent = 80;
-
-      if (isInRange === 'low') {
-        currentPercent = Math.min(currentPercent, 15);
-      } else if (isInRange === 'high') {
-        currentPercent = Math.max(currentPercent, 85);
-      }
-
-      return {
-        startPercent,
-        currentPercent,
-        endPercent
-      };
-    },
-
-    sort(field) {
-      if (this.sortField === field) {
-        this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
-      } else {
-        this.sortField = field;
-        this.sortDirection = 'asc';
-      }
-    },
-
-    getSortClass(field) {
-      if (this.sortField !== field) {
-        return 'sort-inactive';
-      }
-      return this.sortDirection === 'asc' ? 'sort-asc' : 'sort-desc';
-    },
-
-    async refreshData() {
-      await this.loadData();
-    },
-
-    startAutoRefresh() {
-      console.log("now start reload data per 10 min")
-      this.refreshInterval = setInterval(async () => {
-        await this.refreshData();
-      }, 60000);
-    },
-
-    stopAutoRefresh() {
-      if (this.refreshInterval) {
-        clearInterval(this.refreshInterval);
-        this.refreshInterval = null;
-      }
-    }
+const stopAutoRefresh = () => {
+  if (refreshInterval.value) {
+    clearInterval(refreshInterval.value)
+    refreshInterval.value = null
   }
 }
 </script>
@@ -931,7 +810,9 @@ export default {
   align-items: center;
   margin-left: 0.5rem;
   opacity: 0.5;
-  transition: opacity 0.2s ease, transform 0.2s ease;
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
 }
 
 .sort-inactive {
@@ -949,7 +830,6 @@ export default {
 }
 
 @media (max-width: 768px) {
-
   .table-header,
   .table-row {
     grid-template-columns: 1fr;
