@@ -64,7 +64,7 @@ const tokens = reactive({
     { category: 'Stables', name: 'USDC', amount: 0 },
   ],
   liquid: [
-    { category: 'Solana', name: 'SOL', amount: 84},
+    { category: 'Solana', name: 'SOL', amount: 85},
     { category: 'Hyperliquid', name: 'HYPE', amount: 45 },
     { category: 'SUI', name: 'SUI', amount: 320 },
     { category: 'Stables', name: 'USDC', amount: 0 }
@@ -80,7 +80,7 @@ const tokens = reactive({
   ],
   stableRep: [
     { protocol: 'hyperliquid', amount: 6000 },
-    { protocol: 'Kamino/Marginfi', amount: 7100 },
+    { protocol: 'Kamino/Marginfi', amount: 6600 },
     { protocol: 'Abstract', amount: 1000 },
     { protocol: 'Navi/Bluefin', amount: 9700 },
     { protocol: 'osmosis', amount: 200 },
@@ -90,7 +90,7 @@ const tokens = reactive({
     { protocol: 'Humana', amount: 1000 },
   ],
   cashOut: 40000,
-  invested: 1200,
+  invested: 1700,
 })
 
 
@@ -137,12 +137,7 @@ const btcPrice = await data.productPrice.get('Crypto.BTC/USD').price.toFixed(0)
 const ethPrice = await data.productPrice.get('Crypto.ETH/USD').price.toFixed(2)
 const solPrice = await data.productPrice.get('Crypto.SOL/USD').price.toFixed(2)
 const suiPrice = await data.productPrice.get('Crypto.SUI/USD').price.toFixed(2)
-const cloudPrice = await data.productPrice.get('Crypto.CLOUD/USD').price.toFixed(2)
-const jupPrice = await data.productPrice.get('Crypto.JUP/USD').price.toFixed(2)
 const hypePrice = await data.productPrice.get('Crypto.HYPE/USD').price.toFixed(2)
-const mePrice = await data.productPrice.get('Crypto.ME/USD').price.toFixed(2)
-const popcatPrice = await data.productPrice.get('Crypto.POPCAT/USD').price.toFixed(2)
-const fwogPrice = await data.productPrice.get('Crypto.FWOG/USD').price.toFixed(2)
 
 
 // Real time

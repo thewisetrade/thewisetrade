@@ -32,10 +32,10 @@
             active-class="active"
           >
             <LockOpenIcon class="size-4" />
-            <span class="text-sm">Opened Position</span>
+            <span class="text-sm">Positions</span>
           </NuxtLink>
         </div>
-         
+
       </div>
       <div
         class="app-container container max-w-screen-md mx-auto p-8 bg-paper shadow-md rounded-lg mt-8"
