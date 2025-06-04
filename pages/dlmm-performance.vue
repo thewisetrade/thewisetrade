@@ -458,6 +458,7 @@ const dateRange = computed(() => {
 
 onMounted(async () => {
   setSavedWalletAddress()
+  await useWallet()
 })
 
 const setSavedWalletAddress = () => {
@@ -467,25 +468,31 @@ const setSavedWalletAddress = () => {
   }
   if (localWalletAddress) {
     walletAddress.value = localWalletAddress
+    currentWalletAddress.value = localWalletAddress
   }
 }
 
 const updateWalletAddress = async ({ address, domain }) => {
+  walletAddress.value = address
   currentWalletAddress.value = address
   domainName.value = domain
   if (isWalletAddressValid.value) {
+    saveWalletAddress()
     await useWallet()
+  } else {
+    currentWalletAddress.value = ''
+    domainName.value = ''
+    saveWalletAddress()
   }
 }
 
 const saveWalletAddress = () => {
   const address = domainName.value || currentWalletAddress.value
   router.push({ query: { address } })
-  localStorage.setItem('walletAddress', address)
+  localStorage.setItem('walletAddress', currentWalletAddress.value)
 }
 
 const useWallet = async () => {
-  saveWalletAddress()
   if (currentWalletAddress.value === '') return
   loadingWalletTransactions.value = true
   let db = await loadDlmmDb()
@@ -580,7 +587,6 @@ const { open, close } = useModal({
     default: '<p>You are going to delete all your data. Are you sure do you want to continue?</p>',
   },
 })
-
 
 watch(quoteToken, resetPositions)
 watch(timePeriod, resetPositions)
