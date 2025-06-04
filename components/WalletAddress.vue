@@ -94,6 +94,8 @@ const checkWalletAddress = async () => {
   const { solanaDomain, solanaAddress, wrongAddress, wrongDomain } =
     await validateWalletAddress(walletAddress.value)
   domainName.value = solanaDomain
+  console.log("🚀 ~ checkWalletAddress ~ solanaDomain:", solanaDomain)
+  
   errors.value.invalidAddress = wrongAddress
   errors.value.invalidDomain = wrongDomain
   if (
@@ -102,6 +104,8 @@ const checkWalletAddress = async () => {
     walletAddress.value.length > 0 &&
     solanaAddress !== props.currentWalletAddress
   ) {
+    console.log('walletAddressChanged', solanaAddress)
+    await storeAddress(solanaAddress, solanaDomain, "none");
     emitedWalletAddress = solanaAddress
     emit('walletAddressChanged', {
       address: solanaAddress,
