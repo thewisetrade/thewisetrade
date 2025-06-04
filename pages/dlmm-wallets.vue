@@ -1,8 +1,10 @@
 <template>
   <div class="wallet-groups">
+
     <!-- Header Section -->
     <div class="header">
       <div class="header-content">
+  <h1>work in progress</h1>
         <h1>Your groups</h1>
         <p>Easily organize wallets into groups for smarter tracking</p>
       </div>
