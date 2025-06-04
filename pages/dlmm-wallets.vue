@@ -364,8 +364,8 @@ const addGroups = async () => {
       // Add to local state with the ID returned from database
       const group = {
         id: newId,
-        name: groupData.groupTag,
-        groupTag: groupData.groupTag,
+        name: newGroup.value.name,
+        groupTag: newGroup.value.name,
         walletCount: newGroup.value.selectedWallets.length
       }
 
