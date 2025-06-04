@@ -55,12 +55,7 @@
           ]"
           v-model="age"
         />
-        <button
-          class="button"
-          @click="loadPoolsData"
-        >
-          <ArrowPathIcon class="w-4 h-4" />
-        </button>
+        <RefreshButton @refresh="loadPoolsData" />
       </div>
     </div>
 
@@ -286,14 +281,5 @@ useHead({
 .data.mc {
   min-width: 40px;
   text-align: right;
-}
-
-.button {
-  border: 1px solid #607CF6;
-  border-radius: 5px;
-  height: 36px;
-  margin-top: 23px;
-  padding: 10px;
-  cursor: pointer;
 }
 </style>

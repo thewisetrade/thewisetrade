@@ -1,71 +1,20 @@
 <template>
   <div id="portfolio-performance" class="container">
-    <div class="flex flex-row items-center mb-8">
-      <h1 class="app-title flex-1">DLMM Portfolio Performance</h1>
-      <div class="flex-1"></div>
-      <a
-        class="credit"
-        href="https://geeklad.github.io/meteora-profit-analysis/"
-        target="_blank"
-      >
-        Powered by Geeklad DB
-      </a>
-    </div>
 
-    <Loader class="" v-if="loadingWalletAddress" />
-    <div
-      class="flex flex-row gap-2"
-      v-else-if="currentWalletAddress"
-    >
-      <div
-        class="text-center wallet-address-container"
-      >
-        <div class="current-wallet-address">
-          <div class="mt-4">{{ domainName ? domainName : currentWalletAddress }}</div>
-            <span class="text-sm close-button" @click="resetWalletAddress">
-              <XMarkIcon class="w-4 h-4" />
-            </span>
-          <div>
-            <Loader v-if="loadingWalletTransactions" />
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div
-      class="flex wallet-address-container gap-2"
-      v-show="!currentWalletAddress && !loadingWalletAddress"
-    >
-      <div class="text-center">
-        Enter your wallet address to see your performance history
-      </div>
-      <div class="flex flex-row gap-2">
-        <input
-          ref="walletAddressInput"
-          class="input w-full max-w-md border-2 border-gray-300 rounded-md p-2 m-auto"
-          type="text"
-          @keyup.enter="loadWalletTransactions"
-          v-model="walletAddress"
-        />
-      </div>
-      <div
-        class="error-message text-red-500 text-center"
-        v-if="errors.invalidAddress"
-      >
-        Invalid wallet address
-      </div>
-      <div
-        class="error-message text-red-500 text-center"
-        v-if="errors.invalidDomain"
-      >
-        Invalid domain name
-      </div>
-      <div class="domain-name text-green-500 text-center" v-if="domainName">
-        {{ domainName }}
-      </div>
-    </div>
     <div class="flex flex-row gap-2">
-      <button class="m-auto reset-database" @click="open()">
+      <WalletAddress
+        :current-wallet-address="walletAddress"
+        @walletAddressChanged="updateWalletAddress"
+      />
+      <div class="flex-1"></div>
+      <Credits
+        link="https://geeklad.github.io/meteora-profit-analysis/"
+        author="Geeklad DB"
+      />
+    </div>
+
+    <div class="flex flex-row gap-2">
+      <button class="reset-database pl-2" @click="open()">
         reset database
       </button>
     </div>
@@ -102,7 +51,7 @@
         v-model="sortOrder"
       />
       <ToggleButtons
-        class="filter"
+        class="mr-5 filter"
         label="Group by"
         :values="[
           { text: 'Position', value: 'position' },
@@ -110,21 +59,34 @@
         ]"
         v-model="groupBy"
       />
-    </div>
-
-    <div
-      class="flex flex-row text-lg mb-8 justify-center"
-      v-if="isDataVisible"
-    >
-      <ToggleButtons
+      <Dropdown
         class="filter"
-        label="Time period"
+        label="Time range"
         :values="timePeriodOptions"
         v-model="timePeriod"
       />
     </div>
 
-    <div class="border-gray-600 rounded-md p-2 pt-2">
+    <div v-if="loadingWalletTransactions" class="loading-state">
+      <Loader class="loading" />
+    </div>
+
+    <div v-if="!isDataVisible">
+      <div class="text-center">
+        <template v-if="!isWalletAddressValid">
+          <div>
+            <p>Please enter a wallet address to view your performance</p>
+          </div>
+        </template>
+        <template v-else-if="!loadingWalletTransactions">
+          <div>
+            <p>No data found</p>
+          </div>
+        </template>
+      </div>
+    </div>
+
+    <div class="border-gray-600 rounded-md p-2 pt-2" v-if="!loadingWalletTransactions">
       <div class="date-range m-auto text-center" v-if="isDataVisible">
         {{ dateRange }}
       </div>
@@ -163,8 +125,8 @@
       :quote-symbol="quoteToken"
       v-if="isDataVisible"
     />
-
   </div>
+
   <div class="transaction-list mt-8" v-if="isDataVisible">
       <div
         class="position-item flex flex-col"
@@ -288,10 +250,8 @@
 
 <script setup>
 import { DateTime } from 'luxon'
-import { useTemplateRef, nextTick } from 'vue'
 import { useModal } from 'vue-final-modal'
 import { useRoute } from 'vue-router'
-import { validateWalletAddress } from '@/utils/solana'
 import {
   loadDlmmDb,
   getDbPositions,
@@ -329,13 +289,7 @@ const RPC_ENDPOINT_URL = import.meta.env.VITE_RPC_ENDPOINT_URL
 const walletAddress = ref('')
 const currentWalletAddress = ref('')
 const domainName = ref('')
-const walletAddressInput = useTemplateRef('walletAddressInput')
-const loadingWalletAddress = ref(false)
 const loadingWalletTransactions = ref(false)
-const errors = ref({
-  invalidAddress: false,
-  invalidDomain: false,
-})
 
 const quoteToken = ref('SOL')
 const sortBy = ref('profit')
@@ -363,7 +317,7 @@ const timePeriodOptions = computed(() => {
       value: allTimePeriod
     },
     {
-      text: '1d',
+      text: 'Last 24h',
       value: {
         name: '1d',
         start: DateTime.now().minus({ day: 1 }),
@@ -371,7 +325,7 @@ const timePeriodOptions = computed(() => {
       }
     },
     {
-      text: '7d',
+      text: 'Last 7 days',
       value: {
         name: '7d',
         start: DateTime.now().minus({ week: 1 }),
@@ -379,7 +333,7 @@ const timePeriodOptions = computed(() => {
       }
     },
     {
-      text: '30d',
+      text: 'Last 30 days',
       value: {
         name: '30d',
         start: DateTime.now().minus({ month: 1 }),
@@ -387,7 +341,7 @@ const timePeriodOptions = computed(() => {
       }
     },
     {
-      text: '1y',
+      text: 'YTD',
       value: {
         name: '1y',
         start: DateTime.now().minus({ year: 1 }),
@@ -411,7 +365,7 @@ const timePeriodOptions = computed(() => {
       }
     },
     {
-      text: DateTime.now().toFormat('MMMM'),
+      text: DateTime.now().toFormat('MMMM yyyy'),
       value: {
         name: DateTime.now().toFormat('MMMM'),
         start: DateTime.now().startOf('month'),
@@ -419,11 +373,27 @@ const timePeriodOptions = computed(() => {
       }
     },
     {
-      text: DateTime.now().minus({ month: 1 }).toFormat('MMMM'),
+      text: DateTime.now().minus({ month: 1 }).toFormat('MMMM yyyy'),
       value: {
         name: DateTime.now().minus({ month: 1 }).toFormat('MMMM'),
         start: DateTime.now().minus({ month: 1 }).startOf('month'),
         end: DateTime.now().minus({ month: 1 }).endOf('month'),
+      }
+    },
+    {
+      text: DateTime.now().minus({ month: 2 }).toFormat('MMMM yyyy'),
+      value: {
+        name: DateTime.now().minus({ month: 2 }).toFormat('MMMM'),
+        start: DateTime.now().minus({ month: 2 }).startOf('month'),
+        end: DateTime.now().minus({ month: 2 }).endOf('month'),
+      }
+    },
+    {
+      text: DateTime.now().minus({ month: 3 }).toFormat('MMMM yyyy'),
+      value: {
+        name: DateTime.now().minus({ month: 3 }).toFormat('MMMM'),
+        start: DateTime.now().minus({ month: 3 }).startOf('month'),
+        end: DateTime.now().minus({ month: 3 }).endOf('month'),
       }
     },
     {
@@ -449,6 +419,14 @@ const isDataVisible = computed(() => {
   return (
     currentWalletAddress.value &&
     !loadingWalletTransactions.value
+  )
+})
+
+const isWalletAddressValid = computed(() => {
+  return (
+    currentWalletAddress.value &&
+    currentWalletAddress.value !== null &&
+    currentWalletAddress.value !== 'undefined'
   )
 })
 
@@ -480,7 +458,6 @@ const dateRange = computed(() => {
 
 onMounted(async () => {
   setSavedWalletAddress()
-  walletAddressInput.value.focus()
 })
 
 const setSavedWalletAddress = () => {
@@ -493,40 +470,12 @@ const setSavedWalletAddress = () => {
   }
 }
 
-const updateWalletAddress = async () => {
-  if (walletAddress.value === '') return
-  loadingWalletAddress.value = true
-  await checkWalletAddress()
-  loadingWalletAddress.value = false
-  if (!errors.value.invalidAddress && !errors.value.invalidDomain) {
+const updateWalletAddress = async ({ address, domain }) => {
+  currentWalletAddress.value = address
+  domainName.value = domain
+  if (isWalletAddressValid.value) {
     await useWallet()
-  } else {
-    loadingWalletTransactions.value = false
-    currentWalletAddress.value = ''
-    domainName.value = ''
   }
-}
-
-const checkWalletAddress = async () => {
-  errors.value.invalidAddress = false
-  errors.value.invalidDomain = false
-  const { solanaDomain, solanaAddress, wrongAddress, wrongDomain } =
-    await validateWalletAddress(walletAddress.value)
-  domainName.value = solanaDomain
-  currentWalletAddress.value = solanaAddress
-  errors.value.invalidAddress = wrongAddress
-  errors.value.invalidDomain = wrongDomain
-}
-
-const resetWalletAddress = () => {
-  walletAddress.value = ''
-  currentWalletAddress.value = ''
-  domainName.value = ''
-  errors.value.invalidAddress = false
-  errors.value.invalidDomain = false
-  nextTick(() => {
-    walletAddressInput.value.focus()
-  })
 }
 
 const saveWalletAddress = () => {
@@ -537,6 +486,7 @@ const saveWalletAddress = () => {
 
 const useWallet = async () => {
   saveWalletAddress()
+  if (currentWalletAddress.value === '') return
   loadingWalletTransactions.value = true
   let db = await loadDlmmDb()
   const downloader = await loadWalletTransactions(
@@ -637,7 +587,6 @@ watch(timePeriod, resetPositions)
 watch(sortBy, resetPositions)
 watch(sortOrder, resetPositions)
 watch(groupBy, resetPositions)
-watch(walletAddress, updateWalletAddress)
 
 const description = 'Meteora DLMM - Performance History'
 const title = 'DLMM Portfolio Performance'
@@ -667,13 +616,6 @@ useHead({
 </script>
 
 <style scoped>
-.app-title {
-  margin: 0;
-  text-align: left;
-  text-transform: uppercase;
-  font-size: 1.4em;
-}
-
 .date-range {
   font-size: 1em;
   font-weight: bold;
@@ -723,11 +665,6 @@ useHead({
   color: #F99;
 }
 
-.credit {
-  color: #cce;
-  font-size: 0.8em;
-}
-
 .current-wallet-address {
   display: inline-block;
   font-size: 1.8em;
@@ -744,14 +681,6 @@ useHead({
     font-weight: normal;
     font-style: italic;
   }
-}
-
-.close-button {
-  float: right;
-  cursor: pointer;
-  position: absolute;
-  right: 10px;
-  top: 6px;
 }
 
 .wallet-address-container {
