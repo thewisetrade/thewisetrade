@@ -1,33 +1,38 @@
 <template>
   <div class="wallet-groups">
+    <!-- Header Section -->
+    <div class="header">
+      <div class="header-content">
+        <h1>Work in progress</h1>
+        <h1>Wallet management</h1>
+        <p>Save wallets to browse them in the performance and position pages</p>
+      </div>
+    </div>
+
 
     <!-- Header Section -->
     <div class="header">
       <div class="header-content">
-  <h1>work in progress</h1>
-        <h1>Your groups</h1>
-        <p>Easily organize wallets into groups for smarter tracking</p>
+        <h2>Your wallet groups</h2>
+        <p>Organize wallets into groups to batch your wallet analysis</p>
       </div>
-      <button class="create-group-btn" @click="createGroup">
-        Create group
+      <button class="button" @click="createGroup">
+        Add group
       </button>
     </div>
 
     <!-- Groups Grid -->
     <div class="groups-grid">
       <!-- All Wallets Group -->
-      <div class="group-card default-group">
-        <div class="wallet-count">{{ totalWallets }} wallets</div>
+      <div class="group-card default-group flex flex-row">
         <div class="group-name">All wallets</div>
+        <div class="wallet-count">{{ totalWallets }} wallets</div>
       </div>
 
       <!-- Custom Groups -->
       <div v-for="group in groups" :key="group.id" class="group-card custom-group" @click="selectGroup(group)">
+        <div class="group-name">{{ group.name }}</div>
         <div class="wallet-count">{{ group.walletCount }} wallets</div>
-        <div class="group-content">
-          <div class="group-name">{{ group.name }}</div>
-          <div class="group-arrow">→</div>
-        </div>
       </div>
     </div>
 
@@ -43,8 +48,8 @@
             @click="clearGroupFilter" title="Show all wallets">
             Clear Filter
           </button>
-          <button class="add-wallet-btn" @click="showAddWallet = true">
-            Add
+          <button class="button" @click="showAddWallet = true">
+            Add Wallet
           </button>
         </div>
       </div>
@@ -57,7 +62,7 @@
             }}</h3>
           <p>{{ selectedGroupFilter && selectedGroupFilter !== 'all' ? 'This group doesn\'t have any wallets yet.' :
             'Start by adding your first wallet.' }}</p>
-          <button class="add-first-wallet-btn" @click="showAddWallet = true">
+          <button class="button" @click="showAddWallet = true">
             Add Wallet
           </button>
         </div>
@@ -104,7 +109,7 @@
             <button type="button" @click="closeModal" class="cancel-btn">
               Cancel
             </button>
-            <button type="submit" class="submit-btn">
+            <button type="submit" class="button">
               Add Wallet
             </button>
           </div>
@@ -146,7 +151,7 @@
             <button type="button" @click="closeModal" class="cancel-btn">
               Cancel
             </button>
-            <button type="submit" class="submit-btn">
+            <button type="submit" class="button">
               Create Group
             </button>
           </div>
@@ -477,7 +482,7 @@ onMounted(() => {
   background: white;
   color: black;
   border: none;
-  padding: 12px 24px;
+  padding: 8px 18px;
   border-radius: 24px;
   font-weight: 500;
   cursor: pointer;
@@ -501,13 +506,13 @@ onMounted(() => {
   background: #1a1a1a;
   border: 1px solid #333;
   border-radius: 16px;
-  padding: 24px;
+  padding: 12px;
   cursor: pointer;
   transition: all 0.2s;
-  min-height: 120px;
+  height: 60px;
   display: flex;
-  flex-direction: column;
   justify-content: space-between;
+  align-items: center;
 }
 
 .group-card:hover {
@@ -554,7 +559,7 @@ onMounted(() => {
 
 /* Wallets Section */
 .wallets-section {
-  margin-top: 48px;
+  margin-top: 0;
   flex: 1;
   /* Take remaining space */
   display: flex;
@@ -568,6 +573,10 @@ onMounted(() => {
   justify-content: space-between;
   align-items: flex-start;
   margin-bottom: 24px;
+}
+
+.header-content h1 {
+  text-align: left;
 }
 
 .header-actions {
@@ -908,6 +917,19 @@ onMounted(() => {
 
 .submit-btn:hover {
   background: #f0f0f0;
+}
+
+.button {
+  border: 1px solid #607CF6;
+  border-radius: 20px;
+  padding: 10px 20px;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    background: #304CA6;
+    color: white;
+  }
 }
 
 /* Responsive */
