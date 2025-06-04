@@ -55,7 +55,7 @@
           ]"
           v-model="age"
         />
-        <RefreshButton @refresh="loadPoolsData" />
+        <RefreshButton class="mt-6" @refresh="loadPoolsData" />
       </div>
     </div>
 
@@ -272,9 +272,6 @@ useHead({
 
   .liq {
     min-width: 92px;
-  }
-
-  .mc {
   }
 }
 
