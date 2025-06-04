@@ -77,11 +77,7 @@ export const validateWalletAddress = async (walletAddress) => {
   if (walletAddress && walletAddress.length > 0) {
     if (isValidSolanaAddress(walletAddress)) {
       solanaDomain = await getPrimaryDomain(walletAddress)
-      if (solanaDomain) {
-        solanaAddress = solanaDomain
-      } else {
-        solanaAddress = walletAddress
-      }
+      solanaAddress = walletAddress
     } else if (isSolanaDomain(walletAddress)) {
       const resolvedAddress = await resolveDomainToAddress(walletAddress)
       if (resolvedAddress) {
