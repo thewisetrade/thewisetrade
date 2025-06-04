@@ -5,7 +5,7 @@
     <div class="flex flex-row gap-2">
       <div class="wallet-address-container">
         <div class="current-wallet-address">
-          <div>{{ domainName ? domainName : props.currentWalletAddress }}</div>
+          <div>{{ domainName && domainName.length > 0 ? domainName : props.currentWalletAddress }}</div>
           <span class="text-sm close-button" @click="resetWalletAddress">
             <XMarkIcon class="w-3 h-3" />
           </span>
@@ -102,7 +102,6 @@ const checkWalletAddress = async () => {
     walletAddress.value.length > 0 &&
     solanaAddress !== props.currentWalletAddress
   ) {
-    console.log('walletAddressChanged', solanaAddress)
     emitedWalletAddress = solanaAddress
     emit('walletAddressChanged', {
       address: solanaAddress,

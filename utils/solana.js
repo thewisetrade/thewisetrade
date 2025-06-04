@@ -48,7 +48,7 @@ export const getPrimaryDomain = async (walletAddress) => {
     return favoriteDomainName
   } catch (error) {
     console.error('Error getting primary domain:', error)
-    return null
+    return ''
   }
 }
 
@@ -65,7 +65,7 @@ export const getFirstDomain = async (walletAddress) => {
     return domainName
   } catch (error) {
     console.error('Error resolving address to domain:', error)
-    return null
+    return ''
   }
 }
 
@@ -76,8 +76,14 @@ export const validateWalletAddress = async (walletAddress) => {
   let wrongDomain = false
   if (walletAddress && walletAddress.length > 0) {
     if (isValidSolanaAddress(walletAddress)) {
-      solanaDomain = await getPrimaryDomain(walletAddress)
-      solanaAddress = walletAddress
+      try {
+        solanaDomain = await getPrimaryDomain(walletAddress)
+        solanaAddress = walletAddress
+      } catch (error) {
+        console.error('Error getting primary domain:', error)
+        solanaDomain = ''
+        solanaAddress = walletAddress
+      }
     } else if (isSolanaDomain(walletAddress)) {
       const resolvedAddress = await resolveDomainToAddress(walletAddress)
       if (resolvedAddress) {
@@ -95,6 +101,5 @@ export const validateWalletAddress = async (walletAddress) => {
     solanaAddress,
     wrongAddress,
     wrongDomain,
-    validateWalletAddress,
   }
 }
