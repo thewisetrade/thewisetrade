@@ -3,24 +3,33 @@
   "private": true,
   "scripts": {
     "build": "nuxt build",
-    "dev": "nuxt dev",
+    "dev": "nuxt dev --host",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare"
   },
   "devDependencies": {
     "@nuxtjs/seo": "^2.1.1",
+    "@types/bn.js": "^5.1.6",
+    "@types/node": "^20.17.52",
     "nuxt": "^3.15.4",
     "prettier": "^3.5.0",
-    "sass": "^1.84.0"
+    "sass": "^1.84.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
   },
   "dependencies": {
     "@bonfida/spl-name-service": "^3.0.10",
     "@geeklad/meteora-dlmm-db": "https://github.com/GeekLad/meteora-dlmm-db.git#82b4837658c892bf70b01161821c3b11206fcb2d",
     "@heroicons/vue": "^2.2.0",
+    "@meteora-ag/dlmm": "^1.5.3",
     "@pythnetwork/client": "^2.22.1",
+    "@solana/spl-token": "^0.4.13",
+    "@solana/web3.js": "^1.98.2",
     "@tailwindcss/vite": "^4.0.0",
+    "axios": "^1.9.0",
     "chart.js": "^4.4.9",
+    "decimal.js": "^10.5.0",
     "luxon": "^3.6.1",
     "sanctum-js": "defilogist/sanctum-js#a1298b6d83c2e76186f9d782d014ab8243089db3",
     "tailwindcss": "^4.0.0",

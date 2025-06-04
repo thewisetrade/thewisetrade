@@ -28,8 +28,9 @@
       class="ml-8 menus-item"
       title="DLMMs Tools"
       :items="[
-        { to: '/dlmm-pool-finder', label: 'DLMMs Pool Finder' },
-        { to: '/dlmm-performance', label: 'DLMMs Performance' }
+        { to: '/dlmm-pool-finder', label: 'DLMM Pool Finder' },
+        { to: '/dlmm-performance', label: 'DLMM Performance' },
+        { to: '/dlmm-positions', label: 'DLMM Positions' },
       ]"
     />
 
