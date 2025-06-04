@@ -1,7 +1,6 @@
 <template>
-<div class="flex-column justify-center mb-6">
-  <span class="option-name uppercase tracking-[.1em] justify-center flex mb-1
-  font-bold">
+<div class="flex-column justify-center">
+  <span class="option-name uppercase tracking-[.1em] justify-center flex mb-1 font-bold">
     {{ label }}
   </span>
   <div class="flex flex-row justify-center gap-2">
