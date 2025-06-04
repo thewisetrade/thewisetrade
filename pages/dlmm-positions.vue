@@ -1,10 +1,24 @@
 <template>
   <div class="liquidity-table-container">
+
+    <div class="flex flex-row gap-2">
+
+    <WalletAddress
+      :current-wallet-address="walletAddress"
+      @walletAddressChanged="updateWalletAddress"
+      />
+      <div class="flex-1"></div>
+      <Credits
+        link="https://geeklad.github.io/meteora-profit-analysis/"
+        author="Geeklad Analyzer"
+      />
+    </div>
+
+
     <div class="table-wrapper">
-      <!-- Header -->
       <div class="table-header">
         <div class="header-cell sortable" @click="sort('pair')">
-          <span>Position/Pool</span>
+          <span>Position</span>
           <div class="sort-icon" :class="getSortClass('pair')"></div>
         </div>
         <div class="header-cell sortable" @click="sort('age')">
@@ -27,9 +41,12 @@
           <span>uPnL</span>
           <div class="sort-icon" :class="getSortClass('upnl')"></div>
         </div-->
-        <div class="header-cell sortable" @click="sort('range')">
+        <div class="header-cell sortable flex items-center" @click="sort('range')">
           <span>Range</span>
           <div class="sort-icon" :class="getSortClass('range')"></div>
+          <div class="flex-1"></div>
+          <RefreshButton @refresh="loadData" />
+
         </div>
       </div>
 
@@ -50,6 +67,7 @@
         <div v-else-if="sortedPositions.length === 0" class="empty-state">
           <span>No positions found</span>
         </div>
+
 
         <!-- Data Rows -->
         <div v-else class="table-rows">
@@ -84,12 +102,12 @@
             </div>
 
             <div class="cell value-cell">
-              <span class="value-amount">{{ position.value }}</span>
               <img
                 :src="position.token2.icon"
                 :alt="position.token2.symbol"
-                class="value-icon"
+                class="value-icon mr-2"
               />
+              <span class="value-amount">{{ position.value }}</span>
             </div>
 
             <!--div class="cell fee-cell">
@@ -98,11 +116,14 @@
             </div-->
 
             <div class="cell fee-cell">
-              <div class="fee-amount" :class="position.uncolFee.color">
-                {{ parseFloat(position.uncolFee.amount || 0).toFixed(2) }}
-              </div>
-              <div class="fee-percentage" :class="position.uncolFee.color">
-                {{ position.uncolFee.percentage }}
+
+              <div class="fee-amount flex items-center" :class="position.uncolFee.color">
+                <img
+                  :src="position.token2.icon"
+                  :alt="position.token2.symbol"
+                  class="value-icon"
+                />
+                {{ position.uncolFee.amount }}
               </div>
             </div>
 
@@ -156,9 +177,12 @@
 import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { getTokenService } from '@/utils/tokens'
 
+definePageMeta({
+  layout: 'app',
+})
 
 const sortField = ref('uncolFee')
-const sortDirection = ref('asc')
+const sortDirection = ref('desc')
 
 const loading = ref(false)
 const isInitialLoad = ref(true)
@@ -170,15 +194,48 @@ const refreshInterval = ref(null)
 const tokenService = ref(null)
 const tokenCache = ref({})
 
+const walletAddress = ref('')
+const loadingWalletTransactions = ref(false)
+
+const router = useRouter()
+
+const updateWalletAddress = async ({ address, domain }) => {
+  walletAddress.value = address
+  saveWalletAddress()
+  loadingWalletTransactions.value = true
+  await loadData()
+  loadingWalletTransactions.value = false
+}
+
+const saveWalletAddress = () => {
+  const address = walletAddress.value
+  router.push({ query: { address } })
+  localStorage.setItem('positions:walletAddress', address)
+}
+
+const setSavedWalletAddress = async () => {
+  let localWalletAddress = useRoute().query.address
+  if (!localWalletAddress) {
+    localWalletAddress = localStorage.getItem('positions:walletAddress')
+  }
+  if (localWalletAddress) {
+    if (isSolanaDomain(localWalletAddress)) {
+      localWalletAddress = await resolveDomainToAddress(localWalletAddress)
+    }
+    walletAddress.value = localWalletAddress
+  }
+}
 
 onMounted(async () => {
   tokenService.value = getTokenService()
   await tokenService.value.init()
-  await loadData()
+  await setSavedWalletAddress()
 
-  console.log('just using refresh')
+  if (walletAddress.value) {
+    await loadData()
+  }
+
   setTimeout(() => {
-    console.log('reload data after 10min')
     startAutoRefresh()
   }, 600000)
 })
@@ -195,6 +252,7 @@ const formattedPositions = computed(() => {
   return dataToUse.map((position, index) => {
     console.log('icon for token1::::', position.token1.icon)
     console.log('icon for token2::::', position.token2.icon)
+
 
     // Calculate fees first
     const collectedFeeAmount = position.collectedFeesValue || 0
@@ -353,8 +411,8 @@ const preloadTokenInfo = async (positions) => {
 }
 
 const fetchPositionsData = async () => {
-  const { main } = await import('~/utils/src/index.ts')
-  const data = await main()
+  const { main } = await import('~/utils/dlmm-analyzer/index.ts')
+  const data = await main(walletAddress.value)
   console.log('data------>', data)
   return data.positions || []
 }
@@ -441,9 +499,9 @@ const getAgeInHours = (age) => {
 }
 
 const formatFeeAmount = (amount) => {
-  if (!amount || amount === 0) return '0 SOL'
-  if (amount < 0.01) return '< 0.01 SOL'
-  return `${amount.toFixed(4)} SOL`
+  if (!amount || amount === 0) return '0'
+  if (amount < 0.01) return '0'
+  return `${amount.toFixed(2)}`
 }
 
 const formatPercentage = (fee, total) => {
@@ -522,9 +580,9 @@ const refreshData = async () => {
 
 const startAutoRefresh = () => {
   console.log('now start reload data per 10 min')
-  refreshInterval.value = setInterval(async () => {
+  /*refreshInterval.value = setInterval(async () => {
     await refreshData()
-  }, 60000)
+  }, 60000)*/
 }
 
 const stopAutoRefresh = () => {
@@ -549,18 +607,22 @@ const stopAutoRefresh = () => {
   height: 100%;
   display: flex;
   flex-direction: column;
+  margin-top: 1em;
+  overflow: auto;
 }
 
 .table-header {
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr 1.2fr 1.2fr 1.2fr 2fr;
+  grid-template-columns: 1.5fr 1fr 1fr 1fr 2fr;
   gap: 1rem;
   padding: 1rem 1.5rem;
-  background: #242424;
-  border-bottom: 1px solid #333;
+  background: #1A1A20;
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+  border: 1px solid #333;
   font-size: 0.875rem;
   font-weight: 500;
-  color: #999;
+  color: #CCC;
   flex-shrink: 0;
 }
 
@@ -568,6 +630,10 @@ const stopAutoRefresh = () => {
   flex: 1;
   overflow-y: auto;
   min-height: 200px;
+  background: #080808;
+  border-bottom-left-radius: 10px;
+  border-bottom-right-radius: 10px;
+  border: 1px solid #333;
 }
 
 .loading-state,
@@ -611,7 +677,7 @@ const stopAutoRefresh = () => {
 
 .table-row {
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr 1.2fr 1.2fr 1.2fr 2fr;
+  grid-template-columns: 1.5fr 1fr 1fr 1fr 2fr;
   gap: 1rem;
   padding: 1rem 1.5rem;
   border-bottom: 1px solid #2a2a2a;
@@ -721,7 +787,7 @@ const stopAutoRefresh = () => {
 
 .range-track {
   position: relative;
-  height: 6px;
+  height: 16px;
   background: #333;
   border-radius: 3px;
   overflow: hidden;
@@ -746,9 +812,9 @@ const stopAutoRefresh = () => {
 .range-indicator {
   position: absolute;
   top: 50%;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
+  width: 6px;
+  height: 30px;
+  border-radius: 2px;
   transform: translateY(-50%) translateX(-50%);
   border: 2px solid #1a1a1a;
 }
@@ -760,7 +826,7 @@ const stopAutoRefresh = () => {
 .range-current {
   background: #fbbf24;
   border: 2px solid #1a1a1a;
-  box-shadow: 0 0 8px rgba(251, 191, 36, 0.6);
+  box-shadow: 0 0 2px rgba(251, 191, 36, 0.6);
 }
 
 .range-end {
