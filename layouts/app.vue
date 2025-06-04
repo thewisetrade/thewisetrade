@@ -10,6 +10,7 @@
             class="flex flex-row gap-2 items-center app-link"
             to="/dlmm-pool-finder"
             active-class="active"
+            title="Pool Finder"
           >
             <MagnifyingGlassIcon class="size-4" />
             <span class="text-sm">Pool Finder</span>
@@ -20,9 +21,32 @@
             class="flex flex-row gap-2 items-center app-link"
             to="/dlmm-performance"
             active-class="active"
+            title="Performance"
           >
             <ChartBarIcon class="size-4" />
             <span class="text-sm">Performance</span>
+          </NuxtLink>
+        </div>
+        <div class="flex flex-row gap-2 text-gray-500 hover:text-gray-100">
+          <NuxtLink
+            class="flex flex-row gap-2 items-center app-link"
+            to="/dlmm-positions"
+            active-class="active"
+            title="Positions"
+          >
+            <QueueListIcon class="size-4" />
+            <span class="text-sm">Positions</span>
+          </NuxtLink>
+        </div>
+        <div class="flex flex-row gap-2 text-gray-500 hover:text-gray-100">
+          <NuxtLink
+            class="flex flex-row gap-2 items-center app-link"
+            to="/dlmm-wallets"
+            active-class="active"
+            title="Wallets"
+          >
+            <WalletIcon class="size-4" />
+            <span class="text-sm">Wallets</span>
           </NuxtLink>
         </div>
       </div>
@@ -37,7 +61,12 @@
 </template>
 
 <script setup>
-import { MagnifyingGlassIcon, ChartBarIcon } from '@heroicons/vue/24/solid'
+import {
+  QueueListIcon,
+  MagnifyingGlassIcon,
+  ChartBarIcon,
+  WalletIcon,
+} from '@heroicons/vue/24/solid'
 import { ModalsContainer } from 'vue-final-modal'
 </script>
 

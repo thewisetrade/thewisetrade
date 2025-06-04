@@ -61,7 +61,7 @@
 
     <h1 class="font-bold mt-12 m-auto">Meteora DLMM Helpers</h1>
     <div class="flex">
-      <div class="sections grid lg:grid-cols-2 md:grid-cols-2 gap-4 m-auto">
+      <div class="sections grid lg:grid-cols-3 md:grid-cols-2 gap-4 m-auto">
         <NuxtLink class="guide-link" to="dlmm-pool-finder">
           <img
             class="mb-2"
@@ -75,6 +75,13 @@
             src="~/assets/images/illustrations/dlmms-performance.svg"
           />
           <h3>Pool Performance</h3>
+        </NuxtLink>
+        <NuxtLink class="guide-link" to="dlmm-positions">
+          <img
+            class="mb-2"
+            src="~/assets/images/illustrations/dlmms-performance.svg"
+          />
+          <h3>Opened Positions</h3>
         </NuxtLink>
       </div>
     </div>
@@ -90,8 +97,8 @@
       </NuxtLink>
       <NuxtLink class="guide-link" to="lsts">
         <img
-          class="mb-2"
           src="~/assets/images/illustrations/sanctum-lsts.png"
+          class="mb-2"
         />
         <h3>Interest rates</h3>
       </NuxtLink>

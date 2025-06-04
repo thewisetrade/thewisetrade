@@ -31,6 +31,23 @@ npm i
 
 ### Preview the result
 
+#### Set the environment
+
+```
+VITE_RPC_ENDPOINT_URL=https://myrpc
+VITE_WALLET_ADDRESS=Hb7y...Ejm
+VITE_METEORA_PROGRAM_ID=LBUZKhRxPF3XUpBCjp4YzTKgLccjZhTSDM9YuVaPwxo
+
+# Optional
+VITE_JUPITER_API_KEY=your-jupiter-api-key
+VITE_COINGECKO_API_KEY=your-coingecko-api-key
+VITE_MAX_TRANSACTIONS=1000
+VITE_BATCH_SIZE=10
+VITE_REQUEST_DELAY=1000
+```
+
+#### Run Nuxt
+
 ```
 npm run dev
 ```
