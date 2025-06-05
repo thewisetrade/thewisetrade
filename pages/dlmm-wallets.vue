@@ -5,13 +5,11 @@
       <div class="header-content">
         <h1>Work in progress</h1>
         <h1>Wallet management</h1>
-        <p>Save wallets to browse them in the performance and position pages</p>
+        <p>Save wallets to browse them in the performance and position pages.</p>
       </div>
     </div>
 
-
-    <!-- Header Section -->
-    <div class="header">
+    <!--div class="header flex flex-row">
       <div class="header-content">
         <h2>Your wallet groups</h2>
         <p>Organize wallets into groups to batch your wallet analysis</p>
@@ -21,20 +19,17 @@
       </button>
     </div>
 
-    <!-- Groups Grid -->
     <div class="groups-grid">
-      <!-- All Wallets Group -->
       <div class="group-card default-group flex flex-row">
         <div class="group-name">All wallets</div>
         <div class="wallet-count">{{ totalWallets }} wallets</div>
       </div>
 
-      <!-- Custom Groups -->
       <div v-for="group in groups" :key="group.id" class="group-card custom-group" @click="selectGroup(group)">
         <div class="group-name">{{ group.name }}</div>
         <div class="wallet-count">{{ group.walletCount }} wallets</div>
       </div>
-    </div>
+    </div-->
 
     <!-- Wallets List Section -->
     <div class="wallets-section">
@@ -465,11 +460,8 @@ onMounted(() => {
   margin-bottom: 32px;
 }
 
-.header-content h1 {
-  font-size: 32px;
-  font-weight: 600;
-  margin: 0 0 8px 0;
-  color: white;
+.header-content h2 {
+  margin-top: 0;
 }
 
 .header-content p {
