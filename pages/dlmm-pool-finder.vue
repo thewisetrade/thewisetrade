@@ -9,28 +9,48 @@
 
     <div class="filters">
       <div class="toggle flex flex-row">
-        <ToggleButtons class="mr-5 filter" label="Bin Step" :values="[
-          { text: '250', value: 250 },
-          { text: '200', value: 200 },
-          { text: '100', value: 100 },
-          { text: '80', value: 80 },
-          { text: '20', value: 20 },
-        ]" v-model="binStep" />
-        <ToggleButtons class="mr-5 filter" label="Market Cap" :values="[
-          { text: '> 1M', value: 1 },
-          { text: '> 10M', value: 10 },
-          { text: '> 100M', value: 100 },
-        ]" v-model="marketCap" />
-        <ToggleButtons class="mr-5 filter" label="Liquidity" :values="[
-          { text: '> 10k', value: 10 },
-          { text: '> 100k', value: 100 },
-          { text: '> 500k', value: 500 },
-        ]" v-model="liquidity" />
-        <ToggleButtons class="filter" label="Age" :values="[
-          { text: '>1d', value: 1 },
-          { text: '>3d', value: 3 },
-          { text: '>7d', value: 7 },
-        ]" v-model="age" />
+        <ToggleButtons
+          class="mr-5 filter"
+          label="Bin Step"
+          :values="[
+           { text: '250', value: 250 },
+           { text: '200', value: 200 },
+           { text: '100', value: 100 },
+           { text: '80', value: 80 },
+           { text: '20', value: 20 },
+          ]"
+          v-model="binStep"
+        />
+        <ToggleButtons
+          class="mr-5 filter"
+          label="Market Cap"
+          :values="[
+           { text: '> 1M', value: 1 },
+           { text: '> 10M', value: 10 },
+           { text: '> 100M', value: 100 },
+          ]"
+          v-model="marketCap"
+        />
+        <ToggleButtons
+          class="mr-5 filter"
+          label="Liquidity"
+          :values="[
+           { text: '> 10k', value: 10 },
+           { text: '> 100k', value: 100 },
+           { text: '> 500k', value: 500 },
+          ]"
+          v-model="liquidity"
+        />
+        <ToggleButtons
+          class="filter"
+          label="Age"
+          :values="[
+           { text: '>1d', value: 1 },
+           { text: '>3d', value: 3 },
+           { text: '>7d', value: 7 },
+          ]"
+          v-model="age"
+        />
         <RefreshButton @refresh="loadPoolsData" />
       </div>
     </div>
@@ -395,7 +415,8 @@ useHead({
     min-width: 73px;
   }
 
-  .mc {}
+  .mc {
+  }
 }
 
 .data.mc {

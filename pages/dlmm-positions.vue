@@ -3,9 +3,10 @@
 
     <div class="flex flex-row gap-2">
 
-    <WalletAddress
-      :current-wallet-address="walletAddress"
-      @walletAddressChanged="updateWalletAddress"
+      <WalletAddress
+        :current-wallet-address="walletAddress"
+        :loading="initLoading"
+        @walletAddressChanged="updateWalletAddress"
       />
       <div class="flex-1"></div>
       <Credits
@@ -45,8 +46,7 @@
           <span>Range</span>
           <div class="sort-icon" :class="getSortClass('range')"></div>
           <div class="flex-1"></div>
-          <RefreshButton @refresh="loadData" />
-
+          <RefreshButton @refresh="refreshData" />
         </div>
       </div>
 
@@ -186,6 +186,8 @@ const sortDirection = ref('desc')
 
 const loading = ref(false)
 const isInitialLoad = ref(true)
+const initLoading = ref(false)
+
 const error = ref(null)
 const positionsData = ref([])
 const tempPositionsData = ref([])
@@ -227,9 +229,11 @@ const setSavedWalletAddress = async () => {
 }
 
 onMounted(async () => {
+  initLoading.value = true
   tokenService.value = getTokenService()
   await tokenService.value.init()
   await setSavedWalletAddress()
+  initLoading.value = false
 
   if (walletAddress.value) {
     await loadData()
@@ -575,7 +579,9 @@ const getSortClass = (field) => {
 }
 
 const refreshData = async () => {
+  loading.value = true
   await loadData()
+  loading.value = false
 }
 
 const startAutoRefresh = () => {
