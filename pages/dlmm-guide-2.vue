@@ -551,7 +551,7 @@ Wrapping up
 
 <script setup>
 const description =
-  "Guides and strategies to take the most out of Meteora DLMM community tools";
+  "Discover the main tools to start with Meteora DLMMs";
 const title = "The Wise Trade | DLMM Guide Part 2 - Community Tools"
 useHead({
   title,

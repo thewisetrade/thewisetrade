@@ -13,7 +13,7 @@
   </VueFinalModal>
 </template>
 
-<script setup lang="ts">
+<script setup>
 import { VueFinalModal } from 'vue-final-modal'
 
 defineProps({

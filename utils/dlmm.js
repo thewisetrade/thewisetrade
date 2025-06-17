@@ -13,6 +13,16 @@ const resetDb = async (db) => {
   return db
 }
 
+const fetchPoolsData = async () => {
+  const response = await fetch("https://api.tokleo.com/api/public/pools", {
+    headers: {
+      'X-Public-Key': 'Daisy-Uncouth-Chrome-Demanding-Freight-Boxcar6'
+    }
+  })
+  const data = await response.json()
+  return data.pools
+}
+
 const loadWalletTransactions = async (db, endpoint, solanaAddress) => {
   const downloader = await db.download({
     endpoint,
@@ -124,6 +134,7 @@ export {
   applySortBy,
   applySortOrder,
   applyTimePeriod,
+  fetchPoolsData,
   groupTransactionsByPosition,
   getDateFromBlockTime,
   loadDlmmDb,

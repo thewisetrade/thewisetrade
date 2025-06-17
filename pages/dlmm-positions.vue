@@ -1,18 +1,17 @@
 <template>
   <div class="liquidity-table-container">
 
-    <div class="flex flex-row gap-2">
+    <AppHeader
+      link="https://geeklad.github.io/meteora-profit-analysis/"
+      author="Geeklad Analyzer"
+      title="DLMM Positions"
+    />
 
-      <WalletAddress
-        :current-wallet-address="walletAddress"
-        :loading="initLoading"
-        @walletAddressChanged="updateWalletAddress"
+    <div class="flex flex-row gap-2">
+      <WalletSelector
+        v-model="selectedWallet"
       />
       <div class="flex-1"></div>
-      <Credits
-        link="https://geeklad.github.io/meteora-profit-analysis/"
-        author="Geeklad Analyzer"
-      />
     </div>
 
 
@@ -196,12 +195,13 @@ const refreshInterval = ref(null)
 const tokenService = ref(null)
 const tokenCache = ref({})
 
-const walletAddress = ref('')
+const walletAddress = ref(null)
+const selectedWallet = ref(null)
 const loadingWalletTransactions = ref(false)
 
 const router = useRouter()
 
-const updateWalletAddress = async ({ address, domain }) => {
+const updateWalletAddress = async (address) => {
   walletAddress.value = address
   saveWalletAddress()
   loadingWalletTransactions.value = true
@@ -216,6 +216,7 @@ const saveWalletAddress = () => {
 }
 
 const setSavedWalletAddress = async () => {
+  /*
   let localWalletAddress = useRoute().query.address
   if (!localWalletAddress) {
     localWalletAddress = localStorage.getItem('positions:walletAddress')
@@ -226,7 +227,13 @@ const setSavedWalletAddress = async () => {
     }
     walletAddress.value = localWalletAddress
   }
+  */
 }
+
+watch(selectedWallet, (address) => {
+  console.log('selectedWallet', address)
+  updateWalletAddress(address)
+})
 
 onMounted(async () => {
   initLoading.value = true

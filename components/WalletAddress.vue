@@ -1,26 +1,8 @@
 <template>
-  <Loader class="" v-if="props.loading" />
-
-  <div class="flex flex-row gap-2" v-else-if="isWalletAddressValid">
-    <div class="flex flex-row gap-2">
-      <div class="wallet-address-container">
-        <div class="current-wallet-address">
-          <div>{{ domainName && domainName.length > 0 ? domainName : props.currentWalletAddress }}</div>
-          <span class="text-sm close-button" @click="resetWalletAddress">
-            <XMarkIcon class="w-3 h-3" />
-          </span>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div v-else>
+  <div>
     <div
       class="flex wallet-address-container gap-2"
-      v-show="!isWalletAddressValid && !loading"
     >
-      <div class="pl-2">Enter your wallet address</div>
-
       <div class="flex flex-row gap-2">
         <input
           ref="walletAddressInput"
@@ -37,9 +19,10 @@
       <div class="error-message text-red-500 pl-2" v-if="errors.invalidDomain">
         Invalid domain name
       </div>
-      <!--div class="domain-name text-green-500 pl-2" v-if="domainName">
-      {{ domainName }}
-    </div-->
+
+      <div class="domain-name text-green-500 pl-2" v-if="domainName">
+        {{ domainName }}
+      </div>
     </div>
   </div>
 </template>
@@ -50,8 +33,6 @@ import { useTemplateRef } from 'vue'
 
 const props = defineProps({
   currentWalletAddress: {
-    type: String,
-    required: true,
   },
   loading: {
     type: Boolean,
@@ -66,7 +47,7 @@ const emit = defineEmits({
   walletAddressChanged: (payload) => true,
 })
 
-const walletAddress = ref('')
+const walletAddress = ref(null)
 const domainName = ref('')
 const errors = ref({
   invalidAddress: false,
@@ -76,7 +57,7 @@ const errors = ref({
 const walletAddressInput = useTemplateRef('walletAddressInput')
 
 onMounted(() => {
-  walletAddress.value = props.currentWalletAddress
+  walletAddress.value = props.currentWalletAddress || ''
   walletAddressInput?.value?.focus()
 })
 
@@ -84,6 +65,7 @@ const isWalletAddressValid = computed(() => {
   return (
     walletAddress.value &&
     walletAddress.value !== null &&
+    walletAddress.value !== '' &&
     walletAddress.value !== 'undefined'
   )
 })
@@ -95,7 +77,7 @@ const checkWalletAddress = async () => {
     await validateWalletAddress(walletAddress.value)
   domainName.value = solanaDomain
   console.log("🚀 ~ checkWalletAddress ~ solanaDomain:", solanaDomain)
-  
+
   errors.value.invalidAddress = wrongAddress
   errors.value.invalidDomain = wrongDomain
   if (
@@ -105,7 +87,6 @@ const checkWalletAddress = async () => {
     solanaAddress !== props.currentWalletAddress
   ) {
     console.log('walletAddressChanged', solanaAddress)
-    await storeAddress(solanaAddress, solanaDomain, "none");
     emitedWalletAddress = solanaAddress
     emit('walletAddressChanged', {
       address: solanaAddress,
@@ -163,21 +144,27 @@ watch(
   flex-direction: column;
   font-size: 0.8em;
   font-weight: bold;
-  width: 400px;
 
-  input {
+  .input {
+    background: #0a0a0a;
     font-size: 1.1em;
-    border-radius: 10px;
-    border: 3px solid #445;
-    padding: 0.5em;
+    border-radius: 6px;
+    border: 2px solid #445;
+    padding: 12px;
     text-align: left;
 
     &:focus {
-      border: 3px solid #686;
+      border: 2px solid #607CF6;
       outline: none;
       transition: all 0.5s ease;
     }
   }
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: #555;
 }
 
 .close-button {

@@ -112,7 +112,7 @@
 definePageMeta({
   layout: 'full'
 })
-const description = 'Power-up your Solana Portfolio'
+const description = 'Power-up your Solana Portfolio with liquidity providing'
 useHead({
   title: 'The Wise Trade | Power-up your Solana Portfolio',
   meta: [

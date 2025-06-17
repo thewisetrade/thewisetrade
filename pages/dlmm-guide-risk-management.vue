@@ -305,7 +305,7 @@
 
 <script setup>
 const description =
-  "DLMM Risk Management guide";
+  "DLMM Risk Management Guide";
 const title = "The Wise Trade | DLMM Guide - Risk Management"
 useHead({
   title,

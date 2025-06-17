@@ -45,15 +45,28 @@
 </template>
 
 <script setup>
-const props = defineProps(['label', 'values'])
 const model = defineModel()
-
 const isOpen = ref(false)
 const dropdownMenu = ref(null)
 
+const props = defineProps({
+  label: {
+    type: String,
+    default: '',
+  },
+  values: {
+    type: Array,
+    default: () => [],
+  },
+  placeholder: {
+    type: String,
+    default: 'Select an option',
+  },
+})
+
 const selectedText = computed(() => {
   const selected = props.values.find((val) => isActive(val.value))
-  return selected ? selected.text : 'Select an option'
+  return selected ? selected.text : props.placeholder
 })
 
 const update = (value) => {
@@ -85,11 +98,13 @@ watch(isOpen, (newValue) => {
 }
 
 .dropdown-container {
+  cursor: pointer;
   min-width: 200px;
 }
 
 .dropdown-button {
   border: 1px solid #607cf6;
+  cursor: pointer;
   background-color: #111;
   font-weight: normal;
   font-size: 16px;
