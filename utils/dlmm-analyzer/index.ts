@@ -29,7 +29,7 @@ async function main(walletAddress: string) {
 
     if (transactions.length === 0) {
       console.log('❌ No transactions found for the specified period');
-      return;
+      return [];
     }
 
     // Step 2: Get transaction details
@@ -56,7 +56,7 @@ async function main(walletAddress: string) {
 
     if (positionEvents.length === 0) {
       console.log('❌ No position open events found');
-      return;
+      return [];
     }
 
     // Step 5: Get token prices
@@ -90,7 +90,7 @@ async function main(walletAddress: string) {
 
   } catch (error) {
     console.error('❌ Error during analysis:', error);
-    return null;
+    return [];
   }
 }
 
