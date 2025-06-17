@@ -8,10 +8,7 @@
     />
 
     <div class="flex flex-row gap-2">
-      <WalletSelector
-        v-model="selectedWallet"
-      />
-      <div class="flex-1"></div>
+      <WalletSelector v-model="selectedWallet" />
     </div>
 
 
@@ -49,26 +46,20 @@
         </div>
       </div>
 
-      <!-- Content Area -->
       <div class="table-content">
-        <!-- Loading State -->
         <div v-if="loading" class="loading-state">
           <Loader class="loading" />
         </div>
 
-        <!-- Error State -->
         <div v-else-if="error" class="error-state">
           <span>Error loading positions: {{ error }}</span>
           <button @click="loadData" class="retry-button">Retry</button>
         </div>
 
-        <!-- Empty State -->
         <div v-else-if="sortedPositions.length === 0" class="empty-state">
           <span>No positions found</span>
         </div>
 
-
-        <!-- Data Rows -->
         <div v-else class="table-rows">
           <div
             class="table-row"
@@ -173,7 +164,6 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { getTokenService } from '@/utils/tokens'
 
 definePageMeta({
@@ -261,16 +251,10 @@ const formattedPositions = computed(() => {
     : positionsData.value
 
   return dataToUse.map((position, index) => {
-    console.log('icon for token1::::', position.token1.icon)
-    console.log('icon for token2::::', position.token2.icon)
-
-
-    // Calculate fees first
     const collectedFeeAmount = position.collectedFeesValue || 0
     const uncolFeeAmount = position.unCollectedFeesValue || 0
     const positionValue = position.value || 0
 
-    // Calculate total fees for uPnL
     const totalFees = collectedFeeAmount + uncolFeeAmount
     const upnlPercentage = positionValue > 0 ? (totalFees / positionValue) * 100 : 0
 
@@ -371,6 +355,8 @@ const loadData = async () => {
     error.value = null
 
     let data = await fetchPositionsData()
+    console.log('🚀 ~ loadData ~ data:', data)
+    if (!data) data = []
 
     positionsData.value = data
     tempPositionsData.value = [...data]
