@@ -16,11 +16,10 @@
       class="menus-item"
       title="DLMMs Guide"
       :items="[
-        { to: '/dlmm-guide', label: 'DLMMs Getting Started' },
+        { to: '/dlmm-guide', label: 'DLMMs Guide' },
         { to: '/dlmm-guide-2', label: 'DLMMs Apps' },
         { to: '/dlmm-guide-multidays', label: 'DLMMs Multiday Positions' },
         { to: '/dlmm-guide-risk-management', label: 'DLMMs Risk Management' },
-
       ]"
     />
 
@@ -30,7 +29,8 @@
       :items="[
         { to: '/dlmm-pool-finder', label: 'DLMM Pool Finder' },
         { to: '/dlmm-performance', label: 'DLMM Performance' },
-        { to: '/dlmm-positions', label: 'DLMM Positions' }
+        { to: '/dlmm-positions', label: 'DLMM Positions' },
+        { to: '/dlmm-wallets', label: 'DLMM Wallets' }
       ]"
     />
 

@@ -8,7 +8,7 @@ import {
 } from '@bonfida/spl-name-service'
 
 const connection = new Connection(
-  'https://hardworking-palpable-arrow.solana-mainnet.quiknode.pro/0213d582329af74486932e0ed98015d3e4f7ac52/',
+  import.meta.env.VITE_RPC_ENDPOINT_URL,
 )
 
 export const isValidSolanaAddress = (address) => {

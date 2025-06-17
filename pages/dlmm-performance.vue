@@ -1,16 +1,17 @@
 <template>
   <div id="portfolio-performance" class="container">
 
+    <AppHeader
+      link="https://geeklad.github.io/meteora-profit-analysis/"
+      author="Geeklad DB"
+      title="DLMM Performance"
+    />
+
     <div class="flex flex-row gap-2">
-      <WalletAddress
-        :current-wallet-address="walletAddress"
-        @walletAddressChanged="updateWalletAddress"
+      <WalletSelector
+        v-model="selectedWallet"
       />
       <div class="flex-1"></div>
-      <Credits
-        link="https://geeklad.github.io/meteora-profit-analysis/"
-        author="Geeklad DB"
-      />
     </div>
 
     <div class="flex flex-row gap-2">
@@ -75,7 +76,7 @@
       <div class="text-center">
         <template v-if="!isWalletAddressValid">
           <div>
-            <p>Please enter a wallet address to view your performance</p>
+            <p>Please select a wallet to view its performance</p>
           </div>
         </template>
         <template v-else-if="!loadingWalletTransactions">
@@ -286,9 +287,8 @@ definePageMeta({
 
 const RPC_ENDPOINT_URL = import.meta.env.VITE_RPC_ENDPOINT_URL
 
-const walletAddress = ref('')
-const currentWalletAddress = ref('')
-const domainName = ref('')
+const walletAddress = ref(null)
+const selectedWallet = ref(null)
 const loadingWalletTransactions = ref(false)
 
 const quoteToken = ref('SOL')
@@ -417,16 +417,16 @@ const timePeriodOptions = computed(() => {
 
 const isDataVisible = computed(() => {
   return (
-    currentWalletAddress.value &&
+    walletAddress.value &&
     !loadingWalletTransactions.value
   )
 })
 
 const isWalletAddressValid = computed(() => {
   return (
-    currentWalletAddress.value &&
-    currentWalletAddress.value !== null &&
-    currentWalletAddress.value !== 'undefined'
+    walletAddress.value &&
+    walletAddress.value !== null &&
+    walletAddress.value !== 'undefined'
   )
 })
 
@@ -462,6 +462,7 @@ onMounted(async () => {
 })
 
 const setSavedWalletAddress = () => {
+  /*
   let localWalletAddress = useRoute().query.address
   if (!localWalletAddress) {
     localWalletAddress = localStorage.getItem('walletAddress')
@@ -470,38 +471,37 @@ const setSavedWalletAddress = () => {
     walletAddress.value = localWalletAddress
     currentWalletAddress.value = localWalletAddress
   }
+  */
 }
 
-const updateWalletAddress = async ({ address, domain }) => {
+const updateWalletAddress = async (address) => {
   walletAddress.value = address
-  currentWalletAddress.value = address
-  domainName.value = domain
   if (isWalletAddressValid.value) {
     saveWalletAddress()
     await useWallet()
   } else {
-    currentWalletAddress.value = ''
+    walletAddress.value = ''
     domainName.value = ''
     saveWalletAddress()
   }
 }
 
 const saveWalletAddress = () => {
-  const address = domainName.value || currentWalletAddress.value
+  const address = walletAddress.value
   router.push({ query: { address } })
-  localStorage.setItem('walletAddress', currentWalletAddress.value)
+  localStorage.setItem('walletAddress', walletAddress.value)
 }
 
 const useWallet = async () => {
-  if (currentWalletAddress.value === '') return
+  if (walletAddress.value === '') return
   loadingWalletTransactions.value = true
   let db = await loadDlmmDb()
   const downloader = await loadWalletTransactions(
     db,
     RPC_ENDPOINT_URL,
-    currentWalletAddress.value
+    walletAddress.value
   )
-  db.getOwnerTransactions(currentWalletAddress.value)
+  db.getOwnerTransactions(walletAddress.value)
     .then(metTransactions => {
       transactions = metTransactions
       resetPositions()
@@ -511,7 +511,7 @@ const useWallet = async () => {
   // Manage loading state
   let previousTransactionsLength = 0
   const statsInterval = setInterval(async () => {
-    const downloadedTransactions = await db.getOwnerTransactions(currentWalletAddress.value)
+    const downloadedTransactions = await db.getOwnerTransactions(walletAddress.value)
     if (downloadedTransactions.length !== previousTransactionsLength) {
       previousTransactionsLength = downloadedTransactions.length
       await downloader.stats()
@@ -565,7 +565,6 @@ const togglePosition = (signature) => {
 
 const clearAll = async () => {
   walletAddress.value = ''
-  currentWalletAddress.value = ''
   domainName.value = ''
   transactions = []
   positions.value = []
@@ -593,6 +592,15 @@ watch(timePeriod, resetPositions)
 watch(sortBy, resetPositions)
 watch(sortOrder, resetPositions)
 watch(groupBy, resetPositions)
+watch(selectedWallet, (address) => {
+  console.log('selectedWallet', address)
+  if (address) {
+    updateWalletAddress(address)
+  } else {
+    walletAddress.value = ''
+    saveWalletAddress()
+  }
+})
 
 const description = 'Meteora DLMM - Performance History'
 const title = 'DLMM Portfolio Performance'

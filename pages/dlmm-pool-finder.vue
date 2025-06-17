@@ -1,15 +1,10 @@
 <template>
   <div id="pool-finder" class="container">
-    <div class="flex flex-row items-center mb-10">
-      <h1 class="app-title flex-1">DLMM Active Pool Finder</h1>
-      <a
-        class="credit"
-        href="https://tokleo.com/"
-        target="_blank"
-      >
-      Powered by Tokleo API
-      </a>
-    </div>
+    <AppHeader
+      title="DLMM Pool Finder"
+      link="https://tokleo.com/"
+      author="Tokleo API"
+    />
 
     <div class="filters">
       <div class="toggle flex flex-row">
@@ -103,17 +98,13 @@
 </template>
 
 <script setup>
-import {
-  ArrowPathIcon,
-} from '@heroicons/vue/24/outline'
-
+import { fetchPoolsData } from '@/utils/dlmm'
 
 definePageMeta({
   layout: 'app'
 })
 
-const isLoading = ref(false)
-
+const isLoading = ref(true)
 const displayedPools = ref([])
 let pools = []
 
@@ -122,6 +113,17 @@ const binStep = ref(100)
 const liquidity = ref(10)
 const age = ref(1)
 
+onMounted(() => {
+  loadPoolsData()
+  setInterval(loadPoolsData, 1000 * 60 * 5)
+})
+
+const loadPoolsData = async () => {
+  isLoading.value = true
+  pools = await fetchPoolsData()
+  resetDisplayedPools()
+  isLoading.value = false
+}
 
 const resetDisplayedPools = () => {
   displayedPools.value = pools
@@ -132,28 +134,6 @@ const resetDisplayedPools = () => {
     .filter(p => p.oldest_pair_ageInHours >= age.value * 24)
     .sort((pa, pb) => pb.meteora_feeTvlRatio.h24 - pa.meteora_feeTvlRatio.h24)
 }
-
-const loadPoolsData = () => {
-  isLoading.value = true
-  pools = []
-  fetch("https://api.tokleo.com/api/public/pools", {
-    headers: {
-      'X-Public-Key': 'Daisy-Uncouth-Chrome-Demanding-Freight-Boxcar6'
-    }
-  })
-    .then(res => res.json())
-    .then(data => {
-      data.pools.forEach(pool => {
-        pools.push(pool)
-      })
-      resetDisplayedPools()
-      isLoading.value = false
-    })
-}
-
-loadPoolsData()
-
-setInterval(loadPoolsData, 1000 * 60 * 5)
 
 watch(binStep, resetDisplayedPools)
 watch(marketCap, resetDisplayedPools)
@@ -182,13 +162,6 @@ useHead({
 </script>
 
 <style scoped>
-.app-title {
-  margin: 0;
-  text-align: left;
-  text-transform: uppercase;
-  font-size: 1.4em;
-}
-
 #pool-finder.container {
   display: flex;
   flex-direction: column;

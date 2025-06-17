@@ -832,7 +832,7 @@ to get help and tips from other users:
 
 <script setup>
 const description =
-  "Guides and strategies to take the most out of Meteora DLMMs";
+  "The ultimate guide to start with Meteora DLMMs, from theory to practice";
 useHead({
   title: "The Wise Trade | DLMM Guide",
   meta: [

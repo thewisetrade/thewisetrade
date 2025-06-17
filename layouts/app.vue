@@ -38,7 +38,7 @@
             <span class="text-sm">Positions</span>
           </NuxtLink>
         </div>
-        <!--div class="flex flex-row gap-2 text-gray-500 hover:text-gray-100">
+        <div class="flex flex-row gap-2 text-gray-500 hover:text-gray-100">
           <NuxtLink
             class="flex flex-row gap-2 items-center app-link"
             to="/dlmm-wallets"
@@ -47,7 +47,7 @@
           >
             <WalletIcon class="size-4" />
             <span class="text-sm">Wallets</span>
-          </NuxtLink-->
+          </NuxtLink>
         </div>
       </div>
       <div
@@ -62,9 +62,9 @@
 
 <script setup>
 import {
-  QueueListIcon,
-  MagnifyingGlassIcon,
   ChartBarIcon,
+  MagnifyingGlassIcon,
+  QueueListIcon,
   WalletIcon,
 } from '@heroicons/vue/24/solid'
 import { ModalsContainer } from 'vue-final-modal'
