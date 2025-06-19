@@ -2,120 +2,122 @@
 
 export class TokenService {
   constructor() {
-    this.cache = new Map();
-    this.jupiterTokens = null;
-    this.isLoading = false;
+    this.cache = new Map()
+    this.jupiterTokens = null
+    this.isLoading = false
   }
 
   async init() {
-    if (this.jupiterTokens || this.isLoading) return;
-    
-    this.isLoading = true;
+    if (this.jupiterTokens || this.isLoading) return
+
+    this.isLoading = true
     try {
-      console.log('Loading Jupiter token list...');
-      const response = await fetch('https://token.jup.ag/all');
-      const tokens = await response.json();
-      
-      this.jupiterTokens = new Map();
-      tokens.forEach(token => {
+      console.log('Loading Jupiter token list...')
+      const response = await fetch('https://token.jup.ag/all')
+      const tokens = await response.json()
+
+      this.jupiterTokens = new Map()
+      tokens.forEach((token) => {
         this.jupiterTokens.set(token.address, {
           symbol: token.symbol,
           name: token.name,
           icon: token.logoURI,
           decimals: token.decimals,
-          verified: token.verified || false
-        });
-      });
-      
-      console.log(`Loaded ${this.jupiterTokens.size} tokens from Jupiter`);
+          verified: token.verified || false,
+        })
+      })
+
+      console.log(`Loaded ${this.jupiterTokens.size} tokens from Jupiter`)
     } catch (error) {
-      console.error('Failed to load Jupiter tokens:', error);
-      this.jupiterTokens = new Map();
+      console.error('Failed to load Jupiter tokens:', error)
+      this.jupiterTokens = new Map()
     } finally {
-      this.isLoading = false;
+      this.isLoading = false
     }
   }
 
   async getTokenInfo(address) {
-    if (!address) return this.getDefaultToken();
+    if (!address) return this.getDefaultToken()
 
     // Check cache first
     if (this.cache.has(address)) {
-      return this.cache.get(address);
+      return this.cache.get(address)
     }
 
     // Ensure Jupiter tokens are loaded
-    await this.init();
+    await this.init()
 
     // Check Jupiter cache
     if (this.jupiterTokens.has(address)) {
-      const token = this.jupiterTokens.get(address);
-      this.cache.set(address, token);
-      return token;
+      const token = this.jupiterTokens.get(address)
+      this.cache.set(address, token)
+      return token
     }
 
     // Try individual API call
-    const token = await this.fetchFromAPI(address);
+    const token = await this.fetchFromAPI(address)
     if (token) {
-      this.cache.set(address, token);
-      return token;
+      this.cache.set(address, token)
+      return token
     }
 
     // Return default
-    const defaultToken = this.getDefaultToken(address);
-    this.cache.set(address, defaultToken);
-    return defaultToken;
+    const defaultToken = this.getDefaultToken(address)
+    this.cache.set(address, defaultToken)
+    return defaultToken
   }
 
   async fetchFromAPI(address) {
     // Try Jupiter individual API
     try {
-      const response = await fetch(`https://token.jup.ag/token/${address}`);
+      const response = await fetch(`https://token.jup.ag/token/${address}`)
       if (response.ok) {
-        const data = await response.json();
+        const data = await response.json()
         return {
           symbol: data.symbol,
           name: data.name,
           icon: data.logoURI,
           decimals: data.decimals,
-          verified: data.verified || false
-        };
+          verified: data.verified || false,
+        }
       }
     } catch (error) {
-      console.warn('Jupiter individual API failed:', error);
+      console.warn('Jupiter individual API failed:', error)
     }
 
     // Try Solscan as backup
     try {
-      const response = await fetch(`https://api.solscan.io/token/meta?token=${address}`);
+      const response = await fetch(
+        `https://api.solscan.io/token/meta?token=${address}`,
+      )
       if (response.ok) {
-        const data = await response.json();
+        const data = await response.json()
         return {
           symbol: data.symbol,
           name: data.name,
           icon: data.icon,
           decimals: data.decimals,
-          verified: false
-        };
+          verified: false,
+        }
       }
     } catch (error) {
-      console.warn('Solscan API failed:', error);
+      console.warn('Solscan API failed:', error)
     }
 
-    return null;
+    return null
   }
 
   async getMultipleTokens(addresses) {
-    await this.init();
-    
-    const results = {};
-    const promises = addresses.map(async address => {
-      const token = await this.getTokenInfo(address);
-      results[address] = token;
-    });
-    
-    await Promise.all(promises);
-    return results;
+    await this.init()
+
+    const results = {}
+    const promises = addresses.map(async (address) => {
+      const token = await this.getTokenInfo(address)
+      results[address] = token
+    })
+
+    await Promise.all(promises)
+    return results
   }
 
   getDefaultToken(address = null) {
@@ -124,45 +126,104 @@ export class TokenService {
       name: 'Unknown Token',
       icon: this.getDefaultIcon(),
       decimals: 9,
-      verified: false
-    };
+      verified: false,
+    }
   }
 
   getDefaultIcon() {
-    return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iMTIiIGZpbGw9IiM2NjY2NjYiLz4KPHR0ZXh0IHg9IjUwJSIgeT0iNTAlIiBkb21pbmFudC1iYXNlbGluZT0iY2VudHJhbCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZFlheD0id2hpdGUiIGZvbnQtc2l6ZT0iMTAiPj88L3RleHQ+Cjwvc3ZnPg==';
+    return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iMTIiIGZpbGw9IiM2NjY2NjYiLz4KPHR0ZXh0IHg9IjUwJSIgeT0iNTAlIiBkb21pbmFudC1iYXNlbGluZT0iY2VudHJhbCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZFlheD0id2hpdGUiIGZvbnQtc2l6ZT0iMTAiPj88L3RleHQ+Cjwvc3ZnPg=='
   }
 
   clearCache() {
-    this.cache.clear();
+    this.cache.clear()
   }
 
   getCacheStats() {
     return {
       cacheSize: this.cache.size,
-      jupiterTokensLoaded: this.jupiterTokens ? this.jupiterTokens.size : 0
-    };
+      jupiterTokensLoaded: this.jupiterTokens ? this.jupiterTokens.size : 0,
+    }
   }
 }
 
-// Create singleton instance
-let tokenServiceInstance = null;
+let tokenServiceInstance = null
 
 export function getTokenService() {
   if (!tokenServiceInstance) {
-    tokenServiceInstance = new TokenService();
+    tokenServiceInstance = new TokenService()
   }
-  return tokenServiceInstance;
+  return tokenServiceInstance
 }
 
-// Vue composable for easier use
 export function useTokenService() {
-  const tokenService = getTokenService();
-  
+  const tokenService = getTokenService()
+
   return {
     getTokenInfo: (address) => tokenService.getTokenInfo(address),
     getMultipleTokens: (addresses) => tokenService.getMultipleTokens(addresses),
     clearCache: () => tokenService.clearCache(),
     init: () => tokenService.init(),
-    getCacheStats: () => tokenService.getCacheStats()
-  };
+    getCacheStats: () => tokenService.getCacheStats(),
+  }
 }
+
+export const getTokenInfoInternal = async (tokenAddress) => {
+  let icon = ''
+  if (tokenAddress === 'So11111111111111111111111111111111111111112') {
+    icon =
+      'https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png'
+  }
+  icon = `https://dd.dexscreener.com/ds-data/tokens/solana/${tokenAddress}.png`
+  try {
+    const response = await fetch(
+      `https://api.dexscreener.com/latest/dex/tokens/${tokenAddress}`,
+    )
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+
+    const data = await response.json()
+
+    if (!data.pairs || data.pairs.length === 0) {
+      console.log('No pairs found for this token')
+      return null
+    }
+
+    const pair = data.pairs[0]
+    let symbol, name
+
+    if (pair.baseToken.address.toLowerCase() === tokenAddress.toLowerCase()) {
+      symbol = pair.baseToken.symbol
+      name = pair.baseToken.name
+    } else {
+      symbol = pair.quoteToken.symbol
+      name = pair.quoteToken.name
+    }
+
+    if (tokenAddress === 'So11111111111111111111111111111111111111112') {
+      icon =
+        'https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png'
+    }
+
+    return {
+      symbol,
+      name,
+      icon,
+      address: tokenAddress,
+    }
+  } catch (error) {
+    console.error('Error fetching token info:', error)
+    return null
+  }
+}
+
+export const getDefaultTokenInfo = (tokenAddress) => ({
+  symbol: tokenAddress ? tokenAddress.slice(0, 6) + '...' : 'UNKNOWN',
+  name: 'Unknown Token',
+  icon: getDefaultIcon(),
+  decimals: 9,
+  verified: false
+})
+
+export const getDefaultIcon = () => 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iMTIiIGZpbGw9IiM2NjY2NjYiLz4KPHR0ZXh0IHg9IjUwJSIgeT0iNTAlIiBkb21pbmFudC1iYXNlbGluZT0iY2VudHJhbCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0id2hpdGUiIGZvbnQtc2l6ZT0iMTAiPj88L3RleHQ+Cjwvc3ZnPg=='
