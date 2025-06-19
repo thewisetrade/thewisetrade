@@ -3,6 +3,8 @@ import type { TransactionSignature, TransactionDetails } from '../types/transact
 import { config } from '../config/index.js';
 import { retryWithBackoff, chunkArray } from '../utils/helpers.js';
 
+const cache = new Map<string, any>();
+
 export class QuickNodeService {
   private connection: Connection;
 
@@ -22,11 +24,11 @@ export class QuickNodeService {
     daysBack: number = 1
   ): Promise<TransactionSignature[]> {
     console.log("🚀 ~ QuickNodeService ~ daysBack:", daysBack)
-    
+
     const signatures: TransactionSignature[] = [];
     const now = Date.now();
     const cutoffTime = now - (daysBack * 24 * 60 * 60 * 1000);
-    
+
     let before: string | undefined;
     let hasMore = true;
 
@@ -64,10 +66,10 @@ export class QuickNodeService {
         }
 
         before = result[result.length - 1]?.signature;
-        
+
         // Rate limiting
         await new Promise(resolve => setTimeout(resolve, 100));
-        
+
       } catch (error) {
         console.error('Error fetching signatures:', error);
         break;
@@ -84,21 +86,32 @@ export class QuickNodeService {
     signatures: string[]
   ): Promise<TransactionDetails[]> {
     const transactions: TransactionDetails[] = [];
-    const chunks = chunkArray(signatures, 5); // Process in chunks to avoid rate limits
+    const signaturesToFetch: string[] = [];
+    signatures.forEach(signature => {
+      if (cache.has(signature)) {
+        transactions.push(cache.get(signature))
+      } else {
+        signaturesToFetch.push(signature)
+      }
+    })
+    console.log('signaturesToFetch', signaturesToFetch.length)
+    const chunks = chunkArray(signaturesToFetch, 100); // Process in chunks to avoid rate limits
 
     for (const chunk of chunks) {
       try {
+        const startTime = performance.now()
         const results = await retryWithBackoff(async () => {
           return await this.connection.getParsedTransactions(chunk, {
             commitment: 'confirmed',
             maxSupportedTransactionVersion: 0,
           });
         });
+        console.log('time taken', performance.now() - startTime)
 
         for (let i = 0; i < results.length; i++) {
           const tx = results[i];
           if (tx && tx.meta && tx.meta.err === null) {
-            transactions.push({
+            const txDetails = {
               signature: chunk[i],
               slot: tx.slot,
               blockTime: tx.blockTime || 0,
@@ -110,7 +123,7 @@ export class QuickNodeService {
                     accounts: ix.accounts?.map((acc: string) => new PublicKey(acc)) || [],
                     data: ix.data || '',
                   })),
-                  accountKeys: tx.transaction.message.accountKeys.map((key: any) => 
+                  accountKeys: tx.transaction.message.accountKeys.map((key: any) =>
                     new PublicKey(key.pubkey)
                   ),
                 },
@@ -122,13 +135,17 @@ export class QuickNodeService {
                 postBalances: tx.meta.postBalances,
                 logMessages: tx.meta.logMessages || [],
               },
-            });
+            }
+            transactions.push(txDetails)
+            if (!cache.has(chunk[i])) {
+              cache.set(chunk[i], txDetails)
+            }
           }
         }
 
         // Rate limiting between chunks
-        await new Promise(resolve => setTimeout(resolve, 200));
-        
+        // await new Promise(resolve => setTimeout(resolve, 200));
+
       } catch (error) {
         console.error(`Error fetching transaction details for chunk:`, error);
       }
@@ -141,8 +158,8 @@ export class QuickNodeService {
    * Filter transactions that interact with Meteora DLMM program
    */
   filterMeteoraTransactions(transactions: TransactionDetails[]): TransactionDetails[] {
-    return transactions.filter(tx => 
-      tx.transaction.message.instructions.some(ix => 
+    return transactions.filter(tx =>
+      tx.transaction.message.instructions.some(ix =>
         ix.programId.equals(config.meteoraProgramId)
       )
     );
@@ -162,7 +179,7 @@ export class QuickNodeService {
         });
 
         results.push(...accountInfos);
-        
+
         // Rate limiting
         await new Promise(resolve => setTimeout(resolve, 100));
       } catch (error) {

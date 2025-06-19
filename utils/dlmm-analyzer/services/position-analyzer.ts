@@ -77,6 +77,7 @@ export class PositionAnalyzer {
     try {
       // Fetch current position data
       const position = await this.meteoraService.fetchPosition(event.positionPubkey, event.lbPair);
+      console.log('position', event.positionPubkey.toBase58(), event.lbPair.toBase58())
       if (!position) {
         console.warn(`Position ${event.positionPubkey.toBase58()} not found`);
 
