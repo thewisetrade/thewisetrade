@@ -11,7 +11,6 @@
       <WalletSelector v-model="selectedWallet" />
     </div>
 
-
     <div class="table-wrapper">
       <div class="table-header">
         <div class="header-cell sortable" @click="sort('pair')">
@@ -175,21 +174,40 @@ const sortDirection = ref('desc')
 
 const loading = ref(false)
 const isInitialLoad = ref(true)
-const initLoading = ref(false)
 
 const error = ref(null)
 const positionsData = ref([])
-const tempPositionsData = ref([])
+const fullPositionsData = ref([])
 
 const refreshInterval = ref(null)
-const tokenService = ref(null)
-const tokenCache = ref({})
+
+const tokenService = getTokenService()
+const tokenCache = {}
 
 const walletAddress = ref(null)
 const selectedWallet = ref(null)
 const loadingWalletTransactions = ref(false)
 
 const router = useRouter()
+
+onMounted(async () => {
+  await tokenService.init()
+  await setSavedWalletAddress()
+
+  if (walletAddress.value) {
+    await loadData()
+  }
+
+  setTimeout(() => {
+    startAutoRefresh()
+  }, 600000)
+})
+
+onBeforeUnmount(() => {
+  stopAutoRefresh()
+})
+
+// Wallet management functions
 
 const updateWalletAddress = async (address) => {
   walletAddress.value = address
@@ -220,34 +238,11 @@ const setSavedWalletAddress = async () => {
   */
 }
 
-watch(selectedWallet, (address) => {
-  console.log('selectedWallet', address)
-  updateWalletAddress(address)
-})
-
-onMounted(async () => {
-  initLoading.value = true
-  tokenService.value = getTokenService()
-  await tokenService.value.init()
-  await setSavedWalletAddress()
-  initLoading.value = false
-
-  if (walletAddress.value) {
-    await loadData()
-  }
-
-  setTimeout(() => {
-    startAutoRefresh()
-  }, 600000)
-})
-
-onBeforeUnmount(() => {
-  stopAutoRefresh()
-})
+// Data loading functions
 
 const formattedPositions = computed(() => {
-  const dataToUse = tempPositionsData.value.length > 0
-    ? tempPositionsData.value
+  const dataToUse = fullPositionsData.value.length > 0
+    ? fullPositionsData.value
     : positionsData.value
 
   return dataToUse.map((position, index) => {
@@ -345,8 +340,6 @@ const sortedPositions = computed(() => {
   })
 })
 
-
-// Functions
 const loadData = async () => {
   try {
     if (isInitialLoad.value) {
@@ -354,17 +347,18 @@ const loadData = async () => {
     }
     error.value = null
 
+    const startTime = performance.now()
     let data = await fetchPositionsData()
-    console.log('🚀 ~ loadData ~ data:', data)
-    if (!data) data = []
+    console.log('🚀 ~ loadedData ~ data:', data)
+    console.log('🚀 ~ loadedData ~ data:', performance.now() - startTime)
 
+    if (!data) data = []
     positionsData.value = data
-    tempPositionsData.value = [...data]
-    const updatedPositions = await Promise.all(
-      tempPositionsData.value.map(async (position) => {
+    fullPositionsData.value = []
+    fullPositionsData.value = await Promise.all(
+      positionsData.value.map(async (position) => {
         const token1 = await getTokenInfoInternal(position.tokenX.toString())
         const token2 = await getTokenInfoInternal(position.tokenY.toString())
-
         return {
           ...position,
           token1,
@@ -372,9 +366,8 @@ const loadData = async () => {
         }
       })
     )
-
-    tempPositionsData.value = updatedPositions
-    console.log('🚀 ~ loadData ~ tempPositionsData:', tempPositionsData.value)
+    console.log('🚀 ~ loadedData ~ fullPositionsData:', performance.now() - startTime)
+    console.log('🚀 ~ fullPositionsData:', fullPositionsData.value)
 
     if (isInitialLoad.value) {
       isInitialLoad.value = false
@@ -385,6 +378,12 @@ const loadData = async () => {
   } finally {
     loading.value = false
   }
+}
+
+const fetchPositionsData = async () => {
+  const { main } = await import('~/utils/dlmm-analyzer/index.ts')
+  const data = await main(walletAddress.value)
+  return data.positions || []
 }
 
 const preloadTokenInfo = async (positions) => {
@@ -400,83 +399,14 @@ const preloadTokenInfo = async (positions) => {
 
   console.log(`Pre-loading info for ${tokenAddresses.size} unique tokens...`)
   const addresses = Array.from(tokenAddresses)
-  const tokenInfos = await tokenService.value.getMultipleTokens(addresses)
+  const tokenInfos = await tokenService.getMultipleTokens(addresses)
 
-  tokenCache.value = { ...tokenCache.value, ...tokenInfos }
+  tokenCache = { ...tokenCache, ...tokenInfos }
 
   console.log('Token info pre-loading completed')
 }
 
-const fetchPositionsData = async () => {
-  const { main } = await import('~/utils/dlmm-analyzer/index.ts')
-  const data = await main(walletAddress.value)
-  console.log('data------>', data)
-  return data.positions || []
-}
-
-const getTokenInfoInternal = async (tokenAddress) => {
-  console.log(tokenAddress)
-  let icon
-  if (tokenAddress === 'So11111111111111111111111111111111111111112') {
-    icon = 'https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png'
-  }
-  icon = `https://dd.dexscreener.com/ds-data/tokens/solana/${tokenAddress}.png`
-  try {
-    const response = await fetch(
-      `https://api.dexscreener.com/latest/dex/tokens/${tokenAddress}`
-    )
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
-    }
-
-    const data = await response.json()
-
-    if (!data.pairs || data.pairs.length === 0) {
-      console.log('No pairs found for this token')
-      return null
-    }
-
-    const pair = data.pairs[0]
-    let symbol, name
-
-    if (pair.baseToken.address.toLowerCase() === tokenAddress.toLowerCase()) {
-      symbol = pair.baseToken.symbol
-      name = pair.baseToken.name
-    } else {
-      symbol = pair.quoteToken.symbol
-      name = pair.quoteToken.name
-    }
-
-    if (tokenAddress === 'So11111111111111111111111111111111111111112') {
-      icon = 'https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png'
-    }
-
-    return {
-      symbol,
-      name,
-      icon,
-      address: tokenAddress
-    }
-  } catch (error) {
-    console.error('Error fetching token info:', error)
-    return null
-  }
-}
-
-const getDefaultTokenInfo = (tokenAddress) => ({
-  symbol: tokenAddress ? tokenAddress.slice(0, 6) + '...' : 'UNKNOWN',
-  name: 'Unknown Token',
-  icon: getDefaultIcon(),
-  decimals: 9,
-  verified: false
-})
-
-const getDefaultIcon = () => 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iMTIiIGZpbGw9IiM2NjY2NjYiLz4KPHR0ZXh0IHg9IjUwJSIgeT0iNTAlIiBkb21pbmFudC1iYXNlbGluZT0iY2VudHJhbCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0id2hpdGUiIGZvbnQtc2l6ZT0iMTAiPj88L3RleHQ+Cjwvc3ZnPg=='
-
-const handleImageError = (event) => {
-  event.target.src = getDefaultIcon()
-}
+// Display functions
 
 const formatAge = (age) => {
   if (!age) return '0m'
@@ -555,6 +485,8 @@ const calculateRangePositions = (priceRange, isInRange) => {
   }
 }
 
+// Sorting functions
+
 const sort = (field) => {
   if (sortField.value === field) {
     sortDirection.value = sortDirection.value === 'asc' ? 'desc' : 'asc'
@@ -570,6 +502,8 @@ const getSortClass = (field) => {
   }
   return sortDirection.value === 'asc' ? 'sort-asc' : 'sort-desc'
 }
+
+// Refresh functions
 
 const refreshData = async () => {
   loading.value = true
@@ -590,6 +524,12 @@ const stopAutoRefresh = () => {
     refreshInterval.value = null
   }
 }
+
+// Watch functions
+
+watch(selectedWallet, (address) => {
+  updateWalletAddress(address)
+})
 </script>
 
 <style scoped>
