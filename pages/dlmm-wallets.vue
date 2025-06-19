@@ -1,5 +1,5 @@
 <template>
-  <div class="wallet-groups">
+  <div class="">
     <AppHeader title="DLMM Wallets" />
 
     <div class="header">
@@ -90,7 +90,6 @@
           <div class="form-group">
             <label>Wallet Address</label>
             <WalletAddress @walletAddressChanged="updateWalletAddress" />
-            {{ newWallet }}
           </div>
           <!--div class="form-group">
             <label>Group</label>
