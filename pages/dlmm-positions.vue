@@ -38,10 +38,11 @@
           <div class="sort-icon" :class="getSortClass('upnl')"></div>
         </div-->
         <div class="header-cell sortable flex items-center" @click="sort('range')">
-          <span>Range</span>
+          <span>Bins</span>
           <div class="sort-icon" :class="getSortClass('range')"></div>
           <div class="flex-1"></div>
-          <RefreshButton @refresh="refreshData" />
+
+          <RefreshButton @refresh="refreshData" v-if="selectedWallet" />
         </div>
       </div>
 
@@ -110,7 +111,7 @@
                 <img
                   :src="position.token2.icon"
                   :alt="position.token2.symbol"
-                  class="value-icon"
+                  class="value-icon mr-2"
                 />
                 {{ position.uncolFee.amount }}
               </div>
@@ -122,38 +123,7 @@
             </div-->
 
             <div class="cell range-cell">
-              <div class="range-bar">
-                <div class="range-track">
-                  <div
-                    class="range-fill"
-                    :style="{
-                      left: position.range.startPercent + '%',
-                      width:
-                        position.range.endPercent -
-                        position.range.startPercent +
-                        '%',
-                    }"
-                  ></div>
-                  <div class="range-indicators">
-                    <div
-                      class="range-indicator range-start"
-                      :style="{ left: position.range.startPercent + '%' }"
-                    ></div>
-                    <div
-                      class="range-indicator range-current"
-                      :style="{ left: position.range.currentPercent + '%' }"
-                    ></div>
-                    <div
-                      class="range-indicator range-end"
-                      :style="{ left: position.range.endPercent + '%' }"
-                    ></div>
-                  </div>
-                </div>
-                <div class="range-labels">
-                  <span class="range-min">${{ position.range.min }}</span>
-                  <span class="range-max">${{ position.range.max }}</span>
-                </div>
-              </div>
+              <BinRepresentation :binData="position.binData" :positionKey="position.positionKey" />
             </div>
           </div>
         </div>
@@ -163,6 +133,9 @@
 </template>
 
 <script setup>
+import BinRepresentation from '@/components/positions/BinRepresentation.vue'
+import { PublicKey } from '@solana/web3.js'
+
 import { getTokenService } from '@/utils/tokens'
 
 definePageMeta({
@@ -252,6 +225,8 @@ const formattedPositions = computed(() => {
 
     const totalFees = collectedFeeAmount + uncolFeeAmount
     const upnlPercentage = positionValue > 0 ? (totalFees / positionValue) * 100 : 0
+    const binData = position.position.positionData.positionBinData
+    let positionKey = position.position.lbPair.toBase58()
 
     return {
       id: `position-${index}`,
@@ -284,7 +259,9 @@ const formattedPositions = computed(() => {
         ...calculateRangePositions(position.priceRange, position.isInRange),
         sortValue: position.priceRange?.minPrice || 0,
         currentPrice: position.priceRange?.currentPrice
-      }
+      },
+      binData,
+      positionKey
     }
   })
 })
@@ -366,6 +343,7 @@ const loadData = async () => {
         }
       })
     )
+
     console.log('🚀 ~ loadedData ~ fullPositionsData:', performance.now() - startTime)
     console.log('🚀 ~ fullPositionsData:', fullPositionsData.value)
 
