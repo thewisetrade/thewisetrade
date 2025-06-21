@@ -1,14 +1,18 @@
 <template>
   <div class="liquidity-table-container">
-
     <AppHeader
       link="https://geeklad.github.io/meteora-profit-analysis/"
       author="Geeklad Analyzer"
       title="DLMM Positions"
     />
 
-    <div class="flex flex-row gap-2">
+    <div class="flex flex-row gap-2 items-center">
       <WalletSelector v-model="selectedWallet" />
+      <div class="flex-1"></div>
+      <div class="italic text-sm text-gray-500 mr-2" v-if="lastUpdateTime">
+        Last updated: {{ lastUpdateTime.toFormat('HH:mm:ss') }}
+      </div>
+      <RefreshButton @refresh="refreshData" />
     </div>
 
     <div class="table-wrapper">
@@ -25,10 +29,10 @@
           <span>Value</span>
           <div class="sort-icon" :class="getSortClass('value')"></div>
         </div>
-        <!--div class="header-cell sortable" @click="sort('collectedFee')">
+        <div class="header-cell sortable" @click="sort('collectedFee')">
           <span>Collected Fee</span>
           <div class="sort-icon" :class="getSortClass('collectedFee')"></div>
-        </div-->
+        </div>
         <div class="header-cell sortable" @click="sort('uncolFee')">
           <span>Uncol. Fee</span>
           <div class="sort-icon" :class="getSortClass('uncolFee')"></div>
@@ -37,12 +41,13 @@
           <span>uPnL</span>
           <div class="sort-icon" :class="getSortClass('upnl')"></div>
         </div-->
-        <div class="header-cell sortable flex items-center" @click="sort('range')">
+        <div
+          class="header-cell sortable flex items-center"
+          @click="sort('range')"
+        >
           <span>Bins</span>
           <div class="sort-icon" :class="getSortClass('range')"></div>
           <div class="flex-1"></div>
-
-          <RefreshButton @refresh="refreshData" v-if="selectedWallet" />
         </div>
       </div>
 
@@ -67,24 +72,30 @@
             :key="position.id"
           >
             <div class="cell position-cell">
-              <div class="token-pair">
-                <div class="token-icons">
-                  <img
-                    :src="position.token1.icon"
-                    :alt="position.token1.symbol"
-                    class="token-icon"
-                  />
-                  <img
-                    :src="position.token2.icon"
-                    :alt="position.token2.symbol"
-                    class="token-icon token-icon-overlap"
-                  />
+              <a
+                class="flex flex-row bin-container"
+                :href="`https://app.meteora.ag/dlmm/${position.positionKey}`"
+                target="_blank"
+              >
+                <div class="token-pair">
+                  <div class="token-icons">
+                    <img
+                      :src="position.token1.icon"
+                      :alt="position.token1.symbol"
+                      class="token-icon"
+                    />
+                    <img
+                      :src="position.token2.icon"
+                      :alt="position.token2.symbol"
+                      class="token-icon token-icon-overlap"
+                    />
+                  </div>
+                  <span class="pair-name"
+                    >{{ position.token1.symbol }} /
+                    {{ position.token2.symbol }}</span
+                  >
                 </div>
-                <span class="pair-name"
-                  >{{ position.token1.symbol }} /
-                  {{ position.token2.symbol }}</span
-                >
-              </div>
+              </a>
             </div>
 
             <div class="cell age-cell">
@@ -100,14 +111,21 @@
               <span class="value-amount">{{ position.value }}</span>
             </div>
 
-            <!--div class="cell fee-cell">
-              <div class="fee-amount">{{ position.collectedFee.amount }}</div>
-              <div class="fee-percentage">{{ position.collectedFee.percentage }}</div>
-            </div-->
+            <div class="cell fee-cell">
+              <div class="fee-amount flex items-center">
+                <img
+                  :src="position.token2.icon"
+                  :alt="position.token2.symbol"
+                  class="value-icon mr-2"
+                />
+                {{ position.collectedFee.amount }}
+              </div>
+            </div>
 
             <div class="cell fee-cell">
-
-              <div class="fee-amount flex items-center" :class="position.uncolFee.color">
+              <div
+                class="fee-amount flex items-center"
+              >
                 <img
                   :src="position.token2.icon"
                   :alt="position.token2.symbol"
@@ -123,7 +141,10 @@
             </div-->
 
             <div class="cell range-cell">
-              <BinRepresentation :binData="position.binData" :positionKey="position.positionKey" />
+              <BinRepresentation
+                :binData="position.binData"
+                :positionKey="position.positionKey"
+              />
             </div>
           </div>
         </div>
@@ -134,8 +155,8 @@
 
 <script setup>
 import BinRepresentation from '@/components/positions/BinRepresentation.vue'
-import { PublicKey } from '@solana/web3.js'
 
+import { DateTime } from 'luxon'
 import { getTokenService } from '@/utils/tokens'
 
 definePageMeta({
@@ -152,6 +173,7 @@ const error = ref(null)
 const positionsData = ref([])
 const fullPositionsData = ref([])
 
+const lastUpdateTime = ref(null)
 const refreshInterval = ref(null)
 
 const tokenService = getTokenService()
@@ -197,7 +219,6 @@ const saveWalletAddress = () => {
 }
 
 const setSavedWalletAddress = async () => {
-  /*
   let localWalletAddress = useRoute().query.address
   if (!localWalletAddress) {
     localWalletAddress = localStorage.getItem('positions:walletAddress')
@@ -206,27 +227,30 @@ const setSavedWalletAddress = async () => {
     if (isSolanaDomain(localWalletAddress)) {
       localWalletAddress = await resolveDomainToAddress(localWalletAddress)
     }
-    walletAddress.value = localWalletAddress
+    selectedWallet.value = localWalletAddress
   }
-  */
 }
 
 // Data loading functions
 
 const formattedPositions = computed(() => {
-  const dataToUse = fullPositionsData.value.length > 0
-    ? fullPositionsData.value
-    : positionsData.value
+  const dataToUse =
+    fullPositionsData.value.length > 0
+      ? fullPositionsData.value
+      : positionsData.value
 
   return dataToUse.map((position, index) => {
-    const collectedFeeAmount = position.collectedFeesValue || 0
-    const uncolFeeAmount = position.unCollectedFeesValue || 0
-    const positionValue = position.value || 0
+    const multiplier = position.token2.symbol === 'USDC' ? 1000 : 1
+    const collectedFeeAmount = (position.collectedFeesValue || 0) * multiplier
+    const uncolFeeAmount = (position.unCollectedFeesValue || 0) * multiplier
+    const positionValue = (position.value || 0) * multiplier
 
     const totalFees = collectedFeeAmount + uncolFeeAmount
-    const upnlPercentage = positionValue > 0 ? (totalFees / positionValue) * 100 : 0
+    const upnlPercentage =
+      positionValue > 0 ? (totalFees / positionValue) * 100 : 0
     const binData = position.position.positionData.positionBinData
     let positionKey = position.position.lbPair.toBase58()
+
 
     return {
       id: `position-${index}`,
@@ -239,29 +263,29 @@ const formattedPositions = computed(() => {
       collectedFee: {
         amount: formatFeeAmount(collectedFeeAmount),
         percentage: formatPercentage(collectedFeeAmount, positionValue),
-        sortValue: collectedFeeAmount
+        sortValue: collectedFeeAmount,
       },
       uncolFee: {
         amount: formatFeeAmount(uncolFeeAmount),
         percentage: formatPercentage(uncolFeeAmount, positionValue),
         color: uncolFeeAmount > 0 ? 'positive' : 'neutral',
-        sortValue: uncolFeeAmount
+        sortValue: uncolFeeAmount,
       },
       upnl: {
         amount: formatFeeAmount(totalFees),
         percentage: formatUpnlPercentage(upnlPercentage),
         color: getUpnlColor(upnlPercentage),
-        sortValue: upnlPercentage
+        sortValue: upnlPercentage,
       },
       range: {
         min: position.priceRange?.minPrice?.toFixed(6) || '0.000000',
         max: position.priceRange?.maxPrice?.toFixed(6) || '0.000000',
         ...calculateRangePositions(position.priceRange, position.isInRange),
         sortValue: position.priceRange?.minPrice || 0,
-        currentPrice: position.priceRange?.currentPrice
+        currentPrice: position.priceRange?.currentPrice,
       },
       binData,
-      positionKey
+      positionKey,
     }
   })
 })
@@ -325,6 +349,7 @@ const loadData = async () => {
     error.value = null
 
     const startTime = performance.now()
+    lastUpdateTime.value = DateTime.now()
     let data = await fetchPositionsData()
     console.log('🚀 ~ loadedData ~ data:', data)
     console.log('🚀 ~ loadedData ~ data:', performance.now() - startTime)
@@ -339,12 +364,15 @@ const loadData = async () => {
         return {
           ...position,
           token1,
-          token2
+          token2,
         }
-      })
+      }),
     )
 
-    console.log('🚀 ~ loadedData ~ fullPositionsData:', performance.now() - startTime)
+    console.log(
+      '🚀 ~ loadedData ~ fullPositionsData:',
+      performance.now() - startTime,
+    )
     console.log('🚀 ~ fullPositionsData:', fullPositionsData.value)
 
     if (isInitialLoad.value) {
@@ -406,7 +434,7 @@ const getAgeInHours = (age) => {
 const formatFeeAmount = (amount) => {
   if (!amount || amount === 0) return '0'
   if (amount < 0.01) return '0'
-  return `${amount.toFixed(2)}`
+  return `${amount.toFixed(3)}`
 }
 
 const formatPercentage = (fee, total) => {
@@ -434,7 +462,7 @@ const calculateRangePositions = (priceRange, isInRange) => {
     return {
       startPercent: 0,
       currentPercent: 50,
-      endPercent: 100
+      endPercent: 100,
     }
   }
 
@@ -459,7 +487,7 @@ const calculateRangePositions = (priceRange, isInRange) => {
   return {
     startPercent,
     currentPercent,
-    endPercent
+    endPercent,
   }
 }
 
@@ -530,16 +558,16 @@ watch(selectedWallet, (address) => {
 
 .table-header {
   display: grid;
-  grid-template-columns: 1.5fr 1fr 1fr 1fr 2fr;
+  grid-template-columns: 1.5fr 1fr 1fr 1fr 1fr 2fr;
   gap: 1rem;
   padding: 1rem 1.5rem;
-  background: #1A1A20;
+  background: #1a1a20;
   border-top-left-radius: 10px;
   border-top-right-radius: 10px;
   border: 1px solid #333;
   font-size: 0.875rem;
   font-weight: 500;
-  color: #CCC;
+  color: #ccc;
   flex-shrink: 0;
 }
 
@@ -594,7 +622,7 @@ watch(selectedWallet, (address) => {
 
 .table-row {
   display: grid;
-  grid-template-columns: 1.5fr 1fr 1fr 1fr 2fr;
+  grid-template-columns: 1.5fr 1fr 1fr 1fr 1fr 2fr;
   gap: 1rem;
   padding: 1rem 1.5rem;
   border-bottom: 1px solid #2a2a2a;
