@@ -462,16 +462,13 @@ onMounted(async () => {
 })
 
 const setSavedWalletAddress = () => {
-  /*
   let localWalletAddress = useRoute().query.address
   if (!localWalletAddress) {
     localWalletAddress = localStorage.getItem('walletAddress')
   }
   if (localWalletAddress) {
-    walletAddress.value = localWalletAddress
-    currentWalletAddress.value = localWalletAddress
+    selectedWallet.value = localWalletAddress
   }
-  */
 }
 
 const updateWalletAddress = async (address) => {
