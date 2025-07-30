@@ -69,7 +69,7 @@
         <a
           :key="pool.id"
           target="_blank"
-          :href="`https://v2.meteora.ag/dlmm/${pool.meteora_address}`"
+          :href="`https://app.meteora.ag/dlmm/${pool.meteora_address}`"
           v-for="pool in displayedPools"
         >
           <div
