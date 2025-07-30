@@ -19,23 +19,23 @@
         <div class="flex flex-row gap-2 text-gray-500 hover:text-gray-100">
           <NuxtLink
             class="flex flex-row gap-2 items-center app-link"
-            to="/dlmm-performance"
-            active-class="active"
-            title="Performance"
-          >
-            <ChartBarIcon class="size-4" />
-            <span class="text-sm">Performance</span>
-          </NuxtLink>
-        </div>
-        <div class="flex flex-row gap-2 text-gray-500 hover:text-gray-100">
-          <NuxtLink
-            class="flex flex-row gap-2 items-center app-link"
             to="/dlmm-positions"
             active-class="active"
             title="Positions"
           >
             <QueueListIcon class="size-4" />
             <span class="text-sm">Positions</span>
+          </NuxtLink>
+        </div>
+        <div class="flex flex-row gap-2 text-gray-500 hover:text-gray-100">
+          <NuxtLink
+            class="flex flex-row gap-2 items-center app-link"
+            to="/dlmm-performance"
+            active-class="active"
+            title="Performance"
+          >
+            <ChartBarIcon class="size-4" />
+            <span class="text-sm">Performance</span>
           </NuxtLink>
         </div>
         <div class="flex flex-row gap-2 text-gray-500 hover:text-gray-100">
