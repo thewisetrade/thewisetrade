@@ -21,21 +21,21 @@
           <span>Position</span>
           <div class="sort-icon" :class="getSortClass('pair')"></div>
         </div>
-        <div class="header-cell sortable" @click="sort('age')">
-          <span>Age</span>
-          <div class="sort-icon" :class="getSortClass('age')"></div>
-        </div>
         <div class="header-cell sortable" @click="sort('value')">
           <span>Value</span>
           <div class="sort-icon" :class="getSortClass('value')"></div>
+        </div>
+        <div class="header-cell sortable" @click="sort('uncolFee')">
+          <span>Uncol. Fee</span>
+          <div class="sort-icon" :class="getSortClass('uncolFee')"></div>
         </div>
         <div class="header-cell sortable" @click="sort('collectedFee')">
           <span>Collected Fee</span>
           <div class="sort-icon" :class="getSortClass('collectedFee')"></div>
         </div>
-        <div class="header-cell sortable" @click="sort('uncolFee')">
-          <span>Uncol. Fee</span>
-          <div class="sort-icon" :class="getSortClass('uncolFee')"></div>
+        <div class="header-cell sortable" @click="sort('age')">
+          <span>Age</span>
+          <div class="sort-icon" :class="getSortClass('age')"></div>
         </div>
         <!--div class="header-cell sortable" @click="sort('upnl')">
           <span>uPnL</span>
@@ -98,9 +98,6 @@
               </a>
             </div>
 
-            <div class="cell age-cell">
-              {{ position.age }}
-            </div>
 
             <div class="cell value-cell">
               <img
@@ -109,17 +106,6 @@
                 class="value-icon mr-2"
               />
               <span class="value-amount">{{ position.value }}</span>
-            </div>
-
-            <div class="cell fee-cell">
-              <div class="fee-amount flex items-center">
-                <img
-                  :src="position.token2.icon"
-                  :alt="position.token2.symbol"
-                  class="value-icon mr-2"
-                />
-                {{ position.collectedFee.amount }}
-              </div>
             </div>
 
             <div class="cell fee-cell">
@@ -135,6 +121,21 @@
               </div>
             </div>
 
+            <div class="cell fee-cell">
+              <div class="fee-amount flex items-center">
+                <img
+                  :src="position.token2.icon"
+                  :alt="position.token2.symbol"
+                  class="value-icon mr-2"
+                />
+                {{ position.collectedFee.amount }}
+              </div>
+            </div>
+
+
+            <div class="cell age-cell">
+              {{ position.age }}
+            </div>
             <!--div class="cell upnl-cell">
               <div class="fee-amount" :class="position.upnl.color">{{ position.upnl.amount }}</div>
               <div class="fee-percentage" :class="position.upnl.color">{{ position.upnl.percentage }}</div>
@@ -188,10 +189,6 @@ const router = useRouter()
 onMounted(async () => {
   await tokenService.init()
   await setSavedWalletAddress()
-
-  if (walletAddress.value) {
-    await loadData()
-  }
 
   setTimeout(() => {
     startAutoRefresh()
@@ -249,7 +246,7 @@ const formattedPositions = computed(() => {
     const upnlPercentage =
       positionValue > 0 ? (totalFees / positionValue) * 100 : 0
     const binData = position.position.positionData.positionBinData
-    let positionKey = position.position.lbPair.toBase58()
+    let positionKey = position.position.lbPair
 
 
     return {
@@ -341,7 +338,11 @@ const sortedPositions = computed(() => {
   })
 })
 
+
 const loadData = async () => {
+  if (loading.value) return
+  loading.value = true
+  console.log('loadData')
   try {
     if (isInitialLoad.value) {
       loading.value = true
@@ -351,8 +352,6 @@ const loadData = async () => {
     const startTime = performance.now()
     lastUpdateTime.value = DateTime.now()
     let data = await fetchPositionsData()
-    console.log('🚀 ~ loadedData ~ data:', data)
-    console.log('🚀 ~ loadedData ~ data:', performance.now() - startTime)
 
     if (!data) data = []
     positionsData.value = data
@@ -387,8 +386,8 @@ const loadData = async () => {
 }
 
 const fetchPositionsData = async () => {
-  const { main } = await import('~/utils/dlmm-analyzer/index.ts')
-  const data = await main(walletAddress.value)
+  const { loadPositionsData } = await import('~/utils/dlmm-analyzer/index.ts')
+  const data = await loadPositionsData(walletAddress.value)
   return data.positions || []
 }
 
@@ -512,13 +511,10 @@ const getSortClass = (field) => {
 // Refresh functions
 
 const refreshData = async () => {
-  loading.value = true
   await loadData()
-  loading.value = false
 }
 
 const startAutoRefresh = () => {
-  console.log('now start reload data per 10 min')
   /*refreshInterval.value = setInterval(async () => {
     await refreshData()
   }, 60000)*/

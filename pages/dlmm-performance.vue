@@ -561,7 +561,7 @@ const togglePosition = (signature) => {
 }
 
 const clearAll = async () => {
-  walletAddress.value = ''
+  selectedWallet.value = ''
   domainName.value = ''
   transactions = []
   positions.value = []

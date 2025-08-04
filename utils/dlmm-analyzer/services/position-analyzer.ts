@@ -14,6 +14,12 @@ import type {
 } from '../types/transaction.js';
 import { calculateAge, formatTokenAmount } from '../utils/helpers.js';
 import DLMM from '@meteora-ag/dlmm';
+import {
+  loadPositionAnalyzisCache,
+  savePositionAnalyzisCache,
+  isPositionAnalyzisCached,
+  setPositionAnalyzisCached,
+} from '../../cache.js';
 
 export class PositionAnalyzer {
   private quickNodeService: QuickNodeService;
@@ -28,6 +34,7 @@ export class PositionAnalyzer {
    * Analyze all positions from position open events
    */
   async analyzePositions(
+    walletAddress: string,
     positionEvents: PositionOpenEvent[],
     priceData: Map<string, number> = new Map()
   ): Promise<PositionAnalysis> {
@@ -39,10 +46,14 @@ export class PositionAnalyzer {
     let totalAge = 0;
 
     console.log(`Analyzing ${positionEvents.length} positions...`);
-
+    const cache = loadPositionAnalyzisCache(walletAddress)
     for (const event of positionEvents) {
       try {
-        const positionData = await this.analyzePosition(event, priceData);
+        if (isPositionAnalyzisCached(walletAddress, event)) {
+          // console.log(`Position ${event.signature} already analyzed`)
+          continue
+        }
+        const positionData = await this.analyzePosition(walletAddress, event, priceData);
         if (positionData) {
           positions.push(positionData);
           totalValue += positionData.currentValue.totalUsd;
@@ -52,10 +63,11 @@ export class PositionAnalyzer {
           totalAge += positionData.age.days;
         }
       } catch (error) {
-        console.error(`Error analyzing position ${event.positionPubkey.toBase58()}:`, error);
+        console.error(`Error analyzing position ${event.positionPubkey}:`, error);
       }
     }
 
+    savePositionAnalyzisCache(walletAddress)
     return {
       totalPositions: positions.length,
       totalValue,
@@ -71,60 +83,36 @@ export class PositionAnalyzer {
    * Analyze a single position
    */
   async analyzePosition(
+    walletAddress: string,
     event: PositionOpenEvent,
     priceData: Map<string, number> = new Map()
   ): Promise<PositionData | null> {
     try {
       // Fetch current position data
       const position = await this.meteoraService.fetchPosition(event.positionPubkey, event.lbPair);
-      console.log('position', event.positionPubkey.toBase58(), event.lbPair.toBase58())
       if (!position) {
-        console.warn(`Position ${event.positionPubkey.toBase58()} not found`);
-
+        // console.warn(`Position ${event.lbPair} not found`);
+        setPositionAnalyzisCached(walletAddress, event)
         return null;
       }
 
       // Fetch LB Pair data
-      const lbPair = await this.meteoraService.fetchLbPair(event.lbPair);
       const connection = await this.quickNodeService.getConnection();
 
-      const dlmmPool = await DLMM.create(connection, event.lbPair);
+      const dlmmPool = await DLMM.create(connection, new PublicKey(event.lbPair));
       const token_X_mint = dlmmPool.tokenX.mint.address;
-
-      const token_X_publicKey = dlmmPool.tokenX.publicKey;
       const token_Y_mint = dlmmPool.tokenY.mint.address;
-      const token_Y_publicKey = dlmmPool.tokenY.mint.address;
-      ///console.log("🚀 ~ PositionAnalyzer ~ token_X_mint:", token_X_mint)
-      //console.log("🚀 ~ PositionAnalyzer ~ token_X_publicKey:", token_X_publicKey)
-      //console.log("🚀 ~ PositionAnalyzer ~ token_Y_mint:", token_Y_mint)
-      //console.log("🚀 ~ PositionAnalyzer ~ token_Y_publicKey:", token_Y_publicKey)
-      // if (!lbPair) {
-      //   console.warn(`LB Pair ${event.lbPair.toBase58()} not found`);
-      //   return null;
-      // }
-
-      // Fetch bin data(I will get from the position data)
-      //const bins = await this.meteoraService.fetchBins(position.lbPair, position.binIds);
       const bins = position.positionData.positionBinData;
-      // Calculate current position value
-      const currentValue = this.meteoraService.calculatePositionValue(bins);
 
-      // Calculate uncollected fees
-      //const unCollectedFees = this.meteoraService.calculateUnCollectedFees(position, bins);
+      const currentValue = this.meteoraService.calculatePositionValue(bins);
       const unCollectedFees = { tokenX: position.positionData.feeX, tokenY: position.positionData.feeY };
-      // Get collected fees from transaction history
-      //const collectedFees = await this.getCollectedFees(position.publicKey);
       const collectedFees = { tokenX: position.positionData.totalClaimedFeeXAmount, tokenY: position.positionData.totalClaimedFeeYAmount };
 
-      // Get token decimals
       const tokenXDecimals = await this.meteoraService.getTokenDecimals(token_X_mint);
       const tokenYDecimals = await this.meteoraService.getTokenDecimals(token_Y_mint);
-
-      // Get token prices
       const tokenXPrice = priceData.get(token_X_mint.toBase58()) || 0;
       const tokenYPrice = priceData.get(token_Y_mint.toBase58()) || 0;
 
-      // Calculate USD values
       const currentValueUsd = this.calculateUsdValue(
         currentValue,
         tokenXDecimals,

@@ -42,7 +42,7 @@ export class MeteoraService {
     for (const tx of transactions) {
       try {
         const meteoraInstructions = tx.transaction.message.instructions.filter(
-          (ix) => ix.programId.equals(config.meteoraProgramId),
+          (ix) => ix.programId === config.meteoraProgramId,
         )
 
         for (const instruction of meteoraInstructions) {
@@ -172,81 +172,16 @@ export class MeteoraService {
   ): Promise<LbPosition | null> {
     try {
       const connection = await this.quickNodeService.getConnection()
-      //console.log("🚀 ~ MeteoraService ~ fetchPosition ~ connection:", connection)
-      const accountInfo = await connection.getAccountInfo(positionPubkey)
-      //console.log("🚀 ~ MeteoraService ~ fetchPosition ~ accountInfo:", accountInfo)
-      const dlmmPool = await DLMM.create(connection, lbPair)
-      const positionInfo = await dlmmPool.getPosition(positionPubkey)
-      console.log(
-        '🚀 ~ MeteoraService ~ fetchPosition ~ positionInfo:',
-        positionInfo.positionData,
-      )
-
+      const accountInfo = await connection.getAccountInfo(new PublicKey(positionPubkey))
+      const dlmmPool = await DLMM.create(connection, new PublicKey(lbPair))
+      const positionInfo = await dlmmPool.getPosition(new PublicKey(positionPubkey))
       if (!positionInfo) return null
       return positionInfo
-      //return this.deserializePosition(positionPubkey, accountInfo);
     } catch (error) {
-      //console.error(`Error fetching position ${positionPubkey.toBase58()}:`, error);
+      console.error(`Error fetching position ${positionPubkey}:`, error);
       return null
     }
   }
-  //get positions with position
-  // async getWalletPositionsInPool(
-  //     poolAddress: string,
-  //     walletAddress: string
-  // ): Promise<UserPosition[]> {
-  //     try {
-  //         // Wait for rate limit availability
-  //         await this.rateLimiter.waitForAvailableSlot();
-
-  //         logger.debug(`Getting positions for wallet ${walletAddress} in pool ${poolAddress}`);
-
-  //         const dlmmPool = await DLMM.create(this.connection, new PublicKey(poolAddress));
-
-  //         // This is another rate-limited call
-  //         await this.rateLimiter.waitForAvailableSlot();
-
-  //         const { userPositions } = await dlmmPool.getPositionsByUserAndLbPair(
-  //             new PublicKey(walletAddress)
-  //         );
-
-  //         if (userPositions.length === 0) {
-  //             return [];
-  //         }
-
-  //         const positions: UserPosition[] = userPositions.map((position) => {
-  //             const binData = position.positionData.positionBinData.map(bin => ({
-  //                 binId: bin.binId,
-  //                 liquidityAmount: bin.binLiquidity.toString(),
-  //                 pricePerToken: this.calculateBinPrice(bin.binId, dlmmPool.lbPair.binStep)
-  //             }));
-
-  //             return {
-  //                 positionAddress: position.publicKey.toString(),
-  //                 owner: walletAddress,
-  //                 poolAddress: poolAddress,
-  //                 poolName: dlmmPool.tokenX.mint + '-' + dlmmPool.tokenY.mint,
-  //                 binData: binData,
-  //                 unclaimedFees: {
-  //                     tokenX: position.positionData.feeX.toString(),
-  //                     tokenY: position.positionData.feeY.toString()
-  //                 },
-  //                 rewards: {
-  //                     rewardOne: position.positionData.rewardOne.toString(),
-  //                     rewardTwo: position.positionData.rewardTwo.toString()
-  //                 },
-  //                 lastUpdated: new Date()
-  //             };
-  //         });
-
-  //         logger.debug(`Found ${positions.length} positions in pool ${poolAddress}`);
-  //         return positions;
-
-  //     } catch (error) {
-  //         logger.warn(`Error getting positions for pool ${poolAddress}:`, error);
-  //         return [];
-  //     }
-  // }
 
   /**
    * Deserialize position account data
@@ -395,16 +330,14 @@ export class MeteoraService {
    * Fetch LB Pair data
    */
   async fetchLbPair(lbPairPubkey: PublicKey): Promise<LbPair | null> {
-    //console.log("🚀 ~ MeteoraService ~ fetchLbPair ~ lbPairPubkey:", lbPairPubkey)
     try {
       const connection = await this.quickNodeService.getConnection()
       const accountInfo = await connection.getAccountInfo(lbPairPubkey)
-
       if (!accountInfo) return null
 
       return this.deserializeLbPair(lbPairPubkey, accountInfo)
     } catch (error) {
-      //console.error(`Error fetching LB pair ${lbPairPubkey.toBase58()}:`, error);
+      console.error(`Error fetching LB pair ${lbPairPubkey.toBase58()}:`, error);
       return null
     }
   }
