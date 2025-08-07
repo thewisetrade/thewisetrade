@@ -642,27 +642,6 @@
 
   <ul>
     <li>
-      <a target="_blank" href="https://met-aleksrgs-projects.vercel.app/">
-        DLMM utilities: fees count, transaction P&L, active pools, pool search
-        (Metlex)
-      </a>
-    </li>
-    <li>
-      <a
-        target="_blank"
-        href="https://geeklad.github.io/meteora-profit-analysis/"
-        >DLMM P&L analysis (Geeklad)</a
-      >
-    </li>
-    <li>
-      <a target="_blank" href="https://dashboard.isc.money/meteora_dlmm_ui"
-        >DLMM P&L and fees listing (ISC)</a
-      >
-    </li>
-    <li>
-      <a target="_blank" href="https://lp4fun.vercel.app/">DLMM portfolio</a>
-    </li>
-    <li>
       <a
         target="_blank"
         href="https://docs.google.com/spreadsheets/d/1RIlAb-eilVWUVzruDUWR7Sidt8LI-GB1VIBhiKC_ccI/edit#gid=1434356868"
@@ -670,13 +649,29 @@
       >
     </li>
     <li>
+      <a target="_blank" href="https://metlex.io/">
+        DLMM utilities: fees count, transaction P&L, active pools, pool search
+        (Metlex)
+      </a>
+    </li>
+    <li>
       <a
         target="_blank"
-        href="https://docs.google.com/spreadsheets/d/1uMj43pCdVwhDKEswCTbe47LfbmI0CRlmFisDtWaFFyc/edit#gid=1950288549"
-        >Highly active pairs from the last 24 hours (Spreadsheet)</a
+        href="https://tokleo.com"
+        >Highly active pairs</a>
+    </li>
+    <li>
+      <a
+        target="_blank"
+        href="https://geeklad.github.io/meteora-profit-analysis/"
+        >DLMMs History Analytics (Geeklad)</a
       >
     </li>
-  </ul>
+    <li>
+      <a target="_blank" href="https://app.lpagent.io/">Opened DLMM positions
+      performance</a>
+    </li>
+ </ul>
 
   <h3>Resources</h3>
 
@@ -684,24 +679,9 @@
     <li>
       <a
         target="_blank"
-        href="https://youtube.com/@meteora163?si=MP_dS0kinQosCehA"
+        href="https://www.youtube.com/@meteora-ag"
         >Meteora Youtube Playlist: Bootcamps and JAM sessions</a
       >
-    </li>
-    <li>
-      <a
-        href="https://discord.com/channels/841152225564950528/854683268519559189/1234769289156890654"
-      >
-        Helpful Discord message
-      </a>
-    </li>
-    <li>
-      <a
-        target="_blank"
-        href="https://drive.google.com/file/d/1FrMuyN0ePTiwcC3G9RJVBgaT7e1EE_Yb/view?usp=sharing"
-      >
-        Meteora Bootcamp Slides (old version)
-      </a>
     </li>
   </ul>
   <p>&nbsp;</p>
