@@ -370,6 +370,93 @@
     strategy.
   </p>
 
+  <h3>Fees amount per bin</h3>
+
+  <p>
+    To select the fees amount per bin, you have to consider how wide will the
+    movements be. The positions with a high percentage won't catch many
+    transactions, but if the price movements are big they will be fully used and
+    that way gives you a lot of fees and cover you impermanent loss faster.
+    But if the range tends to move slowly, it's the opposite. With high fees,
+  you will catch very few transactions and potentially miss many opportunities.
+    In that case, bin with smaller fees will perform better.
+  </p>
+
+  <h3>Covered Range</h3>
+
+  <p>
+  All pools can cover any range involving at most 1400 bins. But sometimes,
+  it's simpler to stick with the default range. The following table resume the
+  range covered by default positions proposed by Meteora:
+  </p>
+
+  <table class="w-full my-4">
+    <thead>
+      <tr>
+        <th class="text-left">Bin Step</th>
+        <th class="text-left">Single sided lower range</th>
+        <th class="text-left">Double sided range</th>
+        <th class="text-left">Single sided upper range</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>10</td>
+        <td>-6% - 0</td>
+        <td>-3.44% - +3.35%</td>
+        <td>0 - +7.14%</td>
+      </tr>
+      <tr>
+        <td>20</td>
+        <td>-12.88% - 0</td>
+        <td>-6.57% - +7.03%</td>
+        <td>0 - +14.78%</td>
+      </tr>
+      <tr>
+        <td>50</td>
+        <td>-29.12% - 0</td>
+        <td>-15.60% - +18.48%</td>
+        <td>0 - +41.08%</td>
+      </tr>
+      <tr>
+        <td>80</td>
+        <td>-42.29% - 0</td>
+        <td>-23.73% - +31.12%</td>
+        <td>0 - +72.29%</td>
+      </tr>
+      <tr>
+        <td>100</td>
+        <td>-49.67% - 0</td>
+        <td>-28.70% - +40.26%</td>
+        <td>0 - +98.69%</td>
+      </tr>
+      <tr>
+        <td>125</td>
+        <td>-57.56% - 0</td>
+        <td>-34.45% - +52.56%</td>
+        <td>0 - +135.64%</td>
+      </tr>
+      <tr>
+        <td>200</td>
+        <td>-74.50% - 0</td>
+        <td>-49%  - +96.07%</td>
+        <td>0 - +292.11%</td>
+      </tr>
+      <tr>
+        <td>250</td>
+        <td>-81.80% - 0</td>
+        <td>-56.81% - +131.53%</td>
+        <td>0 - +449.47%</td>
+      </tr>
+      <tr>
+        <td>400</td>
+        <td>-93.32% - 0</td>
+        <td>-73.64% - +279.43%</td>
+        <td>0 - +1397.27%</td>
+      </tr>
+    </tbody>
+  </table>
+
   <h2>8. DLMMs strategies</h2>
 
   <h3>A. Very concentrated ranges: stables and pegged tokens</h3>
@@ -738,11 +825,11 @@
     <li>Use only small capital amount.</li>
     <li>Stay in front of your computer during the process.</li>
     <li>
-      Join a DLMM community like DED LP Army, Goose DAO, or The Whales NFT and
-      trade with them.
+      Join a DLMM community like the LP Army and trade with them.
     </li>
     <li>
-      These tokens can rug at any time, in that case, your funds are lost.
+      These tokens can rug at any time, in that case, your funds are lost. This
+      is why the risk is very high.
     </li>
     <li>Use only single-sided SOL pool</li>
     <li>Wide bins are fine (like 250 or 400).</li>
@@ -784,13 +871,7 @@
       <a href="https://discord.com/invite/meteora">The Meteora Community</a>
     </li>
     <li>
-      <a href="https://discord.com/invite/ded">LP Army</a>
-    </li>
-    <li>
-      <a href="https://discord.com/invite/ded">DED DAO</a>
-    </li>
-    <li>
-      <a href="https://discord.com/invite/thewhalesnft">The Whales NFT</a>
+      <a href="https://www.lparmy.com/">LP Army (Community for advanced users)</a>
     </li>
   </ul>
 </template>
