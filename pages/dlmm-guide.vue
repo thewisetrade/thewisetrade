@@ -650,15 +650,14 @@
     </li>
     <li>
       <a target="_blank" href="https://metlex.io/">
-        DLMM utilities: fees count, transaction P&L, active pools, pool search
-        (Metlex)
+        DLMM utilities: transaction P&L, active pools, pool search
       </a>
     </li>
     <li>
       <a
         target="_blank"
         href="https://tokleo.com"
-        >Highly active pairs</a>
+        >Highly active pairs finder</a>
     </li>
     <li>
       <a
@@ -668,8 +667,11 @@
       >
     </li>
     <li>
-      <a target="_blank" href="https://app.lpagent.io/">Opened DLMM positions
+      <a target="_blank" href="https://app.lpagent.io/">Positions
       performance</a>
+    </li>
+    <li>
+      <a target="_blank" href="https://www.hawkfi.ag/">Automations</a>
     </li>
  </ul>
 
@@ -682,6 +684,14 @@
         href="https://www.youtube.com/@meteora-ag"
         >Meteora Youtube Playlist: Bootcamps and JAM sessions</a
       >
+    </li>
+    <li>
+      <a
+        target="_blank"
+        href="https://www.lparmy.com/strategies"
+      >
+        Advanced strategies
+      </a>
     </li>
   </ul>
   <p>&nbsp;</p>
@@ -839,7 +849,7 @@
 
   <hr />
 
-  <h2>Bonus chapter: Communities</h2>
+  <h2>Communities</h2>
 
   <p>
     Managing proper positions can be tedious. That's why I recommend you to join
