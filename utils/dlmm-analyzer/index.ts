@@ -84,7 +84,7 @@ async function getTokenPrices(
         // console.debug('lbPair does not exist, skipping')
       }
     } catch (error) {
-      console.warn(`Could not fetch LB pair for ${event.lbPair.toBase58()}`)
+      console.warn(`Could not fetch LB pair for ${event.lbPair}`)
     }
   }
 
@@ -117,7 +117,6 @@ async function loadPositionsData(walletAddress: string) {
       transactions,
     )
     console.log('transactionDetails', transactionDetails)
-    /*
     const meteoraTransactions = await getMeteoraTransactions(
       quickNodeService,
       transactionDetails,
@@ -141,8 +140,6 @@ async function loadPositionsData(walletAddress: string) {
     )
     console.log(`✅ Analysis complete!\n`)
     return analysis
-    */
-    return []
   } catch (error) {
     console.warn('❌ Error during analysis:', error)
     throw error
