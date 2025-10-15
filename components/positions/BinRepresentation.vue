@@ -8,17 +8,19 @@
       <div
         :key="bin.id"
         class="bin"
-        :style="binStyle(bin)"
-        v-for="bin in props.binData"
+        :style="binStyle(bin,index)"
+        v-for="(bin, index) in props.binData"
       ></div>
     </a>
   </div>
 </template>
 
 <script setup>
+import { computed } from 'vue'
+
 const props = defineProps({
   binData: {
-    type: Object,
+    type: Array,
     required: true,
   },
   positionKey: {
@@ -27,9 +29,36 @@ const props = defineProps({
   },
 })
 
-const binStyle = (bin) => {
+const maxBinXAmount = computed(() => {
+  const bins = props.binData || []
+  return bins.reduce((max, bin) => {
+    return Math.max(max, bin.positionXAmount)
+  }, 0)
+})
+
+const maxBinYAmount = computed(() => {
+  const bins = props.binData || []
+  return bins.reduce((max, bin) => {
+    return Math.max(max, bin.positionYAmount)
+  }, 0)
+})
+
+const maxBinAmount = computed(() => {
+  return Math.max(maxBinXAmount.value, maxBinYAmount.value)
+})
+
+const binStyle = (bin, index) => {
+  // console.log(bin)
+  // console.log(bin.positionXAmount, bin.positionYAmount, maxBinXAmount.value, maxBinYAmount.value, index)
+  if (bin.positionXAmount > 0) {
+    return {
+      backgroundColor: '#6f61c0',
+      height: '25px' // `${(bin.positionXAmount / maxBinXAmount.value) * 25}px`
+    }
+  }
   return {
-    backgroundColor: bin.positionXAmount > 0 ? '#6f61c0' : '#06aed4',
+    backgroundColor: '#06aed4',
+    height: '25px' // `${(bin.positionYAmount / maxBinYAmount.value) * 25}px`
   }
 }
 </script>
@@ -41,7 +70,7 @@ const binStyle = (bin) => {
 .bin-container {
   display: flex;
   flex-direction: row;
-  align-items: center;
+  align-items: end;
   justify-content: flex-start;
   width: 100%;
 }
@@ -49,5 +78,6 @@ const binStyle = (bin) => {
   width: 3px;
   height: 25px;
   margin-right: 0px;
+  padding: 0;
 }
 </style>

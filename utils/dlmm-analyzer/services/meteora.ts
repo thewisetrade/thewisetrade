@@ -2,7 +2,7 @@
 import { PublicKey, type AccountInfo } from '@solana/web3.js'
 import BN from 'bn.js'
 import { QuickNodeService } from './quicknode.js'
-import DLMM, { type LbPosition, type PositionBinData } from '@meteora-ag/dlmm'
+import DLMM, { type LbPosition, type PositionBinData, type PositionInfo } from '@meteora-ag/dlmm'
 
 import type {
   TransactionDetails,
@@ -309,7 +309,6 @@ export class MeteoraService {
       createdAt: new Date(), // This should be derived from creation transaction
       lastUpdatedAt: new Date(),
     }
-    console.log('position data::', returnData)
 
     return {
       pubkey,
@@ -718,5 +717,14 @@ export class MeteoraService {
       )
       return 9 // Default to 9 decimals if unable to fetch
     }
+  }
+
+  async getUserLbPairs(walletAddress: PublicKey): Promise<PositionInfo[]> {
+    const connection = await this.quickNodeService.getConnection()
+    const userPositions = await DLMM.getAllLbPairPositionsByUser(
+      connection,
+      walletAddress
+    );
+    return Array.from(userPositions.values())
   }
 }

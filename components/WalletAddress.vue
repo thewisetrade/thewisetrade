@@ -28,7 +28,6 @@
 </template>
 
 <script setup>
-import { XMarkIcon } from '@heroicons/vue/24/outline'
 import { useTemplateRef } from 'vue'
 
 const props = defineProps({
