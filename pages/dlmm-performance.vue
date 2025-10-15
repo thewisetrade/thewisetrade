@@ -397,6 +397,38 @@ const timePeriodOptions = computed(() => {
       }
     },
     {
+      text: DateTime.now().minus({ month: 4 }).toFormat('MMMM yyyy'),
+      value: {
+        name: DateTime.now().minus({ month: 4 }).toFormat('MMMM'),
+        start: DateTime.now().minus({ month: 4 }).startOf('month'),
+        end: DateTime.now().minus({ month: 4 }).endOf('month'),
+      }
+    },
+    {
+      text: DateTime.now().minus({ month: 5 }).toFormat('MMMM yyyy'),
+      value: {
+        name: DateTime.now().minus({ month: 5 }).toFormat('MMMM'),
+        start: DateTime.now().minus({ month: 5 }).startOf('month'),
+        end: DateTime.now().minus({ month: 5 }).endOf('month'),
+      }
+    },
+    {
+      text: DateTime.now().minus({ month: 6 }).toFormat('MMMM yyyy'),
+      value: {
+        name: DateTime.now().minus({ month: 6 }).toFormat('MMMM'),
+        start: DateTime.now().minus({ month: 6 }).startOf('month'),
+        end: DateTime.now().minus({ month: 6 }).endOf('month'),
+      }
+    },
+    {
+      text: DateTime.now().minus({ month: 7 }).toFormat('MMMM yyyy'),
+      value: {
+        name: DateTime.now().minus({ month: 7 }).toFormat('MMMM'),
+        start: DateTime.now().minus({ month: 7 }).startOf('month'),
+        end: DateTime.now().minus({ month: 7 }).endOf('month'),
+      }
+    },
+    {
       text: DateTime.now().toFormat('yyyy'),
       value: {
         name: DateTime.now().toFormat('yyyy'),
