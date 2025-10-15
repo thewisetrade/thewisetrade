@@ -2,12 +2,12 @@
   <div class="liquidity-table-container">
     <AppHeader
       link="https://geeklad.github.io/meteora-profit-analysis/"
-      author="Geeklad Analyzer"
+      author=""
       title="DLMM Positions"
     />
 
     <div class="flex flex-row gap-2 items-center">
-      <WalletSelector v-model="selectedWallet" />
+      <WalletSelector v-model="selectedWallet" with-all-wallets />
       <div class="flex-1"></div>
       <div class="italic text-sm text-gray-500 mr-2" v-if="lastUpdateTime">
         Last updated: {{ lastUpdateTime.toFormat('HH:mm:ss') }}
@@ -17,32 +17,32 @@
 
     <div class="table-wrapper">
       <div class="table-header">
-        <div class="header-cell sortable" @click="sort('pair')">
+        <div class="header-cell token-pair-header sortable" @click="sort('pair')">
           <span>Position</span>
           <div class="sort-icon" :class="getSortClass('pair')"></div>
         </div>
-        <div class="header-cell sortable" @click="sort('value')">
+        <div class="header-cell value-cell-header sortable" @click="sort('value')">
           <span>Value</span>
           <div class="sort-icon" :class="getSortClass('value')"></div>
         </div>
-        <div class="header-cell sortable" @click="sort('uncolFee')">
+        <div class="header-cell fee-cell-header sortable" @click="sort('uncolFee')">
           <span>Uncol. Fee</span>
           <div class="sort-icon" :class="getSortClass('uncolFee')"></div>
         </div>
-        <div class="header-cell sortable" @click="sort('collectedFee')">
+        <div class="header-cell fee-cell-header sortable" @click="sort('collectedFee')">
           <span>Collected Fee</span>
           <div class="sort-icon" :class="getSortClass('collectedFee')"></div>
         </div>
-        <div class="header-cell sortable" @click="sort('age')">
+        <!--div class="header-cell sortable" @click="sort('age')">
           <span>Age</span>
           <div class="sort-icon" :class="getSortClass('age')"></div>
-        </div>
+        </div-->
         <!--div class="header-cell sortable" @click="sort('upnl')">
           <span>uPnL</span>
           <div class="sort-icon" :class="getSortClass('upnl')"></div>
         </div-->
         <div
-          class="header-cell sortable flex items-center"
+          class="header-cell range-cell-header sortable flex items-center"
           @click="sort('range')"
         >
           <span>Bins</span>
@@ -53,7 +53,10 @@
 
       <div class="table-content">
         <div v-if="loading" class="loading-state">
-          <Loader class="loading" />
+          <div class="flex flex-column items-center gap-2">
+            <Loader class="loading" />
+            <span>{{ loadingLabel }}</span>
+          </div>
         </div>
 
         <div v-else-if="error" class="error-state">
@@ -66,88 +69,93 @@
         </div>
 
         <div v-else class="table-rows">
-          <div
-            class="table-row"
+          <template
             v-for="position in sortedPositions"
             :key="position.id"
           >
-            <div class="cell position-cell">
-              <a
-                class="flex flex-row bin-container"
-                :href="`https://app.meteora.ag/dlmm/${position.positionKey}`"
-                target="_blank"
-              >
-                <div class="token-pair">
-                  <div class="token-icons">
-                    <img
-                      :src="position.token1.icon"
-                      :alt="position.token1.symbol"
-                      class="token-icon"
-                    />
-                    <img
-                      :src="position.token2.icon"
-                      :alt="position.token2.symbol"
-                      class="token-icon token-icon-overlap"
-                    />
+            <div class="wallet-name" v-if="walletAddress === 'All wallets'">
+              {{ position.walletName }}
+            </div>
+            <div
+              class="table-row"
+            >
+              <div class="cell position-cell">
+                <a
+                  class="flex flex-row bin-container"
+                  :href="`https://app.meteora.ag/dlmm/${position.positionKey}`"
+                  target="_blank"
+                >
+                  <div class="token-pair">
+                    <div class="token-icons">
+                      <img
+                        :src="position.token1.icon"
+                        :alt="position.token1.symbol"
+                        class="token-icon"
+                      />
+                      <img
+                        :src="position.token2.icon"
+                        :alt="position.token2.symbol"
+                        class="token-icon token-icon-overlap"
+                      />
+                    </div>
+                    <span class="pair-name"
+                      >{{ position.token1.symbol }} /
+                      {{ position.token2.symbol }}</span
+                    >
                   </div>
-                  <span class="pair-name"
-                    >{{ position.token1.symbol }} /
-                    {{ position.token2.symbol }}</span
-                  >
+                </a>
+              </div>
+
+              <div class="cell value-cell">
+                <img
+                  :src="position.token2.icon"
+                  :alt="position.token2.symbol"
+                  class="value-icon mr-2"
+                />
+                <span class="value-amount">{{ position.value }}</span>
+              </div>
+
+              <div class="cell fee-cell">
+                <div
+                  class="fee-amount flex items-center"
+                >
+                  <img
+                    :src="position.token2.icon"
+                    :alt="position.token2.symbol"
+                    class="value-icon mr-2"
+                  />
+                  {{ position.uncolFee.amount }}
                 </div>
-              </a>
-            </div>
+              </div>
+
+              <div class="cell fee-cell">
+                <div class="fee-amount flex items-center">
+                  <img
+                    :src="position.token2.icon"
+                    :alt="position.token2.symbol"
+                    class="value-icon mr-2"
+                  />
+                  {{ position.collectedFee.amount }}
+                </div>
+              </div>
 
 
-            <div class="cell value-cell">
-              <img
-                :src="position.token2.icon"
-                :alt="position.token2.symbol"
-                class="value-icon mr-2"
-              />
-              <span class="value-amount">{{ position.value }}</span>
-            </div>
+              <!--div class="cell age-cell">
+                {{ position.age }}
+              </div-->
+              <!--div class="cell upnl-cell">
+                <div class="fee-amount" :class="position.upnl.color">{{ position.upnl.amount }}</div>
+                <div class="fee-percentage" :class="position.upnl.color">{{ position.upnl.percentage }}</div>
+              </div-->
 
-            <div class="cell fee-cell">
-              <div
-                class="fee-amount flex items-center"
-              >
-                <img
-                  :src="position.token2.icon"
-                  :alt="position.token2.symbol"
-                  class="value-icon mr-2"
+              <div class="cell range-cell">
+                <BinRepresentation
+                  :binData="position.binData"
+                  :positionKey="position.positionKey"
                 />
-                {{ position.uncolFee.amount }}
               </div>
             </div>
-
-            <div class="cell fee-cell">
-              <div class="fee-amount flex items-center">
-                <img
-                  :src="position.token2.icon"
-                  :alt="position.token2.symbol"
-                  class="value-icon mr-2"
-                />
-                {{ position.collectedFee.amount }}
-              </div>
-            </div>
-
-
-            <div class="cell age-cell">
-              {{ position.age }}
-            </div>
-            <!--div class="cell upnl-cell">
-              <div class="fee-amount" :class="position.upnl.color">{{ position.upnl.amount }}</div>
-              <div class="fee-percentage" :class="position.upnl.color">{{ position.upnl.percentage }}</div>
-            </div-->
-
-            <div class="cell range-cell">
-              <BinRepresentation
-                :binData="position.binData"
-                :positionKey="position.positionKey"
-              />
-            </div>
-          </div>
+          </template>
         </div>
       </div>
     </div>
@@ -173,9 +181,10 @@ const isInitialLoad = ref(true)
 const error = ref(null)
 const positionsData = ref([])
 const fullPositionsData = ref([])
+const loadingLabel = ref('Loading positions...')
 
 const lastUpdateTime = ref(null)
-const refreshInterval = ref(null)
+const refreshInterval = null
 
 const tokenService = getTokenService()
 const tokenCache = {}
@@ -191,7 +200,7 @@ onMounted(async () => {
   await setSavedWalletAddress()
 
   setTimeout(() => {
-    startAutoRefresh()
+    // startAutoRefresh()
   }, 600000)
 })
 
@@ -246,7 +255,7 @@ const formattedPositions = computed(() => {
     const upnlPercentage =
       positionValue > 0 ? (totalFees / positionValue) * 100 : 0
     const binData = position.position.positionData.positionBinData
-    let positionKey = position.position.lbPair
+    let positionKey = position.position.pair.publicKey.toBase58()
 
 
     return {
@@ -283,6 +292,7 @@ const formattedPositions = computed(() => {
       },
       binData,
       positionKey,
+      walletName: position.walletName,
     }
   })
 })
@@ -342,7 +352,6 @@ const sortedPositions = computed(() => {
 const loadData = async () => {
   if (loading.value) return
   loading.value = true
-  console.log('loadData')
   try {
     if (isInitialLoad.value) {
       loading.value = true
@@ -351,13 +360,13 @@ const loadData = async () => {
 
     const startTime = performance.now()
     lastUpdateTime.value = DateTime.now()
-    let data = await fetchPositionsData()
+    let positionList = await fetchPositionsData()
 
-    if (!data) data = []
-    positionsData.value = data
-    fullPositionsData.value = []
+    if (!positionList) positionList = []
+    positionsData.value = positionList
+    fullPositionsData.value = positionList
     fullPositionsData.value = await Promise.all(
-      positionsData.value.map(async (position) => {
+      positionList.map(async (position) => {
         const token1 = await getTokenInfoInternal(position.tokenX.toString())
         const token2 = await getTokenInfoInternal(position.tokenY.toString())
         return {
@@ -387,8 +396,28 @@ const loadData = async () => {
 
 const fetchPositionsData = async () => {
   const { loadPositionsData } = await import('~/utils/dlmm-analyzer/index.ts')
-  const data = await loadPositionsData(walletAddress.value)
-  return data.positions || []
+  loadingLabel.value = 'Loading positions...'
+  const positions = []
+  if (walletAddress.value === 'All wallets') {
+    const wallets = await getAllAddresses()
+    for (const wallet of wallets) {
+      loadingLabel.value = `Loading positions for ${wallet.name}...`
+      const data = await loadPositionsData(wallet.address)
+      data.positions.forEach(position => {
+        position.walletName = wallet.name
+        positions.push(position)
+      })
+    }
+  } else {
+    loadingLabel.value = `Loading positions for ${walletAddress.value}...`
+    const data = await loadPositionsData(walletAddress.value)
+    data.positions.forEach(position => {
+      position.wallet = walletAddress.value.name
+      positions.push(position)
+    })
+  }
+  loadingLabel.value = 'Loading token info...'
+  return positions
 }
 
 const preloadTokenInfo = async (positions) => {
@@ -515,15 +544,15 @@ const refreshData = async () => {
 }
 
 const startAutoRefresh = () => {
-  /*refreshInterval.value = setInterval(async () => {
+  refreshInterval = setInterval(async () => {
     await refreshData()
-  }, 60000)*/
+  }, 60000)
 }
 
 const stopAutoRefresh = () => {
-  if (refreshInterval.value) {
-    clearInterval(refreshInterval.value)
-    refreshInterval.value = null
+  if (refreshInterval) {
+    clearInterval(refreshInterval)
+    refreshInterval = null
   }
 }
 
@@ -535,11 +564,19 @@ watch(selectedWallet, (address) => {
 </script>
 
 <style scoped>
+.wallet-name {
+  font-size: 0.75rem;
+  color: #666;
+  font-weight: 400;
+  padding: 0.2em 0.5em;
+  text-transform: uppercase;
+}
+
 .liquidity-table-container {
   display: flex;
   flex-direction: column;
   padding-top: 0;
-  min-width: 820px;
+  min-width: 960px;
   height: 78vh;
 }
 
@@ -553,8 +590,7 @@ watch(selectedWallet, (address) => {
 }
 
 .table-header {
-  display: grid;
-  grid-template-columns: 1.5fr 1fr 1fr 1fr 1fr 2fr;
+  display: flex;
   gap: 1rem;
   padding: 1rem 1.5rem;
   background: #1a1a20;
@@ -640,6 +676,10 @@ watch(selectedWallet, (address) => {
   font-size: 0.875rem;
 }
 
+.header-cell {
+  text-align: center;
+}
+
 .position-cell {
   flex-direction: row;
 }
@@ -648,6 +688,11 @@ watch(selectedWallet, (address) => {
   display: flex;
   align-items: center;
   gap: 0.75rem;
+  min-width: 160px;
+}
+
+.token-pair-header {
+  min-width: 160px;
 }
 
 .token-icons {
@@ -687,6 +732,26 @@ watch(selectedWallet, (address) => {
   border-radius: 50%;
 }
 
+.value-cell {
+  min-width: 100px;
+  max-width: 100px;
+}
+
+.value-cell-header {
+  min-width: 100px;
+  max-width: 100px;
+}
+
+.fee-cell {
+  min-width: 100px;
+  max-width: 100px;
+}
+
+.fee-cell-header {
+  min-width: 100px;
+  max-width: 100px;
+}
+
 .fee-cell,
 .upnl-cell {
   flex-direction: column;
@@ -720,6 +785,7 @@ watch(selectedWallet, (address) => {
   flex-direction: column;
   gap: 0.5rem;
   width: 100%;
+  flex: 1;
 }
 
 .range-bar {

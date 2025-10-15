@@ -13,7 +13,7 @@ import type {
   TransactionDetails
 } from '../types/transaction.js';
 import { calculateAge, formatTokenAmount } from '../utils/helpers.js';
-import DLMM from '@meteora-ag/dlmm';
+import DLMM, { type LbPosition, type PositionInfo } from '@meteora-ag/dlmm';
 import {
   loadPositionAnalyzisCache,
   savePositionAnalyzisCache,
@@ -34,9 +34,7 @@ export class PositionAnalyzer {
    * Analyze all positions from position open events
    */
   async analyzePositions(
-    walletAddress: string,
-    positionEvents: PositionOpenEvent[],
-    priceData: Map<string, number> = new Map()
+    pairs: PositionInfo[]
   ): Promise<PositionAnalysis> {
     const positions: PositionData[] = [];
     let totalValue = 0;
@@ -45,15 +43,15 @@ export class PositionAnalyzer {
     let totalUnCollectedFees = 0;
     let totalAge = 0;
 
-    console.log(`Analyzing ${positionEvents.length} positions...`);
-    const cache = loadPositionAnalyzisCache(walletAddress)
-    for (const event of positionEvents) {
+    const positionsData = pairs.reduce((acc, pair) => {
+      pair.lbPairPositionsData.forEach(position => {
+        position.pair = pair;
+      })
+      return acc.concat(pair.lbPairPositionsData)
+    }, [] as LbPosition[])
+    await Promise.all(positionsData.map(async position => {
       try {
-        if (isPositionAnalyzisCached(walletAddress, event)) {
-          // console.log(`Position ${event.signature} already analyzed`)
-          continue
-        }
-        const positionData = await this.analyzePosition(walletAddress, event, priceData);
+        const positionData = await this.analyzePosition(position);
         if (positionData) {
           positions.push(positionData);
           totalValue += positionData.currentValue.totalUsd;
@@ -63,11 +61,11 @@ export class PositionAnalyzer {
           totalAge += positionData.age.days;
         }
       } catch (error) {
-        console.error(`Error analyzing position ${event.positionPubkey}:`, error);
+        console.error(`Error analyzing position ${position.pair.publicKey.toBase58()}:`, error);
+        throw error;
       }
-    }
+    }))
 
-    savePositionAnalyzisCache(walletAddress)
     return {
       totalPositions: positions.length,
       totalValue,
@@ -83,25 +81,12 @@ export class PositionAnalyzer {
    * Analyze a single position
    */
   async analyzePosition(
-    walletAddress: string,
-    event: PositionOpenEvent,
-    priceData: Map<string, number> = new Map()
+    position: LbPosition
   ): Promise<PositionData | null> {
     try {
-      // Fetch current position data
-      const position = await this.meteoraService.fetchPosition(event.positionPubkey, event.lbPair);
-      if (!position) {
-        // console.warn(`Position ${event.lbPair} not found`);
-        setPositionAnalyzisCached(walletAddress, event)
-        return null;
-      }
-
-      // Fetch LB Pair data
-      const connection = await this.quickNodeService.getConnection();
-
-      const dlmmPool = await DLMM.create(connection, new PublicKey(event.lbPair));
-      const token_X_mint = dlmmPool.tokenX.mint.address;
-      const token_Y_mint = dlmmPool.tokenY.mint.address;
+      const pair = position.pair;
+      const token_X_mint = pair.tokenX.mint.address;
+      const token_Y_mint = pair.tokenY.mint.address;
       const bins = position.positionData.positionBinData;
 
       const currentValue = this.meteoraService.calculatePositionValue(bins);
@@ -110,8 +95,8 @@ export class PositionAnalyzer {
 
       const tokenXDecimals = await this.meteoraService.getTokenDecimals(token_X_mint);
       const tokenYDecimals = await this.meteoraService.getTokenDecimals(token_Y_mint);
-      const tokenXPrice = priceData.get(token_X_mint.toBase58()) || 0;
-      const tokenYPrice = priceData.get(token_Y_mint.toBase58()) || 0;
+      const tokenXPrice = 0;
+      const tokenYPrice = 0;
 
       const currentValueUsd = this.calculateUsdValue(
         currentValue,
@@ -122,7 +107,7 @@ export class PositionAnalyzer {
       );
 
       const initialValueUsd = this.calculateUsdValue(
-        event.amounts,
+        { tokenX: new BN(0), tokenY: new BN(0) },
         tokenXDecimals,
         tokenYDecimals,
         tokenXPrice,
@@ -162,14 +147,14 @@ export class PositionAnalyzer {
           true;
 
       // Calculate age
-      const createdAt = new Date(event.blockTime * 1000);
+      const createdAt = new Date();
       const age = calculateAge(createdAt);
 
       return {
         position: {
           ...position,
-          pubkey: position.publicKey,
-          lbPair: event.lbPair,
+          pubkey: pair.publicKey,
+          lbPair: pair.lbPair.publicKey,
           owner: position.positionData.owner,
           createdAt,
           lastUpdatedAt: new Date(),
@@ -182,8 +167,8 @@ export class PositionAnalyzer {
           totalUsd: currentValueUsd,
         },
         initialValue: {
-          tokenX: event.amounts.tokenX,
-          tokenY: event.amounts.tokenY,
+          tokenX: new BN(0),
+          tokenY: new BN(0),
           totalUsd: initialValueUsd,
         },
         collectedFees: {
@@ -197,8 +182,8 @@ export class PositionAnalyzer {
           totalUsd: unCollectedFeesUsd,
         },
         upnl: {
-          tokenX: currentValue.tokenX.sub(event.amounts.tokenX),
-          tokenY: currentValue.tokenY.sub(event.amounts.tokenY),
+          tokenX: new BN(0),
+          tokenY: new BN(0),
           totalUsd: upnlUsd,
           percentage: upnlPercentage,
         },

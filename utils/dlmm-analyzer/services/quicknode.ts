@@ -18,14 +18,19 @@ export class QuickNodeService {
   constructor(walletAddress: string) {
     this.walletAddressString = walletAddress
     this.connection = new Connection(config.quicknodeRpcUrl, 'confirmed')
+    /*
+    localStorage.setItem(`meteora-transactions-${walletAddress}`, '[]')
+    localStorage.setItem(`meteora-details-${walletAddress}`, '{}')
+    localStorage.setItem(`meteora-details-met-${walletAddress}`, '{}')
+    */
     signaturesCache = JSON.parse(
-      localStorage.getItem(`meteora-transactions-${walletAddress}`) || '[]',
+      localStorage.getItem(`meteora-transactions-${walletAddress}`) || '[]'
     )
     detailsCache = JSON.parse(
-      localStorage.getItem(`meteora-details-${walletAddress}`) || '{}',
+      localStorage.getItem(`meteora-details-${walletAddress}`) || '{}'
     )
     meteoraDetailsCache = JSON.parse(
-      localStorage.getItem(`meteora-details-met-${walletAddress}`) || '{}',
+      localStorage.getItem(`meteora-details-met-${walletAddress}`) || '{}'
     )
   }
 
@@ -37,7 +42,6 @@ export class QuickNodeService {
     walletAddress: PublicKey,
   ): Promise<TransactionSignature[]> {
     let transactions = []
-    console.log('signaturesCache', signaturesCache)
     if (signaturesCache.length === 0) {
       const now = Date.now()
       const daysBack = 7
@@ -45,7 +49,6 @@ export class QuickNodeService {
       transactions = await this.getWalletTransactions(
           walletAddress, cutoffTime, undefined
       )
-      //console.log('-> new transactions loaded', transactions.length)
     } else {
       const lastTransaction = signaturesCache[signaturesCache.length - 1]
       const lastSignature = lastTransaction ? lastTransaction.signature : undefined
@@ -54,7 +57,6 @@ export class QuickNodeService {
         undefined,
         lastSignature,
       )
-      // console.log('-> new transactions loaded after cache', transactions.length)
     }
     const allTransactions = signaturesCache.concat(transactions)
     signaturesCache = allTransactions
@@ -89,7 +91,6 @@ export class QuickNodeService {
           before,
           until,
         }
-        console.log('params', params)
         const result = await this.connection.getSignaturesForAddress(
           walletAddress,
           params,
@@ -136,29 +137,33 @@ export class QuickNodeService {
     const transactions: TransactionDetails[] = []
     const signaturesToFetch: string[] = []
 
+    // we check all signatures
     signatures.forEach(signature => {
+      // if the signatures was checked and identified as meteora transaction
+      // we add it to the results.
       if (detailsCache[signature]) {
           if (meteoraDetailsCache[signature]) {
             transactions.push(meteoraDetailsCache[signature])
           }
+      // If the signature was not there, we add it to the signature to analyze.
       } else {
         signaturesToFetch.push(signature)
       }
     })
-    // Process in chunks to avoid rate limits
-    const chunks = chunkArray(signaturesToFetch, 100)
 
-    let analyzedSignatures = 0
+    // Process in chunks to avoid rate limits
+    const chunks = chunkArray(signaturesToFetch, 50)
+
+    let analyzedSignaturesLength = 0
     for (const chunk of chunks) {
-      console.log('chunk', chunks.length, analyzedSignatures)
-      analyzedSignatures += chunk.length
+      analyzedSignaturesLength += chunk.length
+
       try {
         const startTime = performance.now()
         const results = await this.connection.getParsedTransactions(chunk, {
           commitment: 'confirmed',
           maxSupportedTransactionVersion: 0,
         })
-        console.log('time taken', performance.now() - startTime)
 
         for (let i = 0; i < results.length; i++) {
           const tx = results[i]
@@ -193,7 +198,6 @@ export class QuickNodeService {
               },
             }
             if (!detailsCache[chunk[i]]) {
-              console.log('setting cache', chunk[i], detailsCache)
               detailsCache[chunk[i]] = true
 
               if (this.isMeteoraTransaction(txDetails)) {
@@ -207,11 +211,14 @@ export class QuickNodeService {
             `meteora-details-${this.walletAddressString}`,
             JSON.stringify(detailsCache),
           )
+
+          localStorage.setItem(
+            `meteora-details-met-${this.walletAddressString}`,
+            JSON.stringify(meteoraDetailsCache),
+          )
         }
-        console.log('detailsCache', this.walletAddressString, detailsCache)
-        // Rate limiting between chunks
-        await new Promise(resolve => setTimeout(resolve, 100))
-        console.log('chunk finished', chunk)
+        await new Promise(resolve => setTimeout(resolve, 1000))
+        return transactions
       } catch (error) {
         console.error(`Error fetching transaction details for chunk:`, error)
         throw error
@@ -231,8 +238,9 @@ export class QuickNodeService {
   }
 
   isMeteoraTransaction(tx: TransactionDetails): boolean {
-    return tx.transaction.message.instructions.some((ix) => {
-      return ix.programId === config.meteoraProgramId
+    return tx.transaction.message.instructions.some(ix => {
+      const programId = ix.programId.toString()
+      return programId === config.meteoraProgramId
     })
   }
 
@@ -242,7 +250,7 @@ export class QuickNodeService {
   filterMeteoraTransactions(
     transactions: TransactionDetails[],
   ): TransactionDetails[] {
-    return transactions.filter((tx) =>
+    return transactions.filter(tx =>
       tx.transaction.message.instructions.some((ix) => {
         return ix.programId === config.meteoraProgramId
       }),
