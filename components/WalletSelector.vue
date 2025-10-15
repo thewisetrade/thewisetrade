@@ -17,6 +17,13 @@ const loading = ref(false)
 const wallets = ref([])
 const selectedWallet  = defineModel()
 
+const props = defineProps({
+  withAllWallets: {
+    type: Boolean,
+    default: false,
+  },
+})
+
 const loadData = async () => {
   try {
     loading.value = true
@@ -36,14 +43,23 @@ const loadData = async () => {
   }
 }
 
+
+
 onMounted(async () => {
   await loadData()
 })
 
 const walletOptions = computed(() => {
-  return wallets.value.map(wallet => ({
+  let walletList = wallets.value.map(wallet => ({
     value: wallet.address,
     text: wallet.name
   }))
+  if (props.withAllWallets) {
+    walletList = walletList.concat({
+      value: 'All wallets',
+      text: 'All wallets'
+    })
+  }
+  return walletList
 })
 </script>
