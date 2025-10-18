@@ -9,7 +9,7 @@
     </div>
 
     <div class="mb-4">
-      <button class="button" @click="showAddWallet = true">
+      <button class="button" @click="showAddWallet = true; addingWalletErrorMessage = null">
         Add a wallet to your list
       </button>
     </div>
@@ -106,6 +106,9 @@
             </button>
             <button type="submit" class="button">Add Wallet</button>
           </div>
+          <div class="error-message" v-if="addingWalletErrorMessage">
+            {{ addingWalletErrorMessage }}
+          </div>
         </form>
       </div>
     </div>
@@ -181,7 +184,8 @@ const wallets = ref([])
 const showAddWallet = ref(false)
 const showCreateGroup = ref(false)
 const loading = ref(true)
-const selectedGroupFilter = ref(null) // Track selected group for filtering
+const selectedGroupFilter = ref(null)
+const addingWalletErrorMessage = ref(null)
 
 const newWallet = ref({
   name: '',
@@ -203,11 +207,11 @@ const totalWallets = computed(() => wallets.value.length)
 
 const filteredWallets = computed(() => {
   if (!selectedGroupFilter.value) {
-    return wallets.value // Show all wallets when no group is selected
+    return wallets.value
   }
 
   if (selectedGroupFilter.value === 'all') {
-    return wallets.value // Show all wallets when "All wallets" is selected
+    return wallets.value
   }
 
   return wallets.value.filter(
@@ -285,9 +289,10 @@ const clearGroupFilter = () => {
 }
 
 const addWallet = async () => {
+  addingWalletErrorMessage.value = null
   if (newWallet.value.address) {
     try {
-      console.log(newWallet.value.name, newWallet.value)
+      console.log('adding wallet',newWallet.value.name, newWallet.value)
       const walletData = {
         name: newWallet.value.name || newWallet.value.domain,
         domain: newWallet.value.domain,
@@ -307,7 +312,13 @@ const addWallet = async () => {
       }
       closeModal()
     } catch (error) {
-      console.error('Error adding wallet:', error)
+      if (error.name === 'ConstraintError') {
+        console.error('Wallet already exists')
+        addingWalletErrorMessage.value = 'Wallet already exists'
+      } else {
+        console.error('Error adding wallet:', error)
+        addingWalletErrorMessage.value = 'Error adding wallet'
+      }
     }
   }
 }
@@ -316,31 +327,22 @@ const addGroups = async () => {
   if (newGroup.value.name) {
     try {
       const groupTag = newGroup.value.name
-
-      // Call the database function to create the group
       const newId = await addGroup(groupTag)
 
-      // Update selected wallets to belong to this new group
       if (newGroup.value.selectedWallets.length > 0) {
         for (const walletId of newGroup.value.selectedWallets) {
           const walletIndex = wallets.value.findIndex((w) => w.id === walletId)
           if (walletIndex !== -1) {
-            // Update wallet in database
             const walletData = {
               ...wallets.value[walletIndex],
               groupTag: newGroup.value.name,
             }
-
-            // Call database function to update wallet
             await updateAddress(walletId, { groupTag: newGroup.value.name })
-
-            // Update local state
             wallets.value[walletIndex].groupTag = newGroup.value.name
           }
         }
       }
 
-      // Add to local state with the ID returned from database
       const group = {
         id: newId,
         name: newGroup.value.name,
@@ -351,7 +353,6 @@ const addGroups = async () => {
       groups.value.push(group)
       updateGroupWalletCounts()
 
-      // Reset form
       newGroup.value = {
         name: '',
         selectedWallets: [],
@@ -360,7 +361,6 @@ const addGroups = async () => {
       closeModal()
     } catch (error) {
       console.error('Error adding group:', error)
-      // You might want to show an error mesfge to the user here
     }
   }
 }
@@ -846,6 +846,13 @@ const closeModal = () => {
     background: #304ca6;
     color: white;
   }
+}
+
+.error-message {
+  color: red;
+  font-size: 14px;
+  margin-top: 10px;
+  text-align: right;
 }
 
 @media (max-width: 768px) {
