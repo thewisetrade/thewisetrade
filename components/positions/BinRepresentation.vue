@@ -23,11 +23,21 @@ const props = defineProps({
     type: Array,
     required: true,
   },
+  positionToken1: {
+    type: Object,
+    required: true,
+  },
+  positionToken2: {
+    type: Object,
+    required: true,
+  },
   positionKey: {
     type: String,
     required: true,
   },
 })
+
+console.log(props.positionToken1, props.positionToken2)
 
 const maxBinXAmount = computed(() => {
   const bins = props.binData || []
@@ -47,19 +57,29 @@ const maxBinAmount = computed(() => {
   return Math.max(maxBinXAmount.value, maxBinYAmount.value)
 })
 
+const maxBinPrice = computed(() => {
+  return Math.max(...props.binData.map(bin => bin.price))
+})
+
 const binStyle = (bin, index) => {
   // console.log(bin)
-  // console.log(bin.positionXAmount, bin.positionYAmount, maxBinXAmount.value, maxBinYAmount.value, index)
+  // console.log(bin.positionXAmount, bin.positionYAmount, maxBinXAmount.value, maxBinYAmount.value, index)  )
+  console.log(maxBinPrice.value)
+  const styles = {
+    width: '3px',
+  }
+  if (props.binData.length > 140) {
+    styles.width = '2px'
+  }
   if (bin.positionXAmount > 0) {
-    return {
-      backgroundColor: '#6f61c0',
-      height: '25px' // `${(bin.positionXAmount / maxBinXAmount.value) * 25}px`
-    }
+    styles.backgroundColor = '#6f61c0'
+    styles.height = `${(1 - bin.price / maxBinPrice.value) * 25}px`
   }
-  return {
-    backgroundColor: '#06aed4',
-    height: '25px' // `${(bin.positionYAmount / maxBinYAmount.value) * 25}px`
+  if (bin.positionYAmount > 0) {
+    styles.backgroundColor = '#06aed4'
+    styles.height = `${(1 -bin.price / maxBinPrice.value) * 25}px`
   }
+  return styles
 }
 </script>
 
