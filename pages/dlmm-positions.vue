@@ -152,6 +152,8 @@
                 <BinRepresentation
                   :binData="position.binData"
                   :positionKey="position.positionKey"
+                  :positionToken1="position.token1"
+                  :positionToken2="position.token2"
                 />
               </div>
             </div>
@@ -200,7 +202,7 @@ onMounted(async () => {
   await setSavedWalletAddress()
 
   setTimeout(() => {
-    // startAutoRefresh()
+    startAutoRefresh()
   }, 600000)
 })
 
@@ -364,6 +366,7 @@ const loadData = async () => {
 
     if (!positionList) positionList = []
     positionsData.value = positionList
+    console.log('🚀 ~ loadedData ~ positionsData:', positionsData.value)
     fullPositionsData.value = positionList
     fullPositionsData.value = await Promise.all(
       positionList.map(async (position) => {
@@ -376,6 +379,7 @@ const loadData = async () => {
         }
       }),
     )
+    console.log('🚀 ~ loadedData ~ positionsData:', positionsData.value)
 
     console.log(
       '🚀 ~ loadedData ~ fullPositionsData:',
