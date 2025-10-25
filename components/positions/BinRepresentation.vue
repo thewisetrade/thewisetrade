@@ -49,8 +49,8 @@ const maxBinYAmount = computed(() => {
   }, 0)
 })
 
-const maxBinPrice = computed(() => {
-  return Math.max(...props.binData.map(bin => bin.price))
+const maxBinValue = computed(() => {
+  return Math.max(...props.binData.map(bin => bin.value || 0))
 })
 
 const drawBins = () => {
@@ -72,11 +72,10 @@ const drawBins = () => {
   canvas.value.height = canvasHeight
 
   ctx.clearRect(0, 0, canvasWidth, canvasHeight)
+  const maxValue = maxBinValue.value
 
   bins.forEach((bin, index) => {
-    console.log(bin.price, bin.positionXAmount, bin.positionYAmount, maxBinPrice.value)
-
-    const ratio = ((maxBinPrice.value - bin.price) / maxBinPrice.value) * 1.2
+    const ratio = maxValue > 0 ? (bin.value || 0) / maxValue : 0
     let height = ratio * maxHeight
     let color = null
 
