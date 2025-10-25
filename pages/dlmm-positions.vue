@@ -186,7 +186,7 @@ const fullPositionsData = ref([])
 const loadingLabel = ref('Loading positions...')
 
 const lastUpdateTime = ref(null)
-const refreshInterval = null
+let refreshInterval = null
 
 const tokenService = getTokenService()
 const tokenCache = {}
@@ -296,7 +296,7 @@ const formattedPositions = computed(() => {
       positionKey,
       walletName: position.walletName,
     }
-  })
+  }).filter(position => position.value > 0 || position.uncolFee.amount > 0 || position.collectedFee.amount > 0)
 })
 
 const sortedPositions = computed(() => {
@@ -351,9 +351,12 @@ const sortedPositions = computed(() => {
 })
 
 
-const loadData = async () => {
+const loadData = async (withLoading = true) => {
   if (loading.value) return
-  loading.value = true
+
+  if (withLoading) {
+    loading.value = true
+  }
   try {
     if (isInitialLoad.value) {
       loading.value = true
@@ -394,7 +397,9 @@ const loadData = async () => {
     console.error('Error loading positions:', err)
     error.value = err.message || 'Failed to load positions'
   } finally {
-    loading.value = false
+    if (withLoading) {
+      loading.value = false
+    }
   }
 }
 
@@ -543,13 +548,13 @@ const getSortClass = (field) => {
 
 // Refresh functions
 
-const refreshData = async () => {
-  await loadData()
+const refreshData = async (withLoading = true) => {
+  await loadData(withLoading)
 }
 
 const startAutoRefresh = () => {
   refreshInterval = setInterval(async () => {
-    await refreshData()
+    await refreshData(false)
   }, 60000)
 }
 
