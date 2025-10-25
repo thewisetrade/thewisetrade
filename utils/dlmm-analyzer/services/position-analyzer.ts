@@ -137,6 +137,16 @@ export class PositionAnalyzer {
       // Calculate price range
       const priceRange = this.meteoraService.getPriceRange(bins);
       const currentPrice = this.meteoraService.calculateBinPrice(bins);
+
+      // Add value field to each bin
+      const binsWithValue = bins.map(bin => {
+        const binValue = (parseFloat(bin.positionXAmount) * bin.price + parseFloat(bin.positionYAmount))
+        return {
+          ...bin,
+          value: binValue
+        }
+      })
+
       const value = (currentValue.tokenX.toNumber() * currentPrice?.currentPrice! + currentValue.tokenY.toNumber()) / 10 ** 9;
       const collectedFeesValue = (collectedFees.tokenX.toNumber() * currentPrice?.currentPrice! + collectedFees.tokenY.toNumber()) / (10 ** 9);
       const unCollectedFeesValue = (unCollectedFees.tokenX.toNumber() * currentPrice?.currentPrice! + unCollectedFees.tokenY.toNumber()) / (10 ** 9);
@@ -149,6 +159,9 @@ export class PositionAnalyzer {
       // Calculate age
       const createdAt = new Date();
       const age = calculateAge(createdAt);
+
+      // Update bins in the original position
+      position.positionData.positionBinData = binsWithValue
 
       return {
         position: {
