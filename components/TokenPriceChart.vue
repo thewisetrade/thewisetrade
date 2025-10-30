@@ -167,6 +167,13 @@ const drawChart = () => {
 onMounted(() => {
   fetchPriceData()
 })
+
+watch(
+  () => props.tokenAddress,
+  () => {
+    fetchPriceData()
+  },
+)
 </script>
 
 <style scoped>
