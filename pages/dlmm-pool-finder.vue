@@ -65,49 +65,71 @@
       <span class="mc">MC</span>
     </div>
 
-    <div class="pools">
+    <div class="pools" ref="poolsContainerRef">
       <Loader v-if="isLoading" />
       <template v-else>
-        <a
+        <div
           :key="pool.id"
-          target="_blank"
-          :href="`https://app.meteora.ag/dlmm/${pool.meteora_address}`"
+          class="pool-container"
           v-for="pool in displayedPools"
         >
-          <div
-            class="pool flex flex-row gap-4 items-center rounded-xl border-2"
+          <a
+            target="_blank"
+            :href="`https://app.meteora.ag/dlmm/${pool.meteora_address}`"
           >
-            <span class="data pool-parameters"
-              >{{ pool.meteora_baseFeePercentage }}%</span
+            <div
+              class="pool flex flex-row gap-4 items-center rounded-xl border-2"
             >
-            <h2>{{ pool.meteora_name }}</h2>
-            <span class="fee-ratio font-bold"
-              >{{ pool.meteora_feeTvlRatio.h24.toFixed(2) }}%</span
-            >
-            <span class="fee-ratio font-bold"
-              >{{ pool.meteora_feeTvlRatio.h2.toFixed(2) }}%</span
-            >
-            <a
-              target="_blank"
-              :href="`https://www.birdeye.so/token/${pool.meteora_degenTokenAddress}?chain=solana`"
-              class="birdeye-link"
-              @click.stop
-            >
-              <TokenPriceChart
-                :tokenAddress="pool.meteora_degenTokenAddress"
-                :width="120"
-                :height="40"
-              />
-            </a>
-            <span class="flex-1"></span>
-            <span class="data"
-              >{{ Math.round(pool.meteora_liquidity / 1000) }}K</span
-            >
-            <span class="data mc"
-              >{{ Math.round(pool.top_pair_mcap / 1_000_000) }}M</span
-            >
+              <span class="data pool-parameters"
+                >{{ pool.meteora_baseFeePercentage }}%</span
+              >
+              <h2>{{ pool.meteora_name }}</h2>
+              <span class="fee-ratio font-bold"
+                >{{ pool.meteora_feeTvlRatio.h24.toFixed(2) }}%</span
+              >
+              <span class="fee-ratio font-bold"
+                >{{ pool.meteora_feeTvlRatio.h2.toFixed(2) }}%</span
+              >
+              <a
+                target="_blank"
+                :href="`https://www.birdeye.so/token/${pool.meteora_degenTokenAddress}?chain=solana`"
+                class="birdeye-link"
+                @click.stop
+              >
+                <TokenPriceChart
+                  :tokenAddress="pool.meteora_degenTokenAddress"
+                  :width="120"
+                  :height="40"
+                />
+              </a>
+              <button
+                class="chart-toggle-button"
+                @click.stop="$event => toggleChart(pool.meteora_address, $event)"
+                :class="{ active: expandedCharts[pool.meteora_address] }"
+              >
+                {{ expandedCharts[pool.meteora_address] ? '−' : '+' }}
+              </button>
+              <span class="flex-1"></span>
+              <span class="data"
+                >{{ Math.round(pool.meteora_liquidity / 1000) }}K</span
+              >
+              <span class="data mc"
+                >{{ Math.round(pool.top_pair_mcap / 1_000_000) }}M</span
+              >
+            </div>
+          </a>
+          <div
+            v-if="expandedCharts[pool.meteora_address]"
+            class="expanded-chart-container"
+          >
+            <TokenPriceChart
+              :tokenAddress="pool.meteora_degenTokenAddress"
+              :width="chartWidth"
+              :height="200"
+              :showMinus50Line="true"
+            />
           </div>
-        </a>
+        </div>
       </template>
     </div>
   </div>
@@ -128,10 +150,40 @@ const marketCap = ref(10)
 const binStep = ref(100)
 const liquidity = ref(10)
 const age = ref(1)
+const expandedCharts = ref({})
+const poolsContainerRef = ref(null)
+const chartWidth = ref(800)
+
+const toggleChart = (poolId, event) => {
+  event.stopPropagation()
+  event.preventDefault()
+  expandedCharts.value[poolId] = !expandedCharts.value[poolId]
+  if (expandedCharts.value[poolId]) {
+    updateChartWidth()
+  }
+}
+
+const updateChartWidth = () => {
+  nextTick(() => {
+    if (poolsContainerRef.value) {
+      // Chart should match pool row content width
+      // Pool row has 1em left/right padding (16px each = 32px total)
+      // Expanded chart container has 1em left/right padding (16px each = 32px total)
+      // So chart canvas width = container width - chart container left/right padding
+      chartWidth.value = poolsContainerRef.value.clientWidth - 32
+    }
+  })
+}
 
 onMounted(() => {
   loadPoolsData()
   setInterval(loadPoolsData, 1000 * 60 * 5)
+  updateChartWidth()
+  window.addEventListener('resize', updateChartWidth)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', updateChartWidth)
 })
 
 const loadPoolsData = async () => {
@@ -277,5 +329,56 @@ useHead({
 .data.mc {
   min-width: 40px;
   text-align: right;
+}
+
+.pool-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.chart-toggle-button {
+  background: #334;
+  color: #cce;
+  border: 1px solid #556;
+  border-radius: 4px;
+  width: 30px;
+  height: 30px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: bold;
+  transition: all 0.2s ease;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.chart-toggle-button:hover {
+  background: #445;
+  border-color: #667;
+}
+
+.chart-toggle-button.active {
+  background: #556;
+  border-color: #778;
+}
+
+.expanded-chart-container {
+  display: block;
+  width: 100%;
+  padding: 1em;
+  margin-top: 0.5em;
+  background: #1a1a20;
+  border: 2px solid #334;
+  border-radius: 8px;
+  height: 240px;
+}
+
+.expanded-chart-container .price-chart {
+  display: block;
+  width: 100%;
+  margin: 0;
 }
 </style>

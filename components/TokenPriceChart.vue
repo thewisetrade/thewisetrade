@@ -25,6 +25,10 @@ const props = defineProps({
     type: Number,
     default: 40,
   },
+  showMinus50Line: {
+    type: Boolean,
+    default: false,
+  },
 })
 
 const chartCanvas = ref(null)
@@ -130,6 +134,7 @@ const drawChart = () => {
   ctx.clearRect(0, 0, width, height)
 
   const prices = priceData.value
+  const currentPrice = prices[prices.length - 1]
   const minPrice = 0
   const maxPrice = Math.max(...prices)
   const priceRange = maxPrice - minPrice || 1
@@ -138,6 +143,7 @@ const drawChart = () => {
   const isPositive = priceChange >= 0
   const color = isPositive ? '#99FF99' : '#FF9999'
 
+  // Draw price chart first
   ctx.strokeStyle = color
   ctx.lineWidth = 1.5
   ctx.beginPath()
@@ -162,6 +168,35 @@ const drawChart = () => {
     ? 'rgba(153, 255, 153, 0.1)'
     : 'rgba(255, 153, 153, 0.1)'
   ctx.fill()
+
+  // Draw reference lines on top if enabled
+  if (props.showMinus50Line && currentPrice > 0) {
+    const percentages = [0.5, 0.25] // -50%, -70%, -75%
+    const labels = ['-50%', '-75%']
+
+    percentages.forEach((percentage, index) => {
+      const linePrice = currentPrice * percentage
+      const lineY = height - ((linePrice - minPrice) / priceRange) * height
+
+      // Only draw if the line is within the visible range
+      if (lineY >= 0 && lineY <= height) {
+        ctx.strokeStyle = '#888'
+        ctx.lineWidth = 1
+        ctx.setLineDash([4, 4])
+        ctx.beginPath()
+        ctx.moveTo(0, lineY)
+        ctx.lineTo(width, lineY)
+        ctx.stroke()
+        ctx.setLineDash([])
+
+        // Add label
+        ctx.fillStyle = '#888'
+        ctx.font = '10px sans-serif'
+        ctx.textAlign = 'left'
+        ctx.fillText(labels[index], 4, lineY - 4)
+      }
+    })
+  }
 }
 
 onMounted(() => {
@@ -172,6 +207,15 @@ watch(
   () => props.tokenAddress,
   () => {
     fetchPriceData()
+  },
+)
+
+watch(
+  () => [props.width, props.height, props.showMinus50Line],
+  () => {
+    if (priceData.value.length > 0) {
+      drawChart()
+    }
   },
 )
 </script>
