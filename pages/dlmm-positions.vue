@@ -98,7 +98,12 @@
                         class="token-icon token-icon-overlap"
                       />
                     </div>
-                    <span class="pair-name"
+                    <span
+                      class="pair-name"
+                      :class="{
+                        'out-of-range-lower': position.isOutOfRange === 'lower',
+                        'out-of-range-upper': position.isOutOfRange === 'upper',
+                      }"
                       >{{ position.token1.symbol }} /
                       {{ position.token2.symbol }}</span
                     >
@@ -184,6 +189,7 @@ const error = ref(null)
 const positionsData = ref([])
 const fullPositionsData = ref([])
 const loadingLabel = ref('Loading positions...')
+const tokenPrices = ref(new Map())
 
 const lastUpdateTime = ref(null)
 let refreshInterval = null
@@ -248,7 +254,7 @@ const formattedPositions = computed(() => {
       : positionsData.value
 
   return dataToUse.map((position, index) => {
-    const multiplier = position.token2.symbol === 'USDC' ? 1000 : 1
+    const multiplier = position.token2?.symbol === 'USDC' ? 1000 : 1
     const collectedFeeAmount = (position.collectedFeesValue || 0) * multiplier
     const uncolFeeAmount = (position.unCollectedFeesValue || 0) * multiplier
     const positionValue = (position.value || 0) * multiplier
@@ -288,10 +294,10 @@ const formattedPositions = computed(() => {
       range: {
         min: position.priceRange?.minPrice?.toFixed(6) || '0.000000',
         max: position.priceRange?.maxPrice?.toFixed(6) || '0.000000',
-        ...calculateRangePositions(position.priceRange, position.isInRange),
         sortValue: position.priceRange?.minPrice || 0,
         currentPrice: position.priceRange?.currentPrice,
       },
+      isOutOfRange: getOutOfRangeStatus(position.priceRange),
       binData,
       positionKey,
       walletName: position.walletName,
@@ -369,26 +375,65 @@ const loadData = async (withLoading = true) => {
 
     if (!positionList) positionList = []
     positionsData.value = positionList
-    console.log('🚀 ~ loadedData ~ positionsData:', positionsData.value)
     fullPositionsData.value = positionList
     fullPositionsData.value = await Promise.all(
       positionList.map(async (position) => {
         const token1 = await getTokenInfoInternal(position.tokenX.toString())
         const token2 = await getTokenInfoInternal(position.tokenY.toString())
+
+        // If position is out of range, fetch DexScreener price for tokenX (the base token)
+        const isOutOfRange = getOutOfRangeStatus(position.priceRange)
+        if (isOutOfRange && position.tokenX && position.tokenY) {
+          const tokenXMint = position.tokenX.toString()
+          const tokenYMint = position.tokenY.toString()
+
+          // Check if tokenY is a stablecoin (USDC, USDT) - if so, use DexScreener price directly
+          // DexScreener returns price in USD, which is approximately equal to USDC/USDT price
+          const isStablecoin = tokenYMint === 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v' || // USDC
+                               tokenYMint === 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB'   // USDT
+
+          let newPrice = null
+
+          if (isStablecoin) {
+            // For stablecoin pairs, DexScreener price (in USD) is approximately the price in stablecoins
+            const tokenPrice = await fetchTokenPrice(tokenXMint)
+            if (tokenPrice && position.priceRange) {
+              position.priceRange.currentPrice = tokenPrice
+              newPrice = tokenPrice
+            }
+          } else {
+            // For non-stablecoin pairs, fetch both prices and calculate ratio
+            const [priceX, priceY] = await Promise.all([
+              fetchTokenPrice(tokenXMint),
+              fetchTokenPrice(tokenYMint)
+            ])
+
+            if (priceX && priceY && priceY > 0 && position.priceRange) {
+              const calculatedPrice = priceX / priceY
+              position.priceRange.currentPrice = calculatedPrice
+              newPrice = calculatedPrice
+            }
+          }
+
+          if (isOutOfRange === 'lower' && newPrice && position.currentValue) {
+            const tokenXAmount = position.currentValue.tokenX?.toNumber() || 0
+            const tokenYAmount = position.currentValue.tokenY?.toNumber() || 0
+            const newValue = (tokenXAmount * newPrice + tokenYAmount) / 10 ** 9
+            if (newValue > 0) {
+              position.value = newValue
+            }
+          }
+        }
+
         return {
           ...position,
           token1,
           token2,
         }
-      }),
+      })
     )
-    console.log('🚀 ~ loadedData ~ positionsData:', positionsData.value)
-
-    console.log(
-      '🚀 ~ loadedData ~ fullPositionsData:',
-      performance.now() - startTime,
-    )
-    console.log('🚀 ~ fullPositionsData:', fullPositionsData.value)
+    const timeTaken = performance.now() - startTime
+    console.log(`✅ Positions loaded in ${timeTaken.toFixed(2)}ms`)
 
     if (isInitialLoad.value) {
       isInitialLoad.value = false
@@ -494,38 +539,68 @@ const getUpnlColor = (percentage) => {
   return percentage > 0 ? 'positive' : 'negative'
 }
 
-const calculateRangePositions = (priceRange, isInRange) => {
-  if (!priceRange) {
-    return {
-      startPercent: 0,
-      currentPercent: 50,
-      endPercent: 100,
+
+const fetchTokenPrice = async (tokenMint) => {
+  if (!tokenMint) return null
+
+  // Check cache first
+  if (tokenPrices.value.has(tokenMint)) {
+    return tokenPrices.value.get(tokenMint)
+  }
+
+  try {
+    const response = await fetch(
+      `https://api.dexscreener.com/latest/dex/tokens/${tokenMint}`
+    )
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
     }
+
+    const data = await response.json()
+
+    if (!data.pairs || data.pairs.length === 0) {
+      return null
+    }
+
+    // Find the pair with highest volume for most accurate price
+    const pair = data.pairs.reduce((best, current) => {
+      const currentVolume = current.volume?.h24 || 0
+      const bestVolume = best.volume?.h24 || 0
+      return currentVolume > bestVolume ? current : best
+    })
+
+    const price = parseFloat(pair.priceUsd)
+
+    if (price && !isNaN(price)) {
+      tokenPrices.value.set(tokenMint, price)
+      return price
+    }
+  } catch (error) {
+    console.error(`Error fetching DexScreener price for ${tokenMint}:`, error)
+  }
+
+  return null
+}
+
+const getOutOfRangeStatus = (priceRange) => {
+  if (!priceRange || !priceRange.currentPrice || !priceRange.minPrice || !priceRange.maxPrice) {
+    return null
   }
 
   const { minPrice, maxPrice, currentPrice } = priceRange
-  const range = maxPrice - minPrice
 
-  let currentPercent = 50
-  if (range > 0) {
-    currentPercent = ((currentPrice - minPrice) / range) * 100
-    currentPercent = Math.max(0, Math.min(100, currentPercent))
+  // Check if current price is below minimum (out of range on lower side)
+  if (currentPrice < minPrice) {
+    return 'lower'
   }
 
-  let startPercent = 20
-  let endPercent = 80
-
-  if (isInRange === 'low') {
-    currentPercent = Math.min(currentPercent, 15)
-  } else if (isInRange === 'high') {
-    currentPercent = Math.max(currentPercent, 85)
+  // Check if current price is above maximum (out of range on upper side)
+  if (currentPrice > maxPrice) {
+    return 'upper'
   }
 
-  return {
-    startPercent,
-    currentPercent,
-    endPercent,
-  }
+  return null
 }
 
 // Sorting functions
@@ -724,6 +799,14 @@ watch(selectedWallet, (address) => {
 .pair-name {
   color: #ffffff;
   font-weight: 500;
+}
+
+.pair-name.out-of-range-lower {
+  color: #ef4444;
+}
+
+.pair-name.out-of-range-upper {
+  color: #eab308;
 }
 
 .age-cell {
