@@ -34,7 +34,7 @@ const loadWalletTransactions = async (db, endpoint, solanaAddress) => {
       },
       rpc: {
         max: 1,
-        interval: 1000,
+        interval: 1000000,
       },
       jupiterTokenList: {
         max: 8,

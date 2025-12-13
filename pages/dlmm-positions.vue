@@ -17,22 +17,34 @@
 
     <div class="table-wrapper">
       <div class="table-header">
-        <div class="header-cell token-pair-header sortable" @click="sort('pair')">
+        <div
+          class="header-cell token-pair-header sortable"
+          @click="sort('pair')"
+        >
           <span>Position</span>
           <div class="sort-icon" :class="getSortClass('pair')"></div>
         </div>
-        <div class="header-cell value-cell-header sortable" @click="sort('value')">
+        <div
+          class="header-cell value-cell-header sortable"
+          @click="sort('value')"
+        >
           <span>Value</span>
           <div class="sort-icon" :class="getSortClass('value')"></div>
         </div>
-        <div class="header-cell fee-cell-header sortable" @click="sort('uncolFee')">
+        <div
+          class="header-cell fee-cell-header sortable"
+          @click="sort('uncolFee')"
+        >
           <span>Uncol. Fee</span>
           <div class="sort-icon" :class="getSortClass('uncolFee')"></div>
         </div>
-        <div class="header-cell fee-cell-header sortable" @click="sort('collectedFee')">
+        <!--div
+          class="header-cell fee-cell-header sortable"
+          @click="sort('collectedFee')"
+        >
           <span>Collected Fee</span>
           <div class="sort-icon" :class="getSortClass('collectedFee')"></div>
-        </div>
+        </div-->
         <!--div class="header-cell sortable" @click="sort('age')">
           <span>Age</span>
           <div class="sort-icon" :class="getSortClass('age')"></div>
@@ -69,16 +81,11 @@
         </div>
 
         <div v-else class="table-rows">
-          <template
-            v-for="position in sortedPositions"
-            :key="position.id"
-          >
+          <template v-for="position in sortedPositions" :key="position.id">
             <div class="wallet-name" v-if="walletAddress === 'All wallets'">
               {{ position.walletName }}
             </div>
-            <div
-              class="table-row"
-            >
+            <div class="table-row">
               <div class="cell position-cell">
                 <a
                   class="flex flex-row bin-container"
@@ -88,13 +95,13 @@
                   <div class="token-pair">
                     <div class="token-icons">
                       <img
-                        :src="position.token1.icon"
-                        :alt="position.token1.symbol"
+                        :src="position.token1?.icon"
+                        :alt="position.token1?.symbol"
                         class="token-icon"
                       />
                       <img
-                        :src="position.token2.icon"
-                        :alt="position.token2.symbol"
+                        :src="position.token2?.icon"
+                        :alt="position.token2?.symbol"
                         class="token-icon token-icon-overlap"
                       />
                     </div>
@@ -104,8 +111,8 @@
                         'out-of-range-lower': position.isOutOfRange === 'lower',
                         'out-of-range-upper': position.isOutOfRange === 'upper',
                       }"
-                      >{{ position.token1.symbol }} /
-                      {{ position.token2.symbol }}</span
+                      >{{ position.token1?.symbol }} /
+                      {{ position.token2?.symbol }}</span
                     >
                   </div>
                 </a>
@@ -113,37 +120,34 @@
 
               <div class="cell value-cell">
                 <img
-                  :src="position.token2.icon"
-                  :alt="position.token2.symbol"
+                  :src="position.token2?.icon"
+                  :alt="position.token2?.symbol"
                   class="value-icon mr-2"
                 />
                 <span class="value-amount">{{ position.value }}</span>
               </div>
 
               <div class="cell fee-cell">
-                <div
-                  class="fee-amount flex items-center"
-                >
+                <div class="fee-amount flex items-center">
                   <img
-                    :src="position.token2.icon"
-                    :alt="position.token2.symbol"
+                    :src="position.token2?.icon"
+                    :alt="position.token2?.symbol"
                     class="value-icon mr-2"
                   />
                   {{ position.uncolFee.amount }}
                 </div>
               </div>
 
-              <div class="cell fee-cell">
+              <!--div class="cell fee-cell">
                 <div class="fee-amount flex items-center">
                   <img
-                    :src="position.token2.icon"
-                    :alt="position.token2.symbol"
+                    :src="position.token2?.icon"
+                    :alt="position.token2?.symbol"
                     class="value-icon mr-2"
                   />
                   {{ position.collectedFee.amount }}
                 </div>
-              </div>
-
+              </div-->
 
               <!--div class="cell age-cell">
                 {{ position.age }}
@@ -245,65 +249,7 @@ const setSavedWalletAddress = async () => {
   }
 }
 
-// Data loading functions
-
-const formattedPositions = computed(() => {
-  const dataToUse =
-    fullPositionsData.value.length > 0
-      ? fullPositionsData.value
-      : positionsData.value
-
-  return dataToUse.map((position, index) => {
-    const multiplier = position.token2?.symbol === 'USDC' ? 1000 : 1
-    const collectedFeeAmount = (position.collectedFeesValue || 0) * multiplier
-    const uncolFeeAmount = (position.unCollectedFeesValue || 0) * multiplier
-    const positionValue = (position.value || 0) * multiplier
-
-    const totalFees = collectedFeeAmount + uncolFeeAmount
-    const upnlPercentage =
-      positionValue > 0 ? (totalFees / positionValue) * 100 : 0
-    const binData = position.position.positionData.positionBinData
-    let positionKey = position.position.pair.publicKey.toBase58()
-
-
-    return {
-      id: `position-${index}`,
-      token1: position.token1,
-      token2: position.token2,
-      age: formatAge(position.age),
-      ageValue: getAgeInHours(position.age),
-      value: positionValue.toFixed(2),
-      valueNum: positionValue,
-      collectedFee: {
-        amount: formatFeeAmount(collectedFeeAmount),
-        percentage: formatPercentage(collectedFeeAmount, positionValue),
-        sortValue: collectedFeeAmount,
-      },
-      uncolFee: {
-        amount: formatFeeAmount(uncolFeeAmount),
-        percentage: formatPercentage(uncolFeeAmount, positionValue),
-        color: uncolFeeAmount > 0 ? 'positive' : 'neutral',
-        sortValue: uncolFeeAmount,
-      },
-      upnl: {
-        amount: formatFeeAmount(totalFees),
-        percentage: formatUpnlPercentage(upnlPercentage),
-        color: getUpnlColor(upnlPercentage),
-        sortValue: upnlPercentage,
-      },
-      range: {
-        min: position.priceRange?.minPrice?.toFixed(6) || '0.000000',
-        max: position.priceRange?.maxPrice?.toFixed(6) || '0.000000',
-        sortValue: position.priceRange?.minPrice || 0,
-        currentPrice: position.priceRange?.currentPrice,
-      },
-      isOutOfRange: getOutOfRangeStatus(position.priceRange),
-      binData,
-      positionKey,
-      walletName: position.walletName,
-    }
-  }).filter(position => position.value > 0 || position.uncolFee.amount > 0 || position.collectedFee.amount > 0)
-})
+// Formatted data
 
 const sortedPositions = computed(() => {
   if (!sortField.value) {
@@ -315,8 +261,8 @@ const sortedPositions = computed(() => {
 
     switch (sortField.value) {
       case 'pair':
-        aValue = `${a.token1.symbol}/${a.token2.symbol}`
-        bValue = `${b.token1.symbol}/${b.token2.symbol}`
+        aValue = `${a.token1?.symbol}/${a.token2?.symbol}`
+        bValue = `${b.token1?.symbol}/${b.token2?.symbol}`
         break
       case 'age':
         aValue = a.ageValue
@@ -356,6 +302,66 @@ const sortedPositions = computed(() => {
   })
 })
 
+const formattedPositions = computed(() => {
+  const dataToUse =
+    fullPositionsData.value.length > 0
+      ? fullPositionsData.value
+      : positionsData.value
+
+  return dataToUse
+    .map((position, index) => {
+      const multiplier = position.token2?.symbol === 'USDC' ? 1000 : 1
+      const collectedFeeAmount = (position.collectedFeesValue || 0) * multiplier
+      const uncolFeeAmount = (position.unCollectedFeesValue || 0) * multiplier
+      const positionValue = (position.value || 0) * multiplier
+
+      const totalFees = collectedFeeAmount + uncolFeeAmount
+      const upnlPercentage =
+        positionValue > 0 ? (totalFees / positionValue) * 100 : 0
+      const binData = position.position.positionData.positionBinData
+      let positionKey = position.position.pair.publicKey.toBase58()
+
+      return {
+        id: `position-${index}`,
+        token1: position.token1,
+        token2: position.token2,
+        age: formatAge(position.age),
+        ageValue: getAgeInHours(position.age),
+        value: positionValue.toFixed(2),
+        valueNum: positionValue,
+        collectedFee: {
+          amount: formatFeeAmount(collectedFeeAmount),
+          percentage: formatPercentage(collectedFeeAmount, positionValue),
+          sortValue: collectedFeeAmount,
+        },
+        uncolFee: {
+          amount: formatFeeAmount(uncolFeeAmount),
+          percentage: formatPercentage(uncolFeeAmount, positionValue),
+          color: uncolFeeAmount > 0 ? 'positive' : 'neutral',
+          sortValue: uncolFeeAmount,
+        },
+        upnl: {
+          amount: formatFeeAmount(totalFees),
+          percentage: formatUpnlPercentage(upnlPercentage),
+          color: getUpnlColor(upnlPercentage),
+          sortValue: upnlPercentage,
+        },
+        isOutOfRange: getOutOfRangeStatus(position.priceRange),
+        binData,
+        positionKey,
+        walletName: position.walletName,
+      }
+    })
+    .filter(
+      (position) =>
+        position.value > 0 ||
+        position.uncolFee.amount > 0 ||
+        position.collectedFee.amount > 0,
+    )
+})
+
+
+// Methods
 
 const loadData = async (withLoading = true) => {
   if (loading.value) return
@@ -389,8 +395,9 @@ const loadData = async (withLoading = true) => {
 
           // Check if tokenY is a stablecoin (USDC, USDT) - if so, use DexScreener price directly
           // DexScreener returns price in USD, which is approximately equal to USDC/USDT price
-          const isStablecoin = tokenYMint === 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v' || // USDC
-                               tokenYMint === 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB'   // USDT
+          const isStablecoin =
+            tokenYMint === 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v' || // USDC
+            tokenYMint === 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB' // USDT
 
           let newPrice = null
 
@@ -405,7 +412,7 @@ const loadData = async (withLoading = true) => {
             // For non-stablecoin pairs, fetch both prices and calculate ratio
             const [priceX, priceY] = await Promise.all([
               fetchTokenPrice(tokenXMint),
-              fetchTokenPrice(tokenYMint)
+              fetchTokenPrice(tokenYMint),
             ])
 
             if (priceX && priceY && priceY > 0 && position.priceRange) {
@@ -430,10 +437,11 @@ const loadData = async (withLoading = true) => {
           token1,
           token2,
         }
-      })
+      }),
     )
     const timeTaken = performance.now() - startTime
     console.log(`✅ Positions loaded in ${timeTaken.toFixed(2)}ms`)
+    console.log(fullPositionsData.value)
 
     if (isInitialLoad.value) {
       isInitialLoad.value = false
@@ -451,13 +459,14 @@ const loadData = async (withLoading = true) => {
 const fetchPositionsData = async () => {
   const { loadPositionsData } = await import('~/utils/dlmm-analyzer/index.ts')
   loadingLabel.value = 'Loading positions...'
+
   const positions = []
   if (walletAddress.value === 'All wallets') {
     const wallets = await getAllAddresses()
     for (const wallet of wallets) {
       loadingLabel.value = `Loading positions for ${wallet.name}...`
       const data = await loadPositionsData(wallet.address)
-      data.positions.forEach(position => {
+      data.positions.forEach((position) => {
         position.walletName = wallet.name
         positions.push(position)
       })
@@ -465,33 +474,13 @@ const fetchPositionsData = async () => {
   } else {
     loadingLabel.value = `Loading positions for ${walletAddress.value}...`
     const data = await loadPositionsData(walletAddress.value)
-    data.positions.forEach(position => {
+    data.positions.forEach((position) => {
       position.wallet = walletAddress.value.name
       positions.push(position)
     })
   }
   loadingLabel.value = 'Loading token info...'
   return positions
-}
-
-const preloadTokenInfo = async (positions) => {
-  const tokenAddresses = new Set()
-
-  positions.forEach((position) => {
-    const tokenX = position.tokenX
-    const tokenY = position.tokenY
-
-    if (tokenX) tokenAddresses.add(tokenX)
-    if (tokenY) tokenAddresses.add(tokenY)
-  })
-
-  console.log(`Pre-loading info for ${tokenAddresses.size} unique tokens...`)
-  const addresses = Array.from(tokenAddresses)
-  const tokenInfos = await tokenService.getMultipleTokens(addresses)
-
-  tokenCache = { ...tokenCache, ...tokenInfos }
-
-  console.log('Token info pre-loading completed')
 }
 
 // Display functions
@@ -539,18 +528,12 @@ const getUpnlColor = (percentage) => {
   return percentage > 0 ? 'positive' : 'negative'
 }
 
-
 const fetchTokenPrice = async (tokenMint) => {
   if (!tokenMint) return null
 
-  // Check cache first
-  if (tokenPrices.value.has(tokenMint)) {
-    return tokenPrices.value.get(tokenMint)
-  }
-
   try {
     const response = await fetch(
-      `https://api.dexscreener.com/latest/dex/tokens/${tokenMint}`
+      `https://api.dexscreener.com/latest/dex/tokens/${tokenMint}`,
     )
 
     if (!response.ok) {
@@ -584,22 +567,16 @@ const fetchTokenPrice = async (tokenMint) => {
 }
 
 const getOutOfRangeStatus = (priceRange) => {
-  if (!priceRange || !priceRange.currentPrice || !priceRange.minPrice || !priceRange.maxPrice) {
-    return null
-  }
+  if (
+    !priceRange ||
+    !priceRange.currentPrice ||
+    !priceRange.minPrice ||
+    !priceRange.maxPrice
+  ) return null
 
   const { minPrice, maxPrice, currentPrice } = priceRange
-
-  // Check if current price is below minimum (out of range on lower side)
-  if (currentPrice < minPrice) {
-    return 'lower'
-  }
-
-  // Check if current price is above maximum (out of range on upper side)
-  if (currentPrice > maxPrice) {
-    return 'upper'
-  }
-
+  if (currentPrice < minPrice) return 'lower'
+  if (currentPrice > maxPrice) return 'upper'
   return null
 }
 

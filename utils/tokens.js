@@ -39,36 +39,30 @@ export class TokenService {
   async getTokenInfo(address) {
     if (!address) return this.getDefaultToken()
 
-    // Check cache first
     if (this.cache.has(address)) {
       return this.cache.get(address)
     }
 
-    // Ensure Jupiter tokens are loaded
     await this.init()
 
-    // Check Jupiter cache
     if (this.jupiterTokens.has(address)) {
       const token = this.jupiterTokens.get(address)
       this.cache.set(address, token)
       return token
     }
 
-    // Try individual API call
     const token = await this.fetchFromAPI(address)
     if (token) {
       this.cache.set(address, token)
       return token
     }
 
-    // Return default
     const defaultToken = this.getDefaultToken(address)
     this.cache.set(address, defaultToken)
     return defaultToken
   }
 
   async fetchFromAPI(address) {
-    // Try Jupiter individual API
     try {
       const response = await fetch(`https://token.jup.ag/token/${address}`)
       if (response.ok) {
@@ -85,7 +79,6 @@ export class TokenService {
       console.warn('Jupiter individual API failed:', error)
     }
 
-    // Try Solscan as backup
     try {
       const response = await fetch(
         `https://api.solscan.io/token/meta?token=${address}`,
@@ -167,7 +160,13 @@ export function useTokenService() {
   }
 }
 
+const infoCache = new Map()
+
 export const getTokenInfoInternal = async (tokenAddress) => {
+  if (infoCache.has(tokenAddress)) {
+    return infoCache.get(tokenAddress)
+  }
+
   let icon = ''
   if (tokenAddress === 'So11111111111111111111111111111111111111112') {
     icon =
@@ -206,12 +205,14 @@ export const getTokenInfoInternal = async (tokenAddress) => {
         'https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png'
     }
 
-    return {
+    const result = {
       symbol,
       name,
       icon,
       address: tokenAddress,
     }
+    infoCache.set(tokenAddress, result)
+    return result
   } catch (error) {
     console.error('Error fetching token info:', error)
     return null
@@ -223,7 +224,8 @@ export const getDefaultTokenInfo = (tokenAddress) => ({
   name: 'Unknown Token',
   icon: getDefaultIcon(),
   decimals: 9,
-  verified: false
+  verified: false,
 })
 
-export const getDefaultIcon = () => 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iMTIiIGZpbGw9IiM2NjY2NjYiLz4KPHR0ZXh0IHg9IjUwJSIgeT0iNTAlIiBkb21pbmFudC1iYXNlbGluZT0iY2VudHJhbCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0id2hpdGUiIGZvbnQtc2l6ZT0iMTAiPj88L3RleHQ+Cjwvc3ZnPg=='
+export const getDefaultIcon = () =>
+  'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iMTIiIGZpbGw9IiM2NjY2NjYiLz4KPHR0ZXh0IHg9IjUwJSIgeT0iNTAlIiBkb21pbmFudC1iYXNlbGluZT0iY2VudHJhbCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0id2hpdGUiIGZvbnQtc2l6ZT0iMTAiPj88L3RleHQ+Cjwvc3ZnPg=='
