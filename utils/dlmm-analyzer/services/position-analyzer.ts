@@ -72,9 +72,6 @@ export class PositionAnalyzer {
       const token_X_mint = pair.tokenX.mint.address
       const token_Y_mint = pair.tokenY.mint.address
       const bins = position.positionData.positionBinData
-      console.log('analyzing position', position)
-
-      console.log(this.meteoraService)
       const currentValue = this.meteoraService.calculatePositionValue(bins)
       const unCollectedFees = {
         tokenX: position.positionData.feeX,

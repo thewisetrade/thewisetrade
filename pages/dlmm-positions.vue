@@ -441,7 +441,6 @@ const loadData = async (withLoading = true) => {
     )
     const timeTaken = performance.now() - startTime
     console.log(`✅ Positions loaded in ${timeTaken.toFixed(2)}ms`)
-    console.log(fullPositionsData.value)
 
     if (isInitialLoad.value) {
       isInitialLoad.value = false
