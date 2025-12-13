@@ -6,24 +6,20 @@ import { MeteoraService } from './services/meteora.js'
 import { PositionAnalyzer } from './services/position-analyzer.js'
 
 async function loadPositionsData(walletAddress: string) {
-  console.log('🚀 Starting Meteora DLMM Position Analyzer...\n')
+
+  console.log('🚀 Loading DLMM positions for wallet:', walletAddress, '\n')
   const wallet = new PublicKey(walletAddress)
 
   try {
     const quickNodeService = new QuickNodeService(walletAddress)
     const meteoraService = new MeteoraService(quickNodeService)
-    const positionAnalyzer = new PositionAnalyzer(
-      quickNodeService,
-      meteoraService,
-    )
+    const positionAnalyzer = new PositionAnalyzer(meteoraService)
 
-    console.log(`📊 Analyzing wallet: ${wallet.toBase58()}`)
     const startTime = performance.now()
-
     const pairs = await meteoraService.getUserLbPairs(wallet)
     const analysis = await positionAnalyzer.analyzePositions(pairs)
-
     const timeTaken = performance.now() - startTime
+
     console.log(`✅ Analysis complete! Time taken: ${timeTaken}ms`)
 
     return analysis

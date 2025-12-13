@@ -1,70 +1,56 @@
 // src/services/position-analyzer.ts
-import BN from 'bn.js';
-import { PublicKey } from '@solana/web3.js';
-import { QuickNodeService } from './quicknode.js';
-import { MeteoraService } from './meteora.js';
-import type {
-  PositionData,
-  PositionAnalysis,
-  Position
-} from '../types/position.js';
-import type {
-  PositionOpenEvent,
-  TransactionDetails
-} from '../types/transaction.js';
-import { calculateAge, formatTokenAmount } from '../utils/helpers.js';
-import DLMM, { type LbPosition, type PositionInfo } from '@meteora-ag/dlmm';
-import {
-  loadPositionAnalyzisCache,
-  savePositionAnalyzisCache,
-  isPositionAnalyzisCached,
-  setPositionAnalyzisCached,
-} from '../../cache.js';
+import BN from 'bn.js'
+import { PublicKey } from '@solana/web3.js'
+import { MeteoraService } from './meteora.js'
+import type { PositionData, PositionAnalysis } from '../types/position.js'
+import { calculateAge, formatTokenAmount } from '../utils/helpers.js'
+import { type LbPosition, type PositionInfo } from '@meteora-ag/dlmm'
 
 export class PositionAnalyzer {
-  private quickNodeService: QuickNodeService;
-  private meteoraService: MeteoraService;
+  private meteoraService: MeteoraService
 
-  constructor(quickNodeService: QuickNodeService, meteoraService: MeteoraService) {
-    this.quickNodeService = quickNodeService;
-    this.meteoraService = meteoraService;
+  constructor(meteoraService: MeteoraService) {
+    this.meteoraService = meteoraService
   }
 
   /**
    * Analyze all positions from position open events
    */
-  async analyzePositions(
-    pairs: PositionInfo[]
-  ): Promise<PositionAnalysis> {
-    const positions: PositionData[] = [];
-    let totalValue = 0;
-    let totalPnl = 0;
-    let totalCollectedFees = 0;
-    let totalUnCollectedFees = 0;
-    let totalAge = 0;
+  async analyzePositions(pairs: PositionInfo[]): Promise<PositionAnalysis> {
+    const positions: PositionData[] = []
+    let totalValue = 0
+    let totalPnl = 0
+    let totalCollectedFees = 0
+    let totalUnCollectedFees = 0
+    let totalAge = 0
 
     const positionsData = pairs.reduce((acc, pair) => {
-      pair.lbPairPositionsData.forEach(position => {
-        position.pair = pair;
+      pair.lbPairPositionsData.forEach((position) => {
+        position.pair = pair
       })
       return acc.concat(pair.lbPairPositionsData)
     }, [] as LbPosition[])
-    await Promise.all(positionsData.map(async position => {
-      try {
-        const positionData = await this.analyzePosition(position);
-        if (positionData) {
-          positions.push(positionData);
-          totalValue += positionData.currentValue.totalUsd;
-          totalPnl += positionData.upnl.totalUsd;
-          totalCollectedFees += positionData.collectedFees.totalUsd;
-          totalUnCollectedFees += positionData.unCollectedFees.totalUsd;
-          totalAge += positionData.age.days;
+    await Promise.all(
+      positionsData.map(async (position) => {
+        try {
+          const positionData = await this.analyzePosition(position)
+          if (positionData) {
+            positions.push(positionData)
+            totalValue += positionData.currentValue.totalUsd
+            totalPnl += positionData.upnl.totalUsd
+            totalCollectedFees += positionData.collectedFees.totalUsd
+            totalUnCollectedFees += positionData.unCollectedFees.totalUsd
+            totalAge += positionData.age.days
+          }
+        } catch (error) {
+          console.error(
+            `Error analyzing position ${position.pair.publicKey.toBase58()}:`,
+            error,
+          )
+          throw error
         }
-      } catch (error) {
-        console.error(`Error analyzing position ${position.pair.publicKey.toBase58()}:`, error);
-        throw error;
-      }
-    }))
+      }),
+    )
 
     return {
       totalPositions: positions.length,
@@ -74,93 +60,110 @@ export class PositionAnalyzer {
       totalUnCollectedFees,
       avgAge: positions.length > 0 ? totalAge / positions.length : 0,
       positions,
-    };
+    }
   }
 
   /**
    * Analyze a single position
    */
-  async analyzePosition(
-    position: LbPosition
-  ): Promise<PositionData | null> {
+  async analyzePosition(position: LbPosition): Promise<PositionData | null> {
     try {
-      const pair = position.pair;
-      const token_X_mint = pair.tokenX.mint.address;
-      const token_Y_mint = pair.tokenY.mint.address;
-      const bins = position.positionData.positionBinData;
+      const pair = position.pair
+      const token_X_mint = pair.tokenX.mint.address
+      const token_Y_mint = pair.tokenY.mint.address
+      const bins = position.positionData.positionBinData
+      console.log('analyzing position', position)
 
-      const currentValue = this.meteoraService.calculatePositionValue(bins);
-      const unCollectedFees = { tokenX: position.positionData.feeX, tokenY: position.positionData.feeY };
-      const collectedFees = { tokenX: position.positionData.totalClaimedFeeXAmount, tokenY: position.positionData.totalClaimedFeeYAmount };
+      console.log(this.meteoraService)
+      const currentValue = this.meteoraService.calculatePositionValue(bins)
+      const unCollectedFees = {
+        tokenX: position.positionData.feeX,
+        tokenY: position.positionData.feeY,
+      }
+      const collectedFees = {
+        tokenX: position.positionData.totalClaimedFeeXAmount,
+        tokenY: position.positionData.totalClaimedFeeYAmount,
+      }
 
-      const tokenXDecimals = await this.meteoraService.getTokenDecimals(token_X_mint);
-      const tokenYDecimals = await this.meteoraService.getTokenDecimals(token_Y_mint);
-      const tokenXPrice = 0;
-      const tokenYPrice = 0;
+      const tokenXDecimals =
+        await this.meteoraService.getTokenDecimals(token_X_mint)
+      const tokenYDecimals =
+        await this.meteoraService.getTokenDecimals(token_Y_mint)
+      const tokenXPrice = 0
+      const tokenYPrice = 0
 
       const currentValueUsd = this.calculateUsdValue(
         currentValue,
         tokenXDecimals,
         tokenYDecimals,
         tokenXPrice,
-        tokenYPrice
-      );
+        tokenYPrice,
+      )
 
       const initialValueUsd = this.calculateUsdValue(
         { tokenX: new BN(0), tokenY: new BN(0) },
         tokenXDecimals,
         tokenYDecimals,
         tokenXPrice,
-        tokenYPrice
-      );
+        tokenYPrice,
+      )
 
       const collectedFeesUsd = this.calculateUsdValue(
         collectedFees,
         tokenXDecimals,
         tokenYDecimals,
         tokenXPrice,
-        tokenYPrice
-      );
+        tokenYPrice,
+      )
 
       const unCollectedFeesUsd = this.calculateUsdValue(
         unCollectedFees,
         tokenXDecimals,
         tokenYDecimals,
         tokenXPrice,
-        tokenYPrice
-      );
+        tokenYPrice,
+      )
 
-      // Calculate PnL
-      const upnlUsd = currentValueUsd + collectedFeesUsd - initialValueUsd;
-      const upnlPercentage = initialValueUsd > 0 ? (upnlUsd / initialValueUsd) * 100 : 0;
+      const upnlUsd = currentValueUsd + collectedFeesUsd - initialValueUsd
+      const upnlPercentage =
+        initialValueUsd > 0 ? (upnlUsd / initialValueUsd) * 100 : 0
+      const priceRange = this.meteoraService.getPriceRange(bins)
+      const currentPrice = this.meteoraService.calculateBinPrice(bins)
 
-      // Calculate price range
-      const priceRange = this.meteoraService.getPriceRange(bins);
-      const currentPrice = this.meteoraService.calculateBinPrice(bins);
-
-      // Add value field to each bin
-      const binsWithValue = bins.map(bin => {
-        const binValue = (parseFloat(bin.positionXAmount) * bin.price + parseFloat(bin.positionYAmount))
+      const binsWithValue = bins.map((bin) => {
+        const binValue =
+          parseFloat(bin.positionXAmount) * bin.price +
+          parseFloat(bin.positionYAmount)
         return {
           ...bin,
-          value: binValue
+          value: binValue,
         }
       })
 
-      const value = (currentValue.tokenX.toNumber() * currentPrice?.currentPrice! + currentValue.tokenY.toNumber()) / 10 ** 9;
-      const collectedFeesValue = (collectedFees.tokenX.toNumber() * currentPrice?.currentPrice! + collectedFees.tokenY.toNumber()) / (10 ** 9);
-      const unCollectedFeesValue = (unCollectedFees.tokenX.toNumber() * currentPrice?.currentPrice! + unCollectedFees.tokenY.toNumber()) / (10 ** 9);
+      const value =
+        (currentValue.tokenX.toNumber() * currentPrice?.currentPrice! +
+          currentValue.tokenY.toNumber()) /
+        10 ** 9
+      const collectedFeesValue =
+        (collectedFees.tokenX.toNumber() * currentPrice?.currentPrice! +
+          collectedFees.tokenY.toNumber()) /
+        10 ** 9
+      const unCollectedFeesValue =
+        (unCollectedFees.tokenX.toNumber() * currentPrice?.currentPrice! +
+          unCollectedFees.tokenY.toNumber()) /
+        10 ** 9
 
-      const last = bins.length - 1;
-      const isInRange = bins[0].binXAmount !== '0' ? 'low' :
-        bins[last].binYAmount !== '0' ? 'high' :
-          true;
+      const last = bins.length - 1
+      const isInRange =
+        bins[0].binXAmount !== '0'
+          ? 'low'
+          : bins[last].binYAmount !== '0'
+            ? 'high'
+            : true
 
-      // Calculate age
-      const createdAt = new Date();
-      const age = calculateAge(createdAt);
+      const createdAt = new Date()
+      const age = calculateAge(createdAt)
 
-      // Update bins in the original position
       position.positionData.positionBinData = binsWithValue
 
       return {
@@ -172,8 +175,8 @@ export class PositionAnalyzer {
           createdAt,
           lastUpdatedAt: new Date(),
         },
-        tokenX:token_X_mint,
-        tokenY:token_Y_mint,
+        tokenX: token_X_mint,
+        tokenY: token_Y_mint,
         currentValue: {
           tokenX: currentValue.tokenX,
           tokenY: currentValue.tokenY,
@@ -203,36 +206,17 @@ export class PositionAnalyzer {
         priceRange: {
           minPrice: priceRange.minPrice,
           maxPrice: priceRange.maxPrice,
-          currentPrice: currentPrice!.currentPrice
+          currentPrice: currentPrice!.currentPrice,
         },
         collectedFeesValue,
         unCollectedFeesValue,
         value,
         age,
         isInRange,
-      };
+      }
     } catch (error) {
-      console.error(`Error analyzing position:`, error);
-      return null;
-    }
-  }
-
-  /**
-   * Get collected fees from transaction history
-   */
-  private async getCollectedFees(positionPubkey: PublicKey): Promise<{ tokenX: BN; tokenY: BN }> {
-    try {
-      // This would require fetching all transactions that interacted with this position
-      // and parsing fee collection events. For now, returning zero as placeholder.
-      // In a complete implementation, you would:
-      // 1. Get all transactions for this position
-      // 2. Filter for fee collection transactions
-      // 3. Sum up all collected fees
-
-      return { tokenX: new BN(0), tokenY: new BN(0) };
-    } catch (error) {
-      console.error('Error getting collected fees:', error);
-      return { tokenX: new BN(0), tokenY: new BN(0) };
+      console.error(`Error analyzing position:`, error)
+      return null
     }
   }
 
@@ -244,19 +228,23 @@ export class PositionAnalyzer {
     tokenXDecimals: number,
     tokenYDecimals: number,
     tokenXPrice: number,
-    tokenYPrice: number
+    tokenYPrice: number,
   ): number {
-    const tokenXAmount = parseFloat(formatTokenAmount(amounts.tokenX, tokenXDecimals));
-    const tokenYAmount = parseFloat(formatTokenAmount(amounts.tokenY, tokenYDecimals));
+    const tokenXAmount = parseFloat(
+      formatTokenAmount(amounts.tokenX, tokenXDecimals),
+    )
+    const tokenYAmount = parseFloat(
+      formatTokenAmount(amounts.tokenY, tokenYDecimals),
+    )
 
-    return (tokenXAmount * tokenXPrice) + (tokenYAmount * tokenYPrice);
+    return tokenXAmount * tokenXPrice + tokenYAmount * tokenYPrice
   }
 
   /**
    * Get token prices from external API or cache
    */
   async getTokenPrices(tokenMints: PublicKey[]): Promise<Map<string, number>> {
-    const prices = new Map<string, number>();
+    const prices = new Map<string, number>()
 
     try {
       // This is a placeholder. In a real implementation, you would:
@@ -266,20 +254,20 @@ export class PositionAnalyzer {
 
       // Example hardcoded prices (replace with actual API calls)
       const knownPrices: Record<string, number> = {
-        'So11111111111111111111111111111111111111112': 100, // SOL
-        'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v': 1, // USDC
-        'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB': 1, // USDT
-      };
+        So11111111111111111111111111111111111111112: 100, // SOL
+        EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v: 1, // USDC
+        Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB: 1, // USDT
+      }
 
       for (const mint of tokenMints) {
-        const mintStr = mint.toBase58();
-        prices.set(mintStr, knownPrices[mintStr] || 0);
+        const mintStr = mint.toBase58()
+        prices.set(mintStr, knownPrices[mintStr] || 0)
       }
     } catch (error) {
-      console.error('Error fetching token prices:', error);
+      console.error('Error fetching token prices:', error)
     }
 
-    return prices;
+    return prices
   }
 
   /**
@@ -299,7 +287,9 @@ export class PositionAnalyzer {
 
 ## Individual Positions
 
-${analysis.positions.map((pos, index) => `
+${analysis.positions
+  .map(
+    (pos, index) => `
 ### Position ${index + 1}
 - **Address**: ${pos.position.pubkey.toBase58()}
 - **LB Pair**: ${pos.position.lbPair.toBase58()}
@@ -322,26 +312,42 @@ ${analysis.positions.map((pos, index) => `
 - **Uncollected Fees in SOl**: ${pos.unCollectedFeesValue}
 - **Age**: ${pos.age.days}d ${pos.age.hours}h ${pos.age.minutes}m
 
-`).join('')}
-    `.trim();
+`,
+  )
+  .join('')}
+    `.trim()
 
-    return report;
+    return report
   }
 
   /**
    * Export position data to JSON
    */
   exportToJson(analysis: PositionAnalysis): string {
-    return JSON.stringify(analysis, (key, value) => {
-      // Handle BN serialization
-      if (value && typeof value === 'object' && value.constructor && value.constructor.name === 'BN') {
-        return value.toString();
-      }
-      // Handle PublicKey serialization
-      if (value && typeof value === 'object' && value.constructor && value.constructor.name === 'PublicKey') {
-        return value.toBase58();
-      }
-      return value;
-    }, 2);
+    return JSON.stringify(
+      analysis,
+      (key, value) => {
+        // Handle BN serialization
+        if (
+          value &&
+          typeof value === 'object' &&
+          value.constructor &&
+          value.constructor.name === 'BN'
+        ) {
+          return value.toString()
+        }
+        // Handle PublicKey serialization
+        if (
+          value &&
+          typeof value === 'object' &&
+          value.constructor &&
+          value.constructor.name === 'PublicKey'
+        ) {
+          return value.toBase58()
+        }
+        return value
+      },
+      2,
+    )
   }
 }
