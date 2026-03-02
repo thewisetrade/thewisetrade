@@ -69,6 +69,7 @@
           />
           <h3>Pool Finder</h3>
         </NuxtLink>
+        <!-- Section Performance masquée
         <NuxtLink class="guide-link" to="dlmm-performance">
           <img
             class="mb-2"
@@ -76,6 +77,7 @@
           />
           <h3>Pool Performance</h3>
         </NuxtLink>
+        -->
         <NuxtLink class="guide-link" to="dlmm-positions">
           <img
             class="mb-2"
