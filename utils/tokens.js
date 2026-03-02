@@ -189,7 +189,11 @@ export const getTokenInfoInternal = async (tokenAddress) => {
       return null
     }
 
-    const pair = data.pairs[0]
+    // Filter to Solana chain only - DexScreener returns pairs from multiple chains
+    // (e.g. FOGO uses same address as SOL for wrapped native token, causing SOL to show as FOGO)
+    const solanaPairs = data.pairs.filter((p) => p.chainId === 'solana')
+    const pairsToUse = solanaPairs.length > 0 ? solanaPairs : data.pairs
+    const pair = pairsToUse[0]
     let symbol, name
 
     if (pair.baseToken.address.toLowerCase() === tokenAddress.toLowerCase()) {

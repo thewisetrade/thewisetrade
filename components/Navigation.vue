@@ -29,7 +29,6 @@
       :items="[
         { to: '/dlmm-pool-finder', label: 'DLMM Pool Finder' },
         { to: '/dlmm-positions', label: 'DLMM Positions' },
-        { to: '/dlmm-performance', label: 'DLMM Performance' },
         { to: '/dlmm-wallets', label: 'DLMM Wallets' }
       ]"
     />
