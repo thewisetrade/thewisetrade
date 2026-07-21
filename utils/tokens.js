@@ -12,7 +12,6 @@ export class TokenService {
 
     this.isLoading = true
     try {
-      console.log('Loading Jupiter token list...')
       const response = await fetch('https://token.jup.ag/all')
       const tokens = await response.json()
 
@@ -27,7 +26,6 @@ export class TokenService {
         })
       })
 
-      console.log(`Loaded ${this.jupiterTokens.size} tokens from Jupiter`)
     } catch (error) {
       console.error('Failed to load Jupiter tokens:', error)
       this.jupiterTokens = new Map()
@@ -185,7 +183,6 @@ export const getTokenInfoInternal = async (tokenAddress) => {
     const data = await response.json()
 
     if (!data.pairs || data.pairs.length === 0) {
-      console.log('No pairs found for this token')
       return null
     }
 

@@ -220,7 +220,6 @@ const getDateValues = () => {
         dateValues.length === 0 ||
         dateValues[dateValues.length - 1]?.key !== dateKey
       if (isNewEntryRequired) {
-        console.log(dateData[dateKey]?.tokens, 'tokens')
         dateValues.push({
           y: dateData[dateKey]?.profit || 0,
           fees: dateData[dateKey]?.fees || 0,

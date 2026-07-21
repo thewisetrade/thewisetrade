@@ -13,7 +13,6 @@ export default {
       }
     }
 
-    console.log('scrollBehavior', to.fullPath)
     const savedScroll = sessionStorage.getItem(`scroll_${to.fullPath}`)
     if (savedScroll) {
       return { top: parseInt(savedScroll), behavior: 'auto' }

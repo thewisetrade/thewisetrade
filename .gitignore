@@ -8,3 +8,15 @@ node_modules
 dist
 .DS_Store
 pages/portfolio.vue
+__pycache__/
+*.pyc
+
+# Local experiments / unrelated assets
+wizy*
+WIZY*
+omni.py
+field.jpg
+flowers.jpg
+output.jpg
+output*.jpg
+requirements-wizy.txt

@@ -9,9 +9,6 @@
   </div>
 </template>
 
-<script setup>
-</script>
-
 <style scoped>
 .main {
   background-color: #000;

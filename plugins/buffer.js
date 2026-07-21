@@ -1,11 +1,14 @@
 import { Buffer } from 'buffer'
 
-globalThis.Buffer = Buffer
-// globalThis.process = process
-
-export default defineNuxtPlugin(() => {
-  window.Buffer = Buffer
-  if (typeof window.global === 'undefined') {
-    window.global = window
-  }
+export default defineNuxtPlugin({
+  name: 'buffer',
+  setup() {
+    globalThis.Buffer = Buffer
+    if (typeof window !== 'undefined') {
+      window.Buffer = Buffer
+      if (typeof window.global === 'undefined') {
+        window.global = window
+      }
+    }
+  },
 })

@@ -622,7 +622,6 @@ watch(sortBy, resetPositions)
 watch(sortOrder, resetPositions)
 watch(groupBy, resetPositions)
 watch(selectedWallet, (address) => {
-  console.log('selectedWallet', address)
   if (address) {
     updateWalletAddress(address)
   } else {

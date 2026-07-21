@@ -360,7 +360,6 @@ const formattedPositions = computed(() => {
     )
 })
 
-
 // Methods
 
 const loadData = async (withLoading = true) => {
@@ -375,7 +374,6 @@ const loadData = async (withLoading = true) => {
     }
     error.value = null
 
-    const startTime = performance.now()
     lastUpdateTime.value = DateTime.now()
     let positionList = await fetchPositionsData()
 
@@ -439,8 +437,6 @@ const loadData = async (withLoading = true) => {
         }
       }),
     )
-    const timeTaken = performance.now() - startTime
-    console.log(`✅ Positions loaded in ${timeTaken.toFixed(2)}ms`)
 
     if (isInitialLoad.value) {
       isInitialLoad.value = false

@@ -9,10 +9,10 @@
     "postinstall": "nuxt prepare"
   },
   "devDependencies": {
-    "@nuxtjs/seo": "^2.1.1",
+    "@nuxtjs/seo": "^5.3.3",
     "@types/bn.js": "^5.1.6",
-    "@types/node": "^20.17.52",
-    "nuxt": "^3.15.4",
+    "@types/node": "^22.15.0",
+    "nuxt": "^4.5.0",
     "prettier": "^3.5.0",
     "sass": "^1.84.0",
     "ts-node": "^10.9.2",

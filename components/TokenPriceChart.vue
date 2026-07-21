@@ -55,7 +55,6 @@ const fetchPriceData = async () => {
       throw new Error('No pairs found')
     }
 
-    console.log('token chart data', data)
     // Find the pair with highest liquidity for most accurate data
     const pair = data.pairs.reduce((best, current) => {
       const currentLiq = current.liquidity?.usd || 0
@@ -89,7 +88,6 @@ const fetchPriceData = async () => {
         }
       }
     } catch (err) {
-      console.log('GeckoTerminal API failed')
     }
 
     // Create a fake chart based on the price and price change
@@ -110,7 +108,6 @@ const fetchPriceData = async () => {
 
       priceData.value = prices
 
-      console.log('prices', prices)
       drawChart()
     } else {
       throw new Error('No price data available')

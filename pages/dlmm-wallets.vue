@@ -292,7 +292,6 @@ const addWallet = async () => {
   addingWalletErrorMessage.value = null
   if (newWallet.value.address) {
     try {
-      console.log('adding wallet',newWallet.value.name, newWallet.value)
       const walletData = {
         name: newWallet.value.name || newWallet.value.domain,
         domain: newWallet.value.domain,
@@ -369,7 +368,6 @@ const deleteWallet = async (walletId) => {
   try {
     await deleteAddress(walletId)
     wallets.value = wallets.value.filter((w) => w.id !== walletId)
-    console.log(wallets.value)
     updateGroupWalletCounts()
   } catch (error) {
     console.error('Error deleting wallet:', error)

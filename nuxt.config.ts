@@ -1,83 +1,77 @@
 import path from 'path'
-import tailwindcss from "@tailwindcss/vite";
+import tailwindcss from '@tailwindcss/vite'
 
 export default defineNuxtConfig({
-  target: 'static',
+  // Keep Nuxt 3-style root directories (pages/, components/, …)
+  // because this repo already has a small app/ folder for router options.
+  srcDir: '.',
+  dir: {
+    app: 'app',
+  },
+
   ssr: false,
 
+  future: {
+    compatibilityVersion: 4,
+  },
+
+  compatibilityDate: '2026-07-21',
+
   devServer: {
-    port: 3010
+    port: 3010,
   },
 
   app: {
     head: {
       meta: [
-          { charset: 'utf-8' },
-          { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-          { name: 'keywords', content:'liquidity providing solana trading' },
-          { name:'og:title', content: 'The Wise Trade - Empower Your Cryptos With Liquidity Providing' },
-          { name:'og:locale', content: 'en_US' },
-          { name:'twitter:card', content: 'summary' },
-          { name:'twitter:url', content: 'http://twitter.com/defilogist' },
-          { name:'twitter:title', content: 'The Wise Trade - Empower Your Cryptos With Liquidity Providing' }
+        { charset: 'utf-8' },
+        { name: 'viewport', content: 'width=device-width, initial-scale=1' },
+        { name: 'keywords', content: 'liquidity providing solana trading' },
+        {
+          name: 'og:title',
+          content:
+            'The Wise Trade - Empower Your Cryptos With Liquidity Providing',
+        },
+        { name: 'og:locale', content: 'en_US' },
+        { name: 'twitter:card', content: 'summary' },
+        { name: 'twitter:url', content: 'http://twitter.com/defilogist' },
+        {
+          name: 'twitter:title',
+          content:
+            'The Wise Trade - Empower Your Cryptos With Liquidity Providing',
+        },
       ],
-      script: [
-      ],
-      link: [
-        { rel: 'icon', href: '/favicon.ico' }
-      ],
-      style: [
-      ],
-      noscript: [
-        { children: 'Javascript is required' }
-      ]
-    }
+      link: [{ rel: 'icon', href: '/favicon.ico' }],
+      noscript: [{ children: 'Javascript is required' }],
+    },
   },
 
   css: ['~/assets/css/main.css', 'vue-final-modal/style.css'],
 
-  postcss: {
-    plugins: {
-      autoprefixer: {},
-    },
-  },
-
   vite: {
     resolve: {
-      extensions: ['.js', '.json', '.jsx', '.mjs', '.ts', '.tsx', '.vue']
-    },
-    esbuild: {
-      target: "esnext",
+      extensions: ['.js', '.json', '.jsx', '.mjs', '.ts', '.tsx', '.vue'],
     },
     build: {
-      target: "esnext",
+      target: 'esnext',
       commonjsOptions: {
-        transformMixedEsModules: true
+        transformMixedEsModules: true,
       },
     },
     define: {
-      "process.env.BROWSER": true,
-       'global': {}
+      'process.env.BROWSER': true,
+      global: {},
     },
-    plugins: [
-      tailwindcss(),
-    ],
-
+    plugins: [tailwindcss()],
     server: {
       fs: {
-        allow: [
-          // Allow serving files from one level up to the project root
-          path.resolve(__dirname, '..'),
-        ],
+        allow: [path.resolve(__dirname, '..')],
       },
     },
   },
 
-  plugins: [
-    { src: '~/plugins/buffer', mode: 'client', ssr: false },
-  ],
+  plugins: [{ src: '~/plugins/buffer', mode: 'client' }],
 
-  compatibilityDate: '2025-01-11',
   modules: ['@nuxtjs/seo'],
 
   site: {
@@ -86,11 +80,17 @@ export default defineNuxtConfig({
     description: 'Empower Your Cryptos With Liquidity Providing',
     defaultLocale: 'en',
   },
-  robots: {
-    UserAgent: '*',
-    Allow: '/',
-    Sitemap: 'https://thewise.trade/sitemap.xml'
+
+  // SPA site: these modules need SSR
+  ogImage: {
+    enabled: false,
   },
-  routeRules: {
-  }
+  schemaOrg: {
+    enabled: false,
+  },
+
+  robots: {
+    allow: '/',
+    sitemap: 'https://thewise.trade/sitemap.xml',
+  },
 })
