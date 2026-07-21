@@ -75,7 +75,7 @@
         >
           <a
             target="_blank"
-            :href="`https://app.meteora.ag/dlmm/${pool.meteora_address}`"
+            :href="`https://edge.meteora.ag/dlmm/${pool.meteora_address}`"
           >
             <div
               class="pool flex flex-row gap-4 items-center rounded-xl border-2"
