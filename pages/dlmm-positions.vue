@@ -119,15 +119,35 @@
             v-for="group in displayedPositionSections"
             :key="group.id"
           >
-            <div class="quote-group-header" v-if="quoteFilter === 'ALL'">
-              <img
-                v-if="group.icon"
-                :src="group.icon"
-                :alt="group.label"
-                class="quote-group-icon"
-              />
-              <span>{{ group.label }}</span>
-              <span class="quote-group-count">{{ group.positions.length }}</span>
+            <div class="quote-group-summary">
+              <div class="cell position-cell">
+                <img
+                  v-if="group.icon"
+                  :src="group.icon"
+                  :alt="group.label"
+                  class="quote-group-icon"
+                />
+                <span class="quote-group-label">{{ group.label }}</span>
+                <span class="quote-group-count">{{ group.totals.count }}</span>
+              </div>
+              <div class="cell value-cell">
+                <img
+                  v-if="group.icon"
+                  :src="group.icon"
+                  :alt="group.label"
+                  class="value-icon mr-2"
+                />
+                <span class="group-total-value">{{ group.totals.value }}</span>
+              </div>
+              <div class="cell fee-cell">
+                <span class="group-total-value">{{ group.totals.fee }}</span>
+              </div>
+              <div class="cell upnl-cell">
+                <span class="group-total-value" :class="group.totals.upnlColor">
+                  {{ group.totals.upnl }}
+                </span>
+              </div>
+              <div class="cell range-cell"></div>
             </div>
             <template v-for="position in group.positions" :key="position.id">
               <div class="wallet-name" v-if="walletAddress === 'All wallets'">
@@ -415,9 +435,8 @@ const displayedPositionSections = computed(() => {
   }
 
   return sections
-    .map((section) => ({
-      ...section,
-      positions: section.positions.filter((position) => {
+    .map((section) => {
+      const positions = section.positions.filter((position) => {
         if (rangeFilter.value === 'ALL') return true
         if (rangeFilter.value === 'IN_RANGE') return !position.isOutOfRange
         if (rangeFilter.value === 'LOWER') {
@@ -427,8 +446,14 @@ const displayedPositionSections = computed(() => {
           return position.isOutOfRange === 'upper'
         }
         return true
-      }),
-    }))
+      })
+
+      return {
+        ...section,
+        positions,
+        totals: computeSectionTotals(positions, section.id),
+      }
+    })
     .filter((section) => section.positions.length > 0)
 })
 
@@ -479,6 +504,36 @@ const getUpnlColor = (pnl) => {
   if (pnl > 0) return 'positive'
   if (pnl < 0) return 'negative'
   return 'neutral'
+}
+
+const formatGroupAmount = (amount, groupId) => {
+  if (groupId === 'USDC' || groupId === 'EURC') {
+    return Math.round(amount).toLocaleString('fr-FR')
+  }
+  return amount.toLocaleString('fr-FR', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })
+}
+
+const computeSectionTotals = (positions, groupId) => {
+  const value = positions.reduce((sum, position) => sum + (position.valueNum || 0), 0)
+  const fee = positions.reduce(
+    (sum, position) => sum + (position.uncolFee?.sortValue || 0),
+    0,
+  )
+  const upnl = positions.reduce(
+    (sum, position) => sum + (position.upnl?.sortValue || 0),
+    0,
+  )
+
+  return {
+    count: positions.length,
+    value: formatGroupAmount(value, groupId),
+    fee: formatGroupAmount(fee, groupId),
+    upnl: formatGroupAmount(upnl, groupId),
+    upnlColor: getUpnlColor(upnl),
+  }
 }
 
 const formatPnlPercentage = (pct) => {
@@ -862,13 +917,22 @@ watch(selectedWallet, (address) => {
   flex-direction: column;
 }
 
-.quote-group-header {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+.quote-group-summary {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1fr 1fr 2fr;
+  gap: 1rem;
   padding: 0.75rem 1.5rem;
   background: #1f1f1f;
   border-bottom: 1px solid #2a2a2a;
+  align-items: center;
+}
+
+.quote-group-summary .position-cell {
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.quote-group-label {
   color: #ddd;
   font-size: 0.8rem;
   font-weight: 600;
@@ -880,12 +944,26 @@ watch(selectedWallet, (address) => {
   width: 18px;
   height: 18px;
   border-radius: 50%;
+  flex-shrink: 0;
 }
 
 .quote-group-count {
   margin-left: auto;
   color: #888;
   font-weight: 500;
+  font-size: 0.8rem;
+}
+
+.group-total-value {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: #eee;
+}
+
+.quote-group-summary .fee-cell,
+.quote-group-summary .upnl-cell {
+  flex-direction: row;
+  align-items: center;
 }
 
 .table-row {
@@ -1154,7 +1232,8 @@ watch(selectedWallet, (address) => {
 
 @media (max-width: 768px) {
   .table-header,
-  .table-row {
+  .table-row,
+  .quote-group-summary {
     grid-template-columns: 1fr;
     gap: 0.5rem;
   }

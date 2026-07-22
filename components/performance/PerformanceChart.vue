@@ -185,7 +185,7 @@ const getDateLabels = (props) => {
     currentDate = currentDate.plus({ days: 1 })
   }
 
-  if (props.sortOrder === 'desc') {
+  if (props.sortOrder === 'desc' && chartType.value !== 'progress') {
     return dateLabels.reverse()
   }
   return dateLabels
@@ -253,7 +253,7 @@ const getDateValues = () => {
     }
   }
 
-  if (props.sortOrder === 'desc') {
+  if (props.sortOrder === 'desc' && chartType.value !== 'progress') {
     return dateValues.reverse()
   }
   return dateValues
@@ -287,7 +287,7 @@ const formatTokensList = (tokens) => {
 }
 
 const progressContext = computed(() => {
-  return props.sortBy === 'date' && props.sortOrder === 'asc'
+  return props.sortBy === 'date'
 })
 
 const labels = computed(() => {

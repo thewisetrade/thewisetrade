@@ -11,7 +11,19 @@ const METEORA_UPSTREAM = 'https://dlmm.datapi.meteora.ag'
 const METEORA_PROXY_PREFIX = '/api/meteora'
 const MAX_DAYS_BACK = 365
 const PAGE_SIZE = 50
-const PORTFOLIO_POOL_CAP = 500
+const MAX_PAGINATION_PAGES = 100
+
+const hasMorePages = ({ hasNext, batchLength, loadedCount, totalCount }) => {
+  if (!hasNext || batchLength === 0) return false
+  if (totalCount && loadedCount >= totalCount) return false
+  return true
+}
+
+const pageLimitReached = (page, totalCount, pageSize) => {
+  if (page > MAX_PAGINATION_PAGES) return true
+  if (!totalCount) return false
+  return page > Math.ceil(totalCount / pageSize) + 1
+}
 const REQUEST_GAP_MS = 45
 const FETCH_RETRIES = 2
 
@@ -254,6 +266,7 @@ const fetchAllPortfolioPools = async (user, { daysBack = MAX_DAYS_BACK, onProgre
   let hasNext = true
   let totalCount = 0
   let totalPositions = 0
+  let syncIncomplete = false
 
   while (hasNext) {
     const data = await fetchPortfolioPage(user, { page, daysBack })
@@ -262,10 +275,12 @@ const fetchAllPortfolioPools = async (user, { daysBack = MAX_DAYS_BACK, onProgre
     totalCount = data.totalCount || totalCount
     totalPositions = data.totalPositions || totalPositions
 
-    const reachedEnd =
-      !data.hasNext ||
-      batch.length === 0 ||
-      (data.totalCount && pools.length >= data.totalCount)
+    const reachedEnd = !hasMorePages({
+      hasNext: data.hasNext,
+      batchLength: batch.length,
+      loadedCount: pools.length,
+      totalCount: data.totalCount || totalCount,
+    })
 
     hasNext = !reachedEnd
     if (onProgress) {
@@ -278,14 +293,17 @@ const fetchAllPortfolioPools = async (user, { daysBack = MAX_DAYS_BACK, onProgre
       })
     }
     page += 1
-    if (page > 30) break
+    if (pageLimitReached(page, data.totalCount || totalCount, PAGE_SIZE)) {
+      if (hasNext) syncIncomplete = true
+      break
+    }
   }
 
   return {
     pools,
     totalCount,
     totalPositions,
-    capped: totalCount >= PORTFOLIO_POOL_CAP - 5,
+    syncIncomplete,
   }
 }
 
@@ -328,14 +346,16 @@ const fetchAllPoolPositions = async (
     const batch = data.positions || []
     positions.push(...batch)
 
-    const reachedEnd =
-      !data.hasNext ||
-      batch.length === 0 ||
-      (data.totalCount && positions.length >= data.totalCount)
+    const reachedEnd = !hasMorePages({
+      hasNext: data.hasNext,
+      batchLength: batch.length,
+      loadedCount: positions.length,
+      totalCount: data.totalCount,
+    })
 
     hasNext = !reachedEnd
     page += 1
-    if (page > 50) break
+    if (pageLimitReached(page, data.totalCount, 100)) break
   }
 
   return {
@@ -489,7 +509,7 @@ const syncPortfolioPools = async (user, { daysBack = MAX_DAYS_BACK, onProgress, 
     pools: merged,
     totalCount: apiResult.totalCount,
     totalPositions: apiResult.totalPositions,
-    capped: apiResult.capped || localCount > apiResult.pools.length,
+    syncIncomplete: apiResult.syncIncomplete,
     apiPoolCount: apiResult.pools.length,
     localPoolCount: localCount,
     staleRefreshed: 0,
@@ -508,7 +528,8 @@ const loadPortfolioAsPairs = async (user, quoteToken, timePeriod, onProgress) =>
   return {
     positions,
     allMappedCount: allMapped.length,
-    capped: result.capped,
+    capped: result.syncIncomplete,
+    syncIncomplete: result.syncIncomplete,
     totalCount: result.totalCount,
     totalPositions: result.totalPositions,
     apiPoolCount: result.apiPoolCount,
@@ -591,7 +612,8 @@ const loadPortfolioAsPositions = async (user, quoteToken, timePeriod, onProgress
   return {
     positions: nested.flat(),
     allMappedCount: quotePools.length,
-    capped: result.capped,
+    capped: result.syncIncomplete,
+    syncIncomplete: result.syncIncomplete,
     totalCount: result.totalCount,
     totalPositions: result.totalPositions,
     apiPoolCount: result.apiPoolCount,
@@ -628,10 +650,12 @@ const fetchAllOpenPortfolioPools = async (user, { onProgress } = {}) => {
     totalPositions = data.totalPositions || totalPositions
     if (data.total) total = data.total
 
-    const reachedEnd =
-      !data.hasNext ||
-      batch.length === 0 ||
-      (data.totalCount && pools.length >= data.totalCount)
+    const reachedEnd = !hasMorePages({
+      hasNext: data.hasNext,
+      batchLength: batch.length,
+      loadedCount: pools.length,
+      totalCount: data.totalCount || totalCount,
+    })
 
     hasNext = !reachedEnd
     if (onProgress) {
@@ -643,7 +667,7 @@ const fetchAllOpenPortfolioPools = async (user, { onProgress } = {}) => {
       })
     }
     page += 1
-    if (page > 30) break
+    if (pageLimitReached(page, data.totalCount || totalCount, 50)) break
   }
 
   return { pools, totalCount, totalPositions, total }
@@ -819,7 +843,6 @@ const getDateFromBlockTime = (blockTime) => {
 
 export {
   MAX_DAYS_BACK,
-  PORTFOLIO_POOL_CAP,
   daysBackFromPeriod,
   fetchPortfolioTotal,
   fetchAllPortfolioPools,

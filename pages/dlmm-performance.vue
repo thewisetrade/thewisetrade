@@ -97,16 +97,21 @@
           </div>
         </div>
       </div>
-      <p v-if="portfolioCapped || localPoolCount > apiPoolCount" class="api-limit-note">
-        Meteora API returns at most ~{{ portfolioPoolCap }} recent pools
-        ({{ apiPoolCount || portfolioTotalCount }} from API
-        <template v-if="localPoolCount">
-          , {{ localPoolCount }} in local history
+      <p v-if="isDataVisible" class="api-limit-note">
+        Portfolio history loads page by page from Meteora
+        (<template v-if="portfolioTotalCount">
+          {{ apiPoolCount }} / {{ portfolioTotalCount }} pools
         </template>
-        <template v-if="portfolioTotalPositions">
-          , {{ portfolioTotalPositions }} closed positions all-time
+        <template v-else>{{ apiPoolCount }} pools</template>,
+        last 365 days<template v-if="portfolioTotalPositions">
+          · {{ portfolioTotalPositions }} closed positions
+        </template>).
+        <template v-if="localPoolCount > apiPoolCount">
+          {{ localPoolCount }} pools in local cache, including older history.
         </template>
-        ). Older pools are kept in your browser and filled in over time.
+        <template v-else-if="historySyncIncomplete">
+          Sync stopped before the last page — refresh to load more.
+        </template>
       </p>
       <p v-if="loadError" class="api-limit-note">{{ loadError }}</p>
 
@@ -312,7 +317,6 @@ import {
   applySortOrder,
   applyTimePeriod,
   getDateFromBlockTime,
-  PORTFOLIO_POOL_CAP,
 } from '@/utils/meteora-api'
 import { getAllAddresses } from '@/utils/wallets'
 import {
@@ -358,12 +362,11 @@ const collapsedPositions = ref({})
 const winRate = ref(0)
 const totalProfit = ref(0)
 const totalFees = ref(0)
-const portfolioCapped = ref(false)
+const historySyncIncomplete = ref(false)
 const portfolioTotalCount = ref(0)
 const portfolioTotalPositions = ref(0)
 const apiPoolCount = ref(0)
 const localPoolCount = ref(0)
-const portfolioPoolCap = PORTFOLIO_POOL_CAP
 const loadError = ref('')
 const debugStats = ref('')
 const syncingPortfolio = ref(false)
@@ -687,7 +690,7 @@ const applyCachedPortfolio = async (requestId) => {
 const publishPortfolio = (loaded, meta, requestId) => {
   if (requestId !== loadRequestId) return
 
-  portfolioCapped.value = !!meta?.capped
+  historySyncIncomplete.value = !!meta?.syncIncomplete
   portfolioTotalCount.value = meta?.totalCount || 0
   portfolioTotalPositions.value = meta?.totalPositions || 0
   apiPoolCount.value = meta?.apiPoolCount || 0
@@ -722,7 +725,7 @@ const useWallet = async () => {
 
     let loaded = []
     let meta = {
-      capped: false,
+      syncIncomplete: false,
       totalCount: 0,
       totalPositions: 0,
       apiPoolCount: 0,
@@ -767,7 +770,7 @@ const useWallet = async () => {
           wallet_addresses: [wallet.address],
         }))
         perWalletFlat.push(...positionsForWallet)
-        meta.capped = meta.capped || !!result?.capped
+        meta.syncIncomplete = meta.syncIncomplete || !!result?.syncIncomplete
         meta.totalCount += result?.totalCount || 0
         meta.totalPositions += result?.totalPositions || 0
         meta.apiPoolCount += result?.apiPoolCount || 0
@@ -820,7 +823,7 @@ const useWallet = async () => {
       winRate.value = 0
       totalProfit.value = 0
       totalFees.value = 0
-      portfolioCapped.value = false
+      historySyncIncomplete.value = false
       portfolioTotalCount.value = 0
       portfolioTotalPositions.value = 0
       apiPoolCount.value = 0
@@ -1168,8 +1171,11 @@ useHead({
   text-align: center;
   color: #c9a227;
   font-size: 0.85em;
-  margin: 0.75rem 1rem 0;
+  margin: 0.75rem auto 0;
   max-width: 40rem;
+  width: 100%;
+  padding: 0 1rem;
+  box-sizing: border-box;
 }
 
 .position-list-panel {
