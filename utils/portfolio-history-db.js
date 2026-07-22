@@ -110,15 +110,45 @@ const getPoolPositions = async (wallet, poolAddress, quoteToken = '') => {
   return row?.positions || null
 }
 
-const setPoolPositions = async (wallet, poolAddress, quoteToken, positions) => {
+const setPoolPositions = async (
+  wallet,
+  poolAddress,
+  quoteToken,
+  positions,
+  poolLastClosedAt = 0,
+) => {
   if (!wallet || !poolAddress) return
   await getDb().poolPositions.put({
     wallet,
     poolAddress,
     quoteToken,
     positions,
+    poolLastClosedAt: poolLastClosedAt || 0,
     updatedAt: Date.now(),
   })
+}
+
+const getAllPoolPositionsMap = async (wallet, quoteToken = '') => {
+  if (!wallet) return new Map()
+  const rows = await getDb().poolPositions.where('wallet').equals(wallet).toArray()
+  const map = new Map()
+  rows
+    .filter((row) => row.quoteToken === quoteToken && row.poolAddress)
+    .forEach((row) => {
+      map.set(row.poolAddress, {
+        positions: row.positions || [],
+        poolLastClosedAt: row.poolLastClosedAt || 0,
+        updatedAt: row.updatedAt || 0,
+      })
+    })
+  return map
+}
+
+const isPoolPositionsCacheFresh = (pool, cacheEntry) => {
+  if (!cacheEntry?.positions?.length) return false
+  const poolClosedAt = pool?.lastClosedAt || 0
+  if (!poolClosedAt) return true
+  return (cacheEntry.poolLastClosedAt || 0) >= poolClosedAt
 }
 
 export {
@@ -131,4 +161,6 @@ export {
   setPositionDetails,
   getPoolPositions,
   setPoolPositions,
+  getAllPoolPositionsMap,
+  isPoolPositionsCacheFresh,
 }
