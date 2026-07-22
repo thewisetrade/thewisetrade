@@ -11,6 +11,7 @@
       <div class="flex-1"></div>
       <div class="italic text-sm text-gray-500 mr-2" v-if="lastUpdateTime">
         Last updated: {{ lastUpdateTime.toFormat('HH:mm:ss') }}
+        <span v-if="loadingMore"> · {{ loadingLabel }}</span>
         <span v-if="enriching"> · enriching bins…</span>
       </div>
       <RefreshButton @refresh="refreshData" />
@@ -65,7 +66,7 @@
       </div>
 
       <div class="table-content">
-        <div v-if="loading" class="loading-state">
+        <div v-if="loading && sortedPositions.length === 0" class="loading-state">
           <div class="flex flex-column items-center gap-2">
             <Loader class="loading" />
             <span>{{ loadingLabel }}</span>
@@ -77,7 +78,10 @@
           <button @click="loadData" class="retry-button">Retry</button>
         </div>
 
-        <div v-else-if="sortedPositions.length === 0" class="empty-state">
+        <div
+          v-else-if="sortedPositions.length === 0 && !loadingMore"
+          class="empty-state"
+        >
           <span>No positions found</span>
         </div>
 
@@ -213,6 +217,7 @@ definePageMeta({
 const ALL_WALLETS = 'All wallets'
 const SOL_MINT = 'So11111111111111111111111111111111111111112'
 const USDC_MINT = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'
+const EURC_MINT = 'HzwqbKZw8HxMN6bF2yFZNrht3c2iXXzpKcFu7uBEDKtr'
 const SOL_ICON =
   'https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png'
 const USDC_ICON =
@@ -225,6 +230,7 @@ const sortField = ref('uncolFee')
 const sortDirection = ref('desc')
 
 const loading = ref(false)
+const loadingMore = ref(false)
 const enriching = ref(false)
 const isInitialLoad = ref(true)
 
@@ -318,11 +324,25 @@ const sortedPositions = computed(() => {
   })
 })
 
+const normalizeSymbol = (symbol) => String(symbol || '').trim().toUpperCase()
+
 const getQuoteGroupId = (position) => {
-  const mints = [position.token1?.mint, position.token2?.mint]
-  const symbols = [position.token1?.symbol, position.token2?.symbol]
-  if (mints.includes(USDC_MINT) || symbols.includes('USDC')) return 'USDC'
-  if (mints.includes(SOL_MINT) || symbols.includes('SOL')) return 'SOL'
+  const candidates = [
+    {
+      mint: position.token2?.mint,
+      symbol: normalizeSymbol(position.token2?.symbol),
+    },
+    {
+      mint: position.token1?.mint,
+      symbol: normalizeSymbol(position.token1?.symbol),
+    },
+  ]
+
+  for (const { mint, symbol } of candidates) {
+    if (mint === USDC_MINT || symbol === 'USDC') return 'USDC'
+    if (mint === EURC_MINT || symbol === 'EURC') return 'EURC'
+    if (mint === SOL_MINT || symbol === 'SOL' || symbol === 'WSOL') return 'SOL'
+  }
   return 'OTHER'
 }
 
@@ -330,6 +350,7 @@ const groupedPositionSections = computed(() => {
   const sections = [
     { id: 'SOL', label: 'SOL pairs', icon: SOL_ICON, positions: [] },
     { id: 'USDC', label: 'USDC pairs', icon: USDC_ICON, positions: [] },
+    { id: 'EURC', label: 'EURC pairs', icon: null, positions: [] },
     { id: 'OTHER', label: 'Other pairs', icon: null, positions: [] },
   ]
   const byId = Object.fromEntries(sections.map((section) => [section.id, section]))
@@ -339,7 +360,12 @@ const groupedPositionSections = computed(() => {
     byId[groupId].positions.push(position)
   })
 
-  return sections.filter((section) => section.positions.length > 0)
+  return sections
+    .filter((section) => section.positions.length > 0)
+    .map((section) => ({
+      ...section,
+      icon: section.icon || section.positions[0]?.token2?.icon || null,
+    }))
 })
 
 const formatFeeAmount = (amount) => {
@@ -355,11 +381,28 @@ const formatPercentage = (fee, total) => {
   return `${percentage.toFixed(2)}%`
 }
 
+const isSolQuotePosition = (position) =>
+  position.tokenYMint === SOL_MINT ||
+  String(position.tokenY || '').trim().toUpperCase() === 'SOL'
+
+const getQuoteDisplayAmounts = (position) => {
+  if (isSolQuotePosition(position)) {
+    return {
+      value: Number(position.valueSol) || 0,
+      fee: Number(position.unclaimedFeeSol) || 0,
+    }
+  }
+  return {
+    value: Number(position.valueUsd) || 0,
+    fee: Number(position.unclaimedFeeUsd) || 0,
+  }
+}
+
 const formattedPositions = computed(() => {
   return positionsData.value
     .map((position) => {
-      const valueNum = Number(position.valueUsd) || 0
-      const uncolFeeAmount = Number(position.unclaimedFeeUsd) || 0
+      const { value: valueNum, fee: uncolFeeAmount } =
+        getQuoteDisplayAmounts(position)
 
       return {
         id: position.id || position.positionAddress,
@@ -405,23 +448,35 @@ const formattedPositions = computed(() => {
 
 const loadData = async (withLoading = true) => {
   if (!walletAddress.value) return
-  if (loading.value) return
 
   const requestId = ++loadRequestId
   enrichRequestId += 1
   const enrichId = enrichRequestId
+  const isAllWallets = walletAddress.value === ALL_WALLETS
 
   if (withLoading) {
     loading.value = true
+    loadingMore.value = isAllWallets
+    if (isAllWallets) {
+      positionsData.value = []
+    }
   }
   try {
     error.value = null
     lastUpdateTime.value = DateTime.now()
     loadingLabel.value = 'Loading positions...'
 
-    const positions = await fetchPositionsFromApi((label) => {
-      if (requestId === loadRequestId) loadingLabel.value = label
-    })
+    const positions = await fetchPositionsFromApi(
+      (label) => {
+        if (requestId === loadRequestId) loadingLabel.value = label
+      },
+      (partial) => {
+        if (requestId !== loadRequestId) return
+        positionsData.value = partial
+        loading.value = false
+        loadingMore.value = isAllWallets
+      },
+    )
 
     if (requestId !== loadRequestId) return
 
@@ -430,11 +485,6 @@ const loadData = async (withLoading = true) => {
       isInitialLoad.value = false
     }
 
-    if (withLoading) {
-      loading.value = false
-    }
-
-    // Second pass: enrich bins via on-chain SDK without blocking first paint
     void enrichPositionsFromSdk(positions, enrichId).catch(() => {})
   } catch (err) {
     console.error('Error loading positions:', err)
@@ -443,16 +493,19 @@ const loadData = async (withLoading = true) => {
       error.value = /NetworkError|Failed to fetch|Load failed/i.test(message)
         ? 'Network error talking to Meteora API. Retry, or check adblock / offline mode.'
         : message || 'Failed to load positions'
-      positionsData.value = []
+      if (!positionsData.value.length) {
+        positionsData.value = []
+      }
     }
   } finally {
-    if (withLoading && requestId === loadRequestId) {
+    if (requestId === loadRequestId) {
       loading.value = false
+      loadingMore.value = false
     }
   }
 }
 
-const fetchPositionsFromApi = async (onLabel) => {
+const fetchPositionsFromApi = async (onLabel, onPartial) => {
   const positions = []
 
   if (walletAddress.value === ALL_WALLETS) {
@@ -480,6 +533,9 @@ const fetchPositionsFromApi = async (onLabel) => {
           walletAddress: wallet.address,
         })
       })
+      if (onPartial) {
+        onPartial([...positions])
+      }
     }
   } else {
     onLabel(`Loading positions for ${walletAddress.value}...`)

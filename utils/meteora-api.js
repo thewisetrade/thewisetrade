@@ -658,6 +658,13 @@ const mapOpenPnlToUi = (position, pool) => {
   const unclaimedFeeUsd = feeX + feeY + rewardX + rewardY
   const valueUsd = toNumber(unrealized.balances)
 
+  const feeXSol = toNumber(unrealized.unclaimedFeeTokenX?.amountSol)
+  const feeYSol = toNumber(unrealized.unclaimedFeeTokenY?.amountSol)
+  const rewardXSol = toNumber(unrealized.unclaimedRewardTokenX?.amountSol)
+  const rewardYSol = toNumber(unrealized.unclaimedRewardTokenY?.amountSol)
+  const unclaimedFeeSol = feeXSol + feeYSol + rewardXSol + rewardYSol
+  const valueSol = toNumber(unrealized.balancesSol)
+
   return {
     id: position.positionAddress,
     poolAddress: pool.poolAddress,
@@ -669,7 +676,9 @@ const mapOpenPnlToUi = (position, pool) => {
     tokenXMint: pool.tokenXMint,
     tokenYMint: pool.tokenYMint,
     valueUsd,
+    valueSol,
     unclaimedFeeUsd,
+    unclaimedFeeSol,
     isOutOfRange: !!position.isOutOfRange,
     outOfRangeSide: position.isOutOfRange
       ? toNumber(position.poolActivePrice) < toNumber(position.minPrice)
@@ -695,6 +704,8 @@ const mapOpenPoolFallback = (pool) => {
   const share = Math.max(addresses.length, 1)
   const valueUsd = toNumber(pool.balances) / share
   const unclaimedFeeUsd = toNumber(pool.unclaimedFees) / share
+  const valueSol = toNumber(pool.balancesSol) / share
+  const unclaimedFeeSol = toNumber(pool.unclaimedFeesSol) / share
   const poolActivePrice = toNumber(pool.poolPrice)
 
   return addresses.map((positionAddress) => ({
@@ -708,7 +719,9 @@ const mapOpenPoolFallback = (pool) => {
     tokenXMint: pool.tokenXMint,
     tokenYMint: pool.tokenYMint,
     valueUsd,
+    valueSol,
     unclaimedFeeUsd,
+    unclaimedFeeSol,
     isOutOfRange: outOfRange.has(positionAddress) || !!pool.outOfRange,
     outOfRangeSide: outOfRange.has(positionAddress) ? 'upper' : null,
     minPrice: 0,
