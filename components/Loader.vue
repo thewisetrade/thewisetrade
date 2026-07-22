@@ -9,16 +9,17 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 60px;
+  height: auto;
 }
 
 .loader {
-  border: 5px solid #f3f3f3;
-  border-top: 5px solid #403848;
+  border: 3px solid #2a2a2a;
+  border-top: 3px solid #888;
   border-radius: 50%;
-  width: 30px;
-  height: 30px;
-  animation: spin 1s linear infinite;
+  width: 24px;
+  height: 24px;
+  animation: spin 0.8s linear infinite;
+  flex-shrink: 0;
 }
 
 @keyframes spin {

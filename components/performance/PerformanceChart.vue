@@ -1,56 +1,54 @@
 <template>
-  <div class="flex flex-row">
-    <button
-      class="mode"
-      :class="{ active: chartType === 'profit' }"
-      @click="chartType = 'profit'"
-      v-if="progressContext"
-    >
-      P&L
-    </button>
-    <button
-      class="mode"
-      :class="{ active: chartType === 'progress' }"
-      @click="chartType = 'progress'"
-      v-if="progressContext"
-    >
-      Progress
-    </button>
+  <div class="chart-toolbar">
+    <div class="toolbar-group" v-if="progressContext">
+      <button
+        class="mode"
+        :class="{ active: chartType === 'profit' }"
+        @click="chartType = 'profit'"
+      >
+        P&L
+      </button>
+      <button
+        class="mode"
+        :class="{ active: chartType === 'progress' }"
+        @click="chartType = 'progress'"
+      >
+        Progress
+      </button>
+    </div>
     <div class="flex-1"></div>
-    <button
-      class="mode"
-      :class="{ active: groupBy === 'day' }"
-      @click="groupBy = 'day'"
-      v-if="props.sortBy === 'date'"
-    >
-      Day
-    </button>
-    <button
-      class="mode"
-      :class="{ active: groupBy === 'week' }"
-      @click="groupBy = 'week'"
-      v-if="props.sortBy === 'date'"
-    >
-      Week
-    </button>
-    <button
-      class="mode"
-      :class="{ active: groupBy === 'month' }"
-      @click="groupBy = 'month'"
-      v-if="props.sortBy === 'date'"
-    >
-      Month
-    </button>
-    <button
-      class="mode"
-      :class="{ active: groupBy === 'quarter' }"
-      @click="groupBy = 'quarter'"
-      v-if="props.sortBy === 'date'"
-    >
-      Quarter
-    </button>
+    <div class="toolbar-group" v-if="props.sortBy === 'date'">
+      <button
+        class="mode"
+        :class="{ active: groupBy === 'day' }"
+        @click="groupBy = 'day'"
+      >
+        Day
+      </button>
+      <button
+        class="mode"
+        :class="{ active: groupBy === 'week' }"
+        @click="groupBy = 'week'"
+      >
+        Week
+      </button>
+      <button
+        class="mode"
+        :class="{ active: groupBy === 'month' }"
+        @click="groupBy = 'month'"
+      >
+        Month
+      </button>
+      <button
+        class="mode"
+        :class="{ active: groupBy === 'quarter' }"
+        @click="groupBy = 'quarter'"
+      >
+        Quarter
+      </button>
+    </div>
   </div>
-  <div>
+  <div class="chart-canvas">
     <Line
       ref="chartProgressRef"
       id="performance-progress-chart"
@@ -406,15 +404,46 @@ watch(progressContext, () => {
 </script>
 
 <style scoped>
-.mode {
-  color: #aaa;
-  cursor: pointer;
-  font-size: 0.9em;
-  margin-right: 10px;
-  margin-bottom: 0.5em;
+.chart-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem 0.5rem;
+}
 
-  &.active {
-    color: #eee;
-  }
+.toolbar-group {
+  display: inline-flex;
+  padding: 3px;
+  border: 1px solid #2a2a2a;
+  border-radius: 8px;
+  background: #0f0f12;
+}
+
+.mode {
+  color: #888;
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 0.4rem 0.75rem;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.mode:hover {
+  color: #bbb;
+}
+
+.mode.active {
+  color: #eee;
+  background: #222;
+}
+
+.chart-canvas {
+  padding: 0 0.5rem;
 }
 </style>
