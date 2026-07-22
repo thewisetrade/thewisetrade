@@ -17,6 +17,34 @@
       <RefreshButton @refresh="refreshData" />
     </div>
 
+    <div
+      class="flex flex-row flex-wrap gap-4 mt-4 mb-3 justify-center"
+      v-if="walletAddress"
+    >
+      <ToggleButtons
+        class="quote-filter"
+        label="Pairs"
+        :values="[
+          { text: 'All pairs', value: 'ALL' },
+          { text: 'SOL pairs', value: 'SOL' },
+          { text: 'USDC pairs', value: 'USDC' },
+          { text: 'EURC pairs', value: 'EURC' },
+        ]"
+        v-model="quoteFilter"
+      />
+      <ToggleButtons
+        class="range-filter"
+        label="Range"
+        :values="[
+          { text: 'All', value: 'ALL' },
+          { text: 'In range', value: 'IN_RANGE' },
+          { text: 'Low', value: 'LOWER' },
+          { text: 'High', value: 'UPPER' },
+        ]"
+        v-model="rangeFilter"
+      />
+    </div>
+
     <div class="table-wrapper">
       <div class="table-header">
         <div
@@ -51,10 +79,10 @@
           <span>Age</span>
           <div class="sort-icon" :class="getSortClass('age')"></div>
         </div-->
-        <!--div class="header-cell sortable" @click="sort('upnl')">
+        <div class="header-cell upnl-cell-header sortable" @click="sort('upnl')">
           <span>uPnL</span>
           <div class="sort-icon" :class="getSortClass('upnl')"></div>
-        </div-->
+        </div>
         <div
           class="header-cell range-cell-header sortable flex items-center"
           @click="sort('range')"
@@ -79,18 +107,19 @@
         </div>
 
         <div
-          v-else-if="sortedPositions.length === 0 && !loadingMore"
+          v-else-if="!hasVisiblePositions && !loadingMore"
           class="empty-state"
         >
-          <span>No positions found</span>
+          <span v-if="sortedPositions.length === 0">No positions found</span>
+          <span v-else>No positions for these filters</span>
         </div>
 
         <div v-else class="table-rows">
           <template
-            v-for="group in groupedPositionSections"
+            v-for="group in displayedPositionSections"
             :key="group.id"
           >
-            <div class="quote-group-header">
+            <div class="quote-group-header" v-if="quoteFilter === 'ALL'">
               <img
                 v-if="group.icon"
                 :src="group.icon"
@@ -171,10 +200,14 @@
               <!--div class="cell age-cell">
                 {{ position.age }}
               </div-->
-              <!--div class="cell upnl-cell">
-                <div class="fee-amount" :class="position.upnl.color">{{ position.upnl.amount }}</div>
-                <div class="fee-percentage" :class="position.upnl.color">{{ position.upnl.percentage }}</div>
-              </div-->
+              <div class="cell upnl-cell">
+                <div class="fee-amount" :class="position.upnl.color">
+                  {{ position.upnl.amount }}
+                </div>
+                <div class="fee-percentage" :class="position.upnl.color">
+                  {{ position.upnl.percentage }}
+                </div>
+              </div>
 
               <div class="cell range-cell">
                 <BinRepresentation
@@ -228,6 +261,8 @@ const router = useRouter()
 
 const sortField = ref('uncolFee')
 const sortDirection = ref('desc')
+const quoteFilter = ref('ALL')
+const rangeFilter = ref('ALL')
 
 const loading = ref(false)
 const loadingMore = ref(false)
@@ -307,6 +342,10 @@ const sortedPositions = computed(() => {
         aValue = a.uncolFee.sortValue
         bValue = b.uncolFee.sortValue
         break
+      case 'upnl':
+        aValue = a.upnl.sortValue
+        bValue = b.upnl.sortValue
+        break
       case 'range':
         aValue = a.isOutOfRange ? 1 : 0
         bValue = b.isOutOfRange ? 1 : 0
@@ -368,6 +407,37 @@ const groupedPositionSections = computed(() => {
     }))
 })
 
+const displayedPositionSections = computed(() => {
+  let sections = groupedPositionSections.value
+
+  if (quoteFilter.value !== 'ALL') {
+    sections = sections.filter((section) => section.id === quoteFilter.value)
+  }
+
+  return sections
+    .map((section) => ({
+      ...section,
+      positions: section.positions.filter((position) => {
+        if (rangeFilter.value === 'ALL') return true
+        if (rangeFilter.value === 'IN_RANGE') return !position.isOutOfRange
+        if (rangeFilter.value === 'LOWER') {
+          return position.isOutOfRange === 'lower'
+        }
+        if (rangeFilter.value === 'UPPER') {
+          return position.isOutOfRange === 'upper'
+        }
+        return true
+      }),
+    }))
+    .filter((section) => section.positions.length > 0)
+})
+
+const hasVisiblePositions = computed(() => {
+  return displayedPositionSections.value.some(
+    (section) => section.positions.length > 0,
+  )
+})
+
 const formatFeeAmount = (amount) => {
   if (!amount || amount === 0) return '0'
   if (amount < 0.01) return '0'
@@ -385,24 +455,59 @@ const isSolQuotePosition = (position) =>
   position.tokenYMint === SOL_MINT ||
   String(position.tokenY || '').trim().toUpperCase() === 'SOL'
 
+const isStableQuotePosition = (position) => {
+  const symbol = String(position.tokenY || '').trim().toUpperCase()
+  return (
+    position.tokenYMint === USDC_MINT ||
+    position.tokenYMint === EURC_MINT ||
+    symbol === 'USDC' ||
+    symbol === 'EURC'
+  )
+}
+
+const formatPositionAmount = (amount, position) => {
+  if (isStableQuotePosition(position)) {
+    return Math.round(amount).toLocaleString('fr-FR')
+  }
+  return amount.toLocaleString('fr-FR', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })
+}
+
+const getUpnlColor = (pnl) => {
+  if (pnl > 0) return 'positive'
+  if (pnl < 0) return 'negative'
+  return 'neutral'
+}
+
+const formatPnlPercentage = (pct) => {
+  if (pct === null || pct === undefined || Number.isNaN(pct)) return '—'
+  const sign = pct > 0 ? '+' : ''
+  return `${sign}${pct.toFixed(2)}%`
+}
+
 const getQuoteDisplayAmounts = (position) => {
   if (isSolQuotePosition(position)) {
     return {
       value: Number(position.valueSol) || 0,
       fee: Number(position.unclaimedFeeSol) || 0,
+      pnl: Number(position.pnlSol) || 0,
     }
   }
   return {
     value: Number(position.valueUsd) || 0,
     fee: Number(position.unclaimedFeeUsd) || 0,
+    pnl: Number(position.pnlUsd) || 0,
   }
 }
 
 const formattedPositions = computed(() => {
   return positionsData.value
     .map((position) => {
-      const { value: valueNum, fee: uncolFeeAmount } =
+      const { value: valueNum, fee: uncolFeeAmount, pnl: upnlAmount } =
         getQuoteDisplayAmounts(position)
+      const upnlPct = Number(position.pnlPctChange)
 
       return {
         id: position.id || position.positionAddress,
@@ -428,6 +533,12 @@ const formattedPositions = computed(() => {
           percentage: formatPercentage(uncolFeeAmount, valueNum),
           color: uncolFeeAmount > 0 ? 'positive' : 'neutral',
           sortValue: uncolFeeAmount,
+        },
+        upnl: {
+          amount: formatPositionAmount(upnlAmount, position),
+          percentage: formatPnlPercentage(upnlPct),
+          color: getUpnlColor(upnlAmount),
+          sortValue: upnlAmount,
         },
         isOutOfRange: position.outOfRangeSide || (position.isOutOfRange ? 'upper' : null),
         binData: position.binData || null,
@@ -688,7 +799,8 @@ watch(selectedWallet, (address) => {
 }
 
 .table-header {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1fr 1fr 2fr;
   gap: 1rem;
   padding: 1rem 1.5rem;
   background: #1a1a20;
@@ -778,7 +890,7 @@ watch(selectedWallet, (address) => {
 
 .table-row {
   display: grid;
-  grid-template-columns: 1.5fr 1fr 1fr 1fr 1fr 2fr;
+  grid-template-columns: 1.5fr 1fr 1fr 1fr 2fr;
   gap: 1rem;
   padding: 1rem 1.5rem;
   border-bottom: 1px solid #2a2a2a;
@@ -880,6 +992,12 @@ watch(selectedWallet, (address) => {
 }
 
 .fee-cell-header {
+  min-width: 100px;
+  max-width: 100px;
+}
+
+.upnl-cell-header,
+.upnl-cell {
   min-width: 100px;
   max-width: 100px;
 }

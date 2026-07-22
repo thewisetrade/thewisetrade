@@ -679,6 +679,9 @@ const mapOpenPnlToUi = (position, pool) => {
     valueSol,
     unclaimedFeeUsd,
     unclaimedFeeSol,
+    pnlUsd: toNumber(position.pnlUsd),
+    pnlSol: toNumber(position.pnlSol),
+    pnlPctChange: toNumber(position.pnlPctChange),
     isOutOfRange: !!position.isOutOfRange,
     outOfRangeSide: position.isOutOfRange
       ? toNumber(position.poolActivePrice) < toNumber(position.minPrice)
@@ -722,6 +725,9 @@ const mapOpenPoolFallback = (pool) => {
     valueSol,
     unclaimedFeeUsd,
     unclaimedFeeSol,
+    pnlUsd: 0,
+    pnlSol: 0,
+    pnlPctChange: 0,
     isOutOfRange: outOfRange.has(positionAddress) || !!pool.outOfRange,
     outOfRangeSide: outOfRange.has(positionAddress) ? 'upper' : null,
     minPrice: 0,
