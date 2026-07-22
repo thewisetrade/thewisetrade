@@ -97,6 +97,14 @@
           </div>
         </div>
       </div>
+
+      <PerformanceChart
+        :positions="positions"
+        :sort-by="sortBy"
+        :time-period="timePeriod"
+        :sort-order="sortOrder"
+        :quote-symbol="quoteToken"
+      />
       <p v-if="isDataVisible" class="api-limit-note">
         Portfolio history loads page by page from Meteora
         (<template v-if="portfolioTotalCount">
@@ -114,14 +122,6 @@
         </template>
       </p>
       <p v-if="loadError" class="api-limit-note">{{ loadError }}</p>
-
-      <PerformanceChart
-        :positions="positions"
-        :sort-by="sortBy"
-        :time-period="timePeriod"
-        :sort-order="sortOrder"
-        :quote-symbol="quoteToken"
-      />
     </div>
 
     <div class="position-list-panel mt-8" v-if="isWalletAddressValid">
