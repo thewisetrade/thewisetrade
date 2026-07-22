@@ -174,6 +174,14 @@
 import { ref, computed, onMounted } from 'vue'
 
 import { TrashIcon } from '@heroicons/vue/24/solid'
+import {
+  addAddress,
+  addGroup,
+  deleteAddress,
+  getAllAddresses,
+  getAllGroups,
+  updateAddress,
+} from '@/utils/wallets'
 
 definePageMeta({
   layout: 'app',

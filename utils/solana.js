@@ -7,9 +7,17 @@ import {
   reverseLookup,
 } from '@bonfida/spl-name-service'
 
-const connection = new Connection(
-  import.meta.env.VITE_RPC_ENDPOINT_URL,
-)
+const DEFAULT_RPC_URL = 'https://api.mainnet-beta.solana.com'
+
+let connection
+
+const getConnection = () => {
+  if (!connection) {
+    const url = import.meta.env.VITE_RPC_ENDPOINT_URL || DEFAULT_RPC_URL
+    connection = new Connection(url)
+  }
+  return connection
+}
 
 export const isValidSolanaAddress = (address) => {
   try {
@@ -29,7 +37,7 @@ export const resolveDomainToAddress = async (domain) => {
   try {
     const cleanDomain = domain.toLowerCase().replace('.sol', '')
     const { pubkey } = await getDomainKey(cleanDomain)
-    const { registry } = await NameRegistryState.retrieve(connection, pubkey)
+    const { registry } = await NameRegistryState.retrieve(getConnection(), pubkey)
     return registry.owner.toBase58()
   } catch (error) {
     console.error('Error resolving .sol domain:', error)
@@ -40,7 +48,7 @@ export const resolveDomainToAddress = async (domain) => {
 export const getPrimaryDomain = async (walletAddress) => {
   try {
     const pubkey = new PublicKey(walletAddress)
-    const favoriteDomain = await getFavoriteDomain(connection, pubkey)
+    const favoriteDomain = await getFavoriteDomain(getConnection(), pubkey)
     let favoriteDomainName = null
     if (favoriteDomain) {
       favoriteDomainName = `${favoriteDomain.reverse}.sol`
@@ -55,11 +63,11 @@ export const getPrimaryDomain = async (walletAddress) => {
 export const getFirstDomain = async (walletAddress) => {
   try {
     const pubkey = new PublicKey(walletAddress)
-    const domains = await getAllDomains(connection, pubkey)
+    const domains = await getAllDomains(getConnection(), pubkey)
     let domainName = null
     if (domains && domains.length > 0) {
       const domainKey = domains[0]
-      const domain = await reverseLookup(connection, domainKey)
+      const domain = await reverseLookup(getConnection(), domainKey)
       domainName = `${domain}.sol`
     }
     return domainName
