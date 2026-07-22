@@ -41,6 +41,14 @@
     >
       Month
     </button>
+    <button
+      class="mode"
+      :class="{ active: groupBy === 'quarter' }"
+      @click="groupBy = 'quarter'"
+      v-if="props.sortBy === 'date'"
+    >
+      Quarter
+    </button>
   </div>
   <div>
     <Line
@@ -115,15 +123,29 @@ const chartType = ref('profit')
 const groupBy = ref('day')
 
 const getDateKey = (date) => {
-  let key = ''
   if (groupBy.value === 'week') {
-    key = date.toFormat("yyyy-'W'WW")
-  } else if (groupBy.value === 'month') {
-    key = date.toFormat('MMM yyyy')
-  } else {
-    key = date.toFormat('yyyy-MM-dd')
+    return date.toFormat("yyyy-'W'WW")
   }
-  return key
+  if (groupBy.value === 'month') {
+    return date.toFormat('MMM yyyy')
+  }
+  if (groupBy.value === 'quarter') {
+    return `Q${date.quarter} ${date.year}`
+  }
+  return date.toFormat('yyyy-MM-dd')
+}
+
+const advanceGroupedDate = (date) => {
+  if (groupBy.value === 'week') {
+    return date.plus({ weeks: 1 })
+  }
+  if (groupBy.value === 'month') {
+    return date.plus({ months: 1 })
+  }
+  if (groupBy.value === 'quarter') {
+    return date.startOf('quarter').plus({ months: 3 })
+  }
+  return date.plus({ days: 1 })
 }
 
 const getDateRange = () => {
@@ -205,13 +227,7 @@ const getDateValues = () => {
         })
       }
       previousProfit = newProfit
-      if (groupBy.value === 'day') {
-        currentDate = currentDate.plus({ days: 1 })
-      } else if (groupBy.value === 'week') {
-        currentDate = currentDate.plus({ weeks: 1 })
-      } else if (groupBy.value === 'month') {
-        currentDate = currentDate.plus({ months: 1 })
-      }
+      currentDate = advanceGroupedDate(currentDate)
     }
   } else {
     while (currentDate <= endDate) {
