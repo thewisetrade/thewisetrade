@@ -21,6 +21,7 @@
         :values="[
           { text: 'SOL', value: 'SOL' },
           { text: 'USDC', value: 'USDC' },
+          { text: 'EURC', value: 'EURC' },
         ]"
         v-model="quoteToken"
       />
@@ -59,7 +60,10 @@
       />
     </div>
 
-    <div v-if="loadingWalletTransactions" class="loading-state">
+    <div
+      v-if="loadingWalletTransactions && !positions.length"
+      class="loading-state"
+    >
       <Loader class="loading" />
       <p v-if="loadingProgress" class="loading-progress">
         {{ loadingProgress }}
@@ -81,11 +85,8 @@
               <p v-if="debugStats" class="loading-progress mt-2">
                 {{ debugStats }}
               </p>
-              <p v-if="quoteToken === 'SOL'" class="loading-progress mt-2">
-                Try switching quote token to USDC
-              </p>
-              <p v-else class="loading-progress mt-2">
-                Try switching quote token to SOL
+              <p class="loading-progress mt-2">
+                Try another quote token (SOL, USDC, EURC)
               </p>
             </template>
           </div>
@@ -99,6 +100,7 @@
     >
       <div class="date-range m-auto text-center" v-if="isDataVisible">
         {{ dateRange }}
+        <span v-if="syncingPortfolio" class="sync-note"> · {{ loadingProgress || 'syncing…' }}</span>
       </div>
       <p v-if="isDataVisible && (portfolioCapped || localPoolCount > apiPoolCount)" class="api-limit-note">
         Meteora API returns at most ~{{ portfolioPoolCap }} recent pools
@@ -299,6 +301,7 @@
 <script setup>
 import { DateTime } from 'luxon'
 import {
+  loadCachedClosedPortfolio,
   loadPortfolioAsPairs,
   loadPortfolioAsPositions,
   loadPositionEvents,
@@ -362,6 +365,7 @@ const localPoolCount = ref(0)
 const portfolioPoolCap = PORTFOLIO_POOL_CAP
 const loadError = ref('')
 const debugStats = ref('')
+const syncingPortfolio = ref(false)
 
 let loadRequestId = 0
 let filterReloadTimer = null
@@ -372,6 +376,42 @@ const allTimePeriod = {
   end: DateTime.now().endOf('day'),
 }
 const timePeriod = ref(allTimePeriod)
+
+const buildQuarterPeriod = (year, quarter) => {
+  const startMonth = (quarter - 1) * 3 + 1
+  const start = DateTime.fromObject({ year, month: startMonth, day: 1 }).startOf(
+    'day',
+  )
+  const quarterEnd = start.plus({ months: 3 }).minus({ days: 1 }).endOf('day')
+  const end = DateTime.min(quarterEnd, DateTime.now().endOf('day'))
+  return {
+    name: `Q${quarter} ${year}`,
+    start,
+    end,
+  }
+}
+
+const lastQuarterOptions = () => {
+  const now = DateTime.now()
+  let year = now.year
+  let quarter = Math.ceil(now.month / 3)
+  const options = []
+
+  for (let i = 0; i < 4; i++) {
+    const period = buildQuarterPeriod(year, quarter)
+    options.push({
+      text: period.name,
+      value: period,
+    })
+    quarter -= 1
+    if (quarter < 1) {
+      quarter = 4
+      year -= 1
+    }
+  }
+
+  return options
+}
 
 const timePeriodOptions = computed(() => {
   return [
@@ -414,6 +454,7 @@ const timePeriodOptions = computed(() => {
         end: DateTime.now(),
       },
     },
+    ...lastQuarterOptions(),
     {
       text: 'Week ' + DateTime.now().localWeekNumber,
       value: {
@@ -561,16 +602,102 @@ const saveWalletAddress = () => {
   localStorage.setItem('walletAddress', walletAddress.value || '')
 }
 
+const applyCachedPortfolio = async (requestId) => {
+  const publishCached = (cachedPositions, cachedPoolCount) => {
+    if (requestId !== loadRequestId || !cachedPositions.length) return false
+    rawPositions.value = cachedPositions
+    localPoolCount.value = cachedPoolCount
+    resetPositions()
+    loadingWalletTransactions.value = false
+    syncingPortfolio.value = true
+    return true
+  }
+
+  if (walletAddress.value === ALL_WALLETS) {
+    const wallets = await getAllAddresses()
+    let cachedPositions = []
+    let cachedPoolCount = 0
+    let anyShown = false
+
+    for (const wallet of wallets) {
+      const cached = await loadCachedClosedPortfolio(
+        wallet.address,
+        quoteToken.value,
+        timePeriod.value,
+        groupBy.value,
+      )
+      if (!cached.positions?.length) continue
+
+      cachedPoolCount += cached.poolCount || 0
+      const label = wallet.name || wallet.domain || wallet.address
+      cachedPositions.push(
+        ...(cached.positions || []).map((position) => ({
+          ...position,
+          wallet_address: wallet.address,
+          wallet_name: label,
+          wallet_addresses: [wallet.address],
+        })),
+      )
+
+      const display =
+        groupBy.value === 'pair'
+          ? mergePairPositions(cachedPositions)
+          : cachedPositions
+
+      if (publishCached(display, cachedPoolCount)) {
+        anyShown = true
+      }
+    }
+
+    return anyShown
+  }
+
+  const cached = await loadCachedClosedPortfolio(
+    walletAddress.value,
+    quoteToken.value,
+    timePeriod.value,
+    groupBy.value,
+  )
+  const cachedPositions = (cached.positions || []).map((position) => ({
+    ...position,
+    wallet_address: walletAddress.value,
+    wallet_addresses: [walletAddress.value],
+  }))
+
+  return publishCached(cachedPositions, cached.poolCount || 0)
+}
+
+const publishPortfolio = (loaded, meta, requestId) => {
+  if (requestId !== loadRequestId) return
+
+  portfolioCapped.value = !!meta?.capped
+  portfolioTotalCount.value = meta?.totalCount || 0
+  portfolioTotalPositions.value = meta?.totalPositions || 0
+  apiPoolCount.value = meta?.apiPoolCount || 0
+  localPoolCount.value = meta?.localPoolCount || 0
+  rawPositions.value = loaded
+  resetPositions()
+  loadingWalletTransactions.value = false
+  syncingPortfolio.value = true
+}
+
 const useWallet = async () => {
   if (!walletAddress.value) return
 
   const requestId = ++loadRequestId
-  loadingWalletTransactions.value = true
-  loadingProgress.value = 'Loading portfolio...'
+  syncingPortfolio.value = false
   loadError.value = ''
   debugStats.value = ''
   collapsedPositions.value = {}
   loadingDetails.value = {}
+  loadingProgress.value = 'Loading portfolio...'
+
+  const hadCache = await applyCachedPortfolio(requestId)
+  if (!hadCache) {
+    loadingWalletTransactions.value = true
+  } else {
+    syncingPortfolio.value = true
+  }
 
   try {
     const loader =
@@ -591,7 +718,7 @@ const useWallet = async () => {
         throw new Error('No wallets found. Add wallets first.')
       }
 
-      const perWallet = []
+      const perWalletFlat = []
       for (let i = 0; i < wallets.length; i++) {
         if (requestId !== loadRequestId) return
         const wallet = wallets[i]
@@ -602,7 +729,7 @@ const useWallet = async () => {
           if (requestId !== loadRequestId) return
           const prefix = `[${i + 1}/${wallets.length}] ${label}`
           if (progress.stage === 'positions') {
-            loadingProgress.value = `${prefix} — positions ${progress.loaded}/${progress.totalCount}${progress.cacheHits ? ` (${progress.cacheHits} cached)` : ''}`
+            loadingProgress.value = `${prefix} — pools ${progress.loaded}/${progress.totalCount} · ${progress.positionsLoaded || 0} positions${progress.cacheHits ? ` · ${progress.cacheHits} cached pools` : ''}`
           } else if (progress.stage === 'history') {
             loadingProgress.value = `${prefix} — history ${progress.loaded}/${progress.totalCount}`
           } else {
@@ -622,27 +749,28 @@ const useWallet = async () => {
           wallet_name: label,
           wallet_addresses: [wallet.address],
         }))
-        perWallet.push(positionsForWallet)
+        perWalletFlat.push(...positionsForWallet)
         meta.capped = meta.capped || !!result?.capped
         meta.totalCount += result?.totalCount || 0
         meta.totalPositions += result?.totalPositions || 0
         meta.apiPoolCount += result?.apiPoolCount || 0
         meta.localPoolCount += result?.localPoolCount || 0
-      }
 
-      loaded =
-        groupBy.value === 'pair'
-          ? mergePairPositions(perWallet.flat())
-          : perWallet.flat()
+        loaded =
+          groupBy.value === 'pair'
+            ? mergePairPositions(perWalletFlat)
+            : perWalletFlat
+        publishPortfolio(loaded, meta, requestId)
+      }
     } else {
       const onProgress = (progress) => {
         if (requestId !== loadRequestId) return
         if (progress.stage === 'positions') {
-          loadingProgress.value = `Loading positions ${progress.loaded}/${progress.totalCount} (${progress.positionsLoaded || 0} closed${progress.cacheHits ? `, ${progress.cacheHits} cached` : ''})`
+          loadingProgress.value = `Loading closed positions — pools ${progress.loaded}/${progress.totalCount} · ${progress.positionsLoaded || 0} positions${progress.cacheHits ? ` · ${progress.cacheHits} cached pools` : ''}`
         } else if (progress.stage === 'history') {
           loadingProgress.value = `Refreshing local history ${progress.loaded}/${progress.totalCount}`
         } else {
-          loadingProgress.value = `Loading pools ${progress.loaded}/${progress.totalCount || '?'}`
+          loadingProgress.value = `Loading portfolio pools ${progress.loaded}/${progress.totalCount || '?'}`
         }
       }
 
@@ -658,17 +786,10 @@ const useWallet = async () => {
         wallet_addresses: [walletAddress.value],
       }))
       meta = result || meta
+      publishPortfolio(loaded, meta, requestId)
     }
 
     if (requestId !== loadRequestId) return
-
-    portfolioCapped.value = !!meta?.capped
-    portfolioTotalCount.value = meta?.totalCount || 0
-    portfolioTotalPositions.value = meta?.totalPositions || 0
-    apiPoolCount.value = meta?.apiPoolCount || 0
-    localPoolCount.value = meta?.localPoolCount || 0
-    rawPositions.value = loaded
-    resetPositions()
 
     if (!positions.value.length) {
       debugStats.value = `API pools: ${apiPoolCount.value}, local: ${localPoolCount.value}, matched ${quoteToken.value}: ${loaded.length}, after filters: ${positions.value.length}`
@@ -692,6 +813,7 @@ const useWallet = async () => {
     if (requestId === loadRequestId) {
       loadingWalletTransactions.value = false
       loadingProgress.value = ''
+      syncingPortfolio.value = false
     }
   }
 }
@@ -953,6 +1075,13 @@ useHead({
   margin-bottom: 0em;
   margin-top: 1.5em;
   width: 100%;
+}
+
+.sync-note {
+  color: #888;
+  font-size: 0.85em;
+  font-weight: normal;
+  font-style: italic;
 }
 
 .api-limit-note {
