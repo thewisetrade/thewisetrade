@@ -32,8 +32,8 @@
       class="dropdown-menu absolute w-full mt-1 bg-gray-800 border-gray-700 border rounded-md shadow-lg z-10"
     >
       <button
-        v-for="val in props.values"
-        :key="val.value"
+        v-for="(val, index) in props.values"
+        :key="val.text || index"
         @click="update(val.value)"
         class="option w-full p-2 text-left transition-colors"
         :class="{ 'active-option': isActive(val.value) }"

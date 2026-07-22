@@ -67,6 +67,21 @@ export default defineNuxtConfig({
       fs: {
         allow: [path.resolve(__dirname, '..')],
       },
+      proxy: {
+        '/api/meteora': {
+          target: 'https://dlmm.datapi.meteora.ag',
+          changeOrigin: true,
+          rewrite: (p: string) => p.replace(/^\/api\/meteora/, ''),
+        },
+      },
+    },
+  },
+
+  nitro: {
+    routeRules: {
+      '/api/meteora/**': {
+        proxy: 'https://dlmm.datapi.meteora.ag/**',
+      },
     },
   },
 

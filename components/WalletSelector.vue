@@ -50,15 +50,12 @@ onMounted(async () => {
 })
 
 const walletOptions = computed(() => {
-  let walletList = wallets.value.map(wallet => ({
+  const walletList = wallets.value.map((wallet) => ({
     value: wallet.address,
-    text: wallet.name
+    text: wallet.name,
   }))
   if (props.withAllWallets) {
-    walletList = walletList.concat({
-      value: 'All wallets',
-      text: 'All wallets'
-    })
+    return [{ value: 'All wallets', text: 'All wallets' }, ...walletList]
   }
   return walletList
 })

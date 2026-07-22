@@ -20,7 +20,6 @@
   },
   "dependencies": {
     "@bonfida/spl-name-service": "^3.0.10",
-    "@geeklad/meteora-dlmm-db": "https://github.com/GeekLad/meteora-dlmm-db.git#db233a821561afe0c2dde079c2593a26c85328ee",
     "@heroicons/vue": "^2.2.0",
     "@meteora-ag/dlmm": "^1.7.3",
     "@pythnetwork/client": "^2.22.1",
@@ -30,6 +29,7 @@
     "axios": "^1.9.0",
     "chart.js": "^4.4.9",
     "decimal.js": "^10.5.0",
+    "dexie": "^4.4.4",
     "luxon": "^3.6.1",
     "sanctum-js": "defilogist/sanctum-js#a1298b6d83c2e76186f9d782d014ab8243089db3",
     "tailwindcss": "^4.0.0",

@@ -1,0 +1,5 @@
+[[redirects]]
+  from = "/api/meteora/*"
+  to = "https://dlmm.datapi.meteora.ag/:splat"
+  status = 200
+  force = true

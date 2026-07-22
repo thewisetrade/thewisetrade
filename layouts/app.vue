@@ -30,6 +30,17 @@
         <div class="flex flex-row gap-2 text-gray-500 hover:text-gray-100">
           <NuxtLink
             class="flex flex-row gap-2 items-center app-link"
+            to="/dlmm-performance"
+            active-class="active"
+            title="Performance"
+          >
+            <ChartBarIcon class="size-4" />
+            <span class="text-sm">Performance</span>
+          </NuxtLink>
+        </div>
+        <div class="flex flex-row gap-2 text-gray-500 hover:text-gray-100">
+          <NuxtLink
+            class="flex flex-row gap-2 items-center app-link"
             to="/dlmm-wallets"
             active-class="active"
             title="Wallets"
@@ -53,6 +64,7 @@
 import {
   MagnifyingGlassIcon,
   QueueListIcon,
+  ChartBarIcon,
   WalletIcon,
 } from '@heroicons/vue/24/solid'
 import { ModalsContainer } from 'vue-final-modal'
