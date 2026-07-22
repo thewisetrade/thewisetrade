@@ -2,8 +2,9 @@ import {
   upsertPools,
   getStoredPools,
   countStoredPools,
-  getPoolPositions,
   setPoolPositions,
+  getAllPoolPositionsMap,
+  isPoolPositionsCacheFresh,
 } from '@/utils/portfolio-history-db'
 
 const METEORA_UPSTREAM = 'https://dlmm.datapi.meteora.ag'
@@ -133,9 +134,14 @@ const isSolMint = (mint) =>
 const isUsdcMint = (mint) =>
   mint === 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'
 
+const isEurcMint = (mint) =>
+  mint === 'HzwqbKZw8HxMN6bF2yFZNrht3c2iXXzpKcFu7uBEDKtr'
+
 const quoteSymbolFromMint = (mint, fallbackSymbol) => {
   if (isSolMint(mint)) return 'SOL'
   if (isUsdcMint(mint)) return 'USDC'
+  if (isEurcMint(mint)) return 'EURC'
+  if (fallbackSymbol === 'USDC' || fallbackSymbol === 'EURC') return fallbackSymbol
   return fallbackSymbol || 'UNKNOWN'
 }
 
@@ -378,7 +384,86 @@ const mergePoolsByAddress = (apiPools, storedPools) => {
   )
 }
 
-const syncPortfolioPools = async (user, { daysBack = MAX_DAYS_BACK, onProgress } = {}) => {
+const filterPoolsForQuote = (pools, quoteToken) =>
+  (pools || []).filter(
+    (pool) =>
+      pool?.poolAddress &&
+      quoteSymbolFromMint(pool.tokenYMint, pool.tokenY) === quoteToken,
+  )
+
+const filterPositionsForPeriod = (positions, timePeriod) => {
+  if (!timePeriod?.start || !timePeriod?.end || timePeriod.name === 'All') {
+    return positions || []
+  }
+  if (typeof timePeriod.start.toJSDate !== 'function') return positions || []
+
+  const start = timePeriod.start.toJSDate()
+  const end = timePeriod.end.toJSDate()
+  return (positions || []).filter((position) => {
+    if (!position.block_time) return true
+    const positionDate = new Date(position.block_time * 1000)
+    return positionDate >= start && positionDate <= end
+  })
+}
+
+const loadCachedClosedPortfolio = async (
+  user,
+  quoteToken,
+  timePeriod,
+  groupBy = 'pair',
+) => {
+  if (!user || typeof window === 'undefined') {
+    return { positions: [], poolCount: 0, positionCount: 0 }
+  }
+
+  try {
+    const stored = await getStoredPools(user)
+    const quotePools = filterPoolsForQuote(stored, quoteToken)
+
+    if (groupBy === 'pair') {
+      const positions = filterPositionsForPeriod(
+        quotePools.map((pool) => mapPoolToPosition(pool, quoteToken)),
+        timePeriod,
+      )
+      return {
+        positions,
+        poolCount: quotePools.length,
+        positionCount: positions.length,
+        fromCache: true,
+      }
+    }
+
+    const cacheByPool = await getAllPoolPositionsMap(user, quoteToken)
+    const positions = []
+    quotePools.forEach((pool) => {
+      const cached = cacheByPool.get(pool.poolAddress)
+      if (isPoolPositionsCacheFresh(pool, cached)) {
+        positions.push(...(cached.positions || []))
+      }
+    })
+
+    return {
+      positions: filterPositionsForPeriod(positions, timePeriod),
+      poolCount: quotePools.length,
+      positionCount: positions.length,
+      fromCache: true,
+    }
+  } catch (error) {
+    console.warn('Local closed portfolio unavailable:', error)
+    return { positions: [], poolCount: 0, positionCount: 0, fromCache: true }
+  }
+}
+
+const syncPortfolioPools = async (user, { daysBack = MAX_DAYS_BACK, onProgress, storedPools = null } = {}) => {
+  let stored = storedPools
+  if (!stored) {
+    try {
+      stored = await getStoredPools(user)
+    } catch {
+      stored = []
+    }
+  }
+
   const apiResult = await fetchAllPortfolioPools(user, { daysBack, onProgress })
   let merged = apiResult.pools
   let localCount = apiResult.pools.length
@@ -388,14 +473,12 @@ const syncPortfolioPools = async (user, { daysBack = MAX_DAYS_BACK, onProgress }
       await upsertPools(user, apiResult.pools)
     }
 
-    // Keep already-local pools as-is (no PnL re-fetch). Only merge with fresh API page.
-    const stored = await getStoredPools(user)
     merged = mergePoolsByAddress(apiResult.pools, stored)
     localCount = Math.max(await countStoredPools(user), merged.length)
   } catch (error) {
     console.warn('Local portfolio history unavailable, using API only:', error)
-    merged = apiResult.pools
-    localCount = apiResult.pools.length
+    merged = stored.length ? mergePoolsByAddress(apiResult.pools, stored) : apiResult.pools
+    localCount = merged.length
   }
 
   if (!merged.length && apiResult.pools.length) {
@@ -435,23 +518,34 @@ const loadPortfolioAsPairs = async (user, quoteToken, timePeriod, onProgress) =>
 
 const loadPortfolioAsPositions = async (user, quoteToken, timePeriod, onProgress) => {
   const daysBack = daysBackFromPeriod(timePeriod)
-  const result = await syncPortfolioPools(user, { daysBack, onProgress })
 
-  const quotePools = (result.pools || []).filter(
-    (pool) =>
-      pool?.poolAddress &&
-      quoteSymbolFromMint(pool.tokenYMint, pool.tokenY) === quoteToken,
-  )
+  let storedPools = []
+  let cacheByPool = new Map()
+  try {
+    storedPools = await getStoredPools(user)
+    cacheByPool = await getAllPoolPositionsMap(user, quoteToken)
+  } catch {
+    storedPools = []
+    cacheByPool = new Map()
+  }
+
+  const result = await syncPortfolioPools(user, {
+    daysBack,
+    onProgress,
+    storedPools,
+  })
+
+  const quotePools = filterPoolsForQuote(result.pools, quoteToken)
 
   let completed = 0
   let positionsLoaded = 0
   let cacheHits = 0
   const nested = await mapWithConcurrency(quotePools, 6, async (pool) => {
     let mapped = null
-    try {
-      mapped = await getPoolPositions(user, pool.poolAddress, quoteToken)
-    } catch {
-      mapped = null
+    const cached = cacheByPool.get(pool.poolAddress)
+
+    if (isPoolPositionsCacheFresh(pool, cached)) {
+      mapped = cached.positions
     }
 
     if (!Array.isArray(mapped)) {
@@ -462,7 +556,17 @@ const loadPortfolioAsPositions = async (user, quoteToken, timePeriod, onProgress
         mapPnlPosition(position, pool, quoteToken),
       )
       try {
-        await setPoolPositions(user, pool.poolAddress, quoteToken, mapped)
+        await setPoolPositions(
+          user,
+          pool.poolAddress,
+          quoteToken,
+          mapped,
+          pool.lastClosedAt || 0,
+        )
+        cacheByPool.set(pool.poolAddress, {
+          positions: mapped,
+          poolLastClosedAt: pool.lastClosedAt || 0,
+        })
       } catch (error) {
         console.warn('Failed to cache pool positions', pool.poolAddress, error)
       }
@@ -492,6 +596,7 @@ const loadPortfolioAsPositions = async (user, quoteToken, timePeriod, onProgress
     totalPositions: result.totalPositions,
     apiPoolCount: result.apiPoolCount,
     localPoolCount: result.localPoolCount,
+    cacheHits,
   }
 }
 
@@ -702,6 +807,7 @@ export {
   fetchAllOpenPortfolioPools,
   fetchAllPoolPositions,
   fetchPositionHistorical,
+  loadCachedClosedPortfolio,
   loadPortfolioAsPairs,
   loadPortfolioAsPositions,
   loadOpenPositions,
