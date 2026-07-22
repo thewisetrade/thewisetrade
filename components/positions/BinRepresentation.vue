@@ -2,7 +2,7 @@
   <div class="bin-wrapper">
     <a
       class="flex flex-row bin-container"
-      :href="`https://app.meteora.ag/dlmm/${props.positionKey}`"
+      :href="`https://edge.meteora.ag/dlmm/${props.positionKey}`"
       target="_blank"
     >
       <canvas ref="canvas" class="bin-canvas"></canvas>
@@ -32,32 +32,71 @@ const props = defineProps({
     type: String,
     required: true,
   },
+  activePrice: {
+    type: Number,
+    default: 0,
+  },
 })
 
+const COLOR_QUOTE = '#06aed4'
+const COLOR_BASE = '#6f61c0'
 
-const maxBinXAmount = computed(() => {
-  const bins = props.binData || []
-  return bins.reduce((max, bin) => {
-    return Math.max(max, bin.positionXAmount)
-  }, 0)
+const sortedBins = computed(() =>
+  [...(props.binData || [])].sort(
+    (a, b) => Number(a.binId ?? 0) - Number(b.binId ?? 0),
+  ),
+)
+
+const maxBinValue = computed(() =>
+  Math.max(...sortedBins.value.map((bin) => bin.value || 0), 0),
+)
+
+const activeBinIndex = computed(() => {
+  const bins = sortedBins.value
+  if (!bins.length) return -1
+
+  const bothIdx = bins.findIndex((bin) => {
+    const x = Number(bin.positionXAmount) || 0
+    const y = Number(bin.positionYAmount) || 0
+    return x > 0 && y > 0
+  })
+  if (bothIdx >= 0) return bothIdx
+
+  const active = Number(props.activePrice)
+  if (!Number.isFinite(active) || active <= 0) return -1
+
+  let closestIdx = 0
+  let closestDiff = Infinity
+  bins.forEach((bin, index) => {
+    const price = Number(bin.price)
+    if (!Number.isFinite(price)) return
+    const diff = Math.abs(price - active)
+    if (diff < closestDiff) {
+      closestDiff = diff
+      closestIdx = index
+    }
+  })
+  return closestIdx
 })
 
-const maxBinYAmount = computed(() => {
-  const bins = props.binData || []
-  return bins.reduce((max, bin) => {
-    return Math.max(max, bin.positionYAmount)
-  }, 0)
-})
-
-const maxBinValue = computed(() => {
-  return Math.max(...props.binData.map(bin => bin.value || 0))
-})
+const binColor = (index) => {
+  const activeIdx = activeBinIndex.value
+  if (activeIdx < 0) {
+    const bin = sortedBins.value[index]
+    const x = Number(bin?.positionXAmount) || 0
+    const y = Number(bin?.positionYAmount) || 0
+    if (y > 0 && x <= 0) return COLOR_QUOTE
+    if (x > 0 && y <= 0) return COLOR_BASE
+    return y >= x ? COLOR_QUOTE : COLOR_BASE
+  }
+  return index <= activeIdx ? COLOR_QUOTE : COLOR_BASE
+}
 
 const drawBins = () => {
   if (!canvas.value) return
 
   const ctx = canvas.value.getContext('2d')
-  const bins = props.binData || []
+  const bins = sortedBins.value
 
   if (bins.length === 0) return
 
@@ -76,33 +115,37 @@ const drawBins = () => {
 
   bins.forEach((bin, index) => {
     const ratio = maxValue > 0 ? (bin.value || 0) / maxValue : 0
-    let height = ratio * maxHeight
-    let color = null
+    const height = ratio * maxHeight
+    const color = binColor(index)
 
-    if (bin.positionXAmount > 0) {
-      color = '#6f61c0'
-    }
-    if (bin.positionYAmount > 0) {
-      color = '#06aed4'
-    }
+    if (height <= 0) return
 
-    if (color) {
-      const x = index * (binWidth + binMargin)
-      const y = canvasHeight - height
+    const x = index * (binWidth + binMargin)
+    const y = canvasHeight - height
 
-      ctx.fillStyle = color
-      ctx.fillRect(x, y, binWidth, height)
-    }
+    ctx.fillStyle = color
+    ctx.fillRect(x, y, binWidth, height)
   })
+
+  const activeIdx = activeBinIndex.value
+  if (activeIdx >= 0) {
+    const markerX = activeIdx * (binWidth + binMargin) + binWidth / 2
+    ctx.fillStyle = '#efe'
+    ctx.fillRect(markerX - 1, 0, 2, canvasHeight)
+  }
 }
 
 onMounted(() => {
   drawBins()
 })
 
-watch(() => props.binData, () => {
-  drawBins()
-}, { deep: true })
+watch(
+  () => [props.binData, props.activePrice],
+  () => {
+    drawBins()
+  },
+  { deep: true },
+)
 </script>
 
 <style scoped>

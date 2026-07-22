@@ -16,8 +16,16 @@ async function loadPositionsData(walletAddress: string) {
     const pairs = await meteoraService.getUserLbPairs(wallet)
     return await positionAnalyzer.analyzePositions(pairs)
   } catch (error) {
-    console.warn('Error during analysis:', error)
-    throw error
+    console.log('SDK positions unavailable:', error?.message || error)
+    return {
+      totalPositions: 0,
+      totalValue: 0,
+      totalPnl: 0,
+      totalCollectedFees: 0,
+      totalUnCollectedFees: 0,
+      avgAge: 0,
+      positions: [],
+    }
   }
 }
 

@@ -1,8 +1,8 @@
 <template>
   <div class="liquidity-table-container">
     <AppHeader
-      link="https://geeklad.github.io/meteora-profit-analysis/"
-      author=""
+      link="https://dlmm.datapi.meteora.ag"
+      author="Meteora Data API"
       title="DLMM Positions"
     />
 
@@ -11,6 +11,7 @@
       <div class="flex-1"></div>
       <div class="italic text-sm text-gray-500 mr-2" v-if="lastUpdateTime">
         Last updated: {{ lastUpdateTime.toFormat('HH:mm:ss') }}
+        <span v-if="enriching"> · enriching bins…</span>
       </div>
       <RefreshButton @refresh="refreshData" />
     </div>
@@ -81,15 +82,29 @@
         </div>
 
         <div v-else class="table-rows">
-          <template v-for="position in sortedPositions" :key="position.id">
-            <div class="wallet-name" v-if="walletAddress === 'All wallets'">
-              {{ position.walletName }}
+          <template
+            v-for="group in groupedPositionSections"
+            :key="group.id"
+          >
+            <div class="quote-group-header">
+              <img
+                v-if="group.icon"
+                :src="group.icon"
+                :alt="group.label"
+                class="quote-group-icon"
+              />
+              <span>{{ group.label }}</span>
+              <span class="quote-group-count">{{ group.positions.length }}</span>
             </div>
-            <div class="table-row">
+            <template v-for="position in group.positions" :key="position.id">
+              <div class="wallet-name" v-if="walletAddress === 'All wallets'">
+                {{ position.walletName }}
+              </div>
+              <div class="table-row">
               <div class="cell position-cell">
                 <a
                   class="flex flex-row bin-container"
-                  :href="`https://app.meteora.ag/dlmm/${position.positionKey}`"
+                  :href="`https://edge.meteora.ag/dlmm/${position.positionKey}`"
                   target="_blank"
                 >
                   <div class="token-pair">
@@ -159,13 +174,24 @@
 
               <div class="cell range-cell">
                 <BinRepresentation
+                  v-if="position.binData?.length"
                   :binData="position.binData"
                   :positionKey="position.positionKey"
                   :positionToken1="position.token1"
                   :positionToken2="position.token2"
+                  :activePrice="position.poolActivePrice"
+                />
+                <PositionRangeBar
+                  v-else
+                  :positionKey="position.positionKey"
+                  :minPrice="position.minPrice"
+                  :maxPrice="position.maxPrice"
+                  :activePrice="position.poolActivePrice"
+                  :isOutOfRange="!!position.isOutOfRange"
                 />
               </div>
             </div>
+            </template>
           </template>
         </div>
       </div>
@@ -175,42 +201,47 @@
 
 <script setup>
 import BinRepresentation from '@/components/positions/BinRepresentation.vue'
-
+import PositionRangeBar from '@/components/positions/PositionRangeBar.vue'
 import { DateTime } from 'luxon'
-import { getTokenService } from '@/utils/tokens'
+import { loadOpenPositions } from '@/utils/meteora-api'
+import { getAllAddresses } from '@/utils/wallets'
 
 definePageMeta({
   layout: 'app',
 })
 
+const ALL_WALLETS = 'All wallets'
+const SOL_MINT = 'So11111111111111111111111111111111111111112'
+const USDC_MINT = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'
+const SOL_ICON =
+  'https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png'
+const USDC_ICON =
+  'https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v/logo.png'
+
+const route = useRoute()
+const router = useRouter()
+
 const sortField = ref('uncolFee')
 const sortDirection = ref('desc')
 
 const loading = ref(false)
+const enriching = ref(false)
 const isInitialLoad = ref(true)
 
 const error = ref(null)
 const positionsData = ref([])
-const fullPositionsData = ref([])
 const loadingLabel = ref('Loading positions...')
-const tokenPrices = ref(new Map())
 
 const lastUpdateTime = ref(null)
 let refreshInterval = null
-
-const tokenService = getTokenService()
-const tokenCache = {}
+let loadRequestId = 0
+let enrichRequestId = 0
 
 const walletAddress = ref(null)
 const selectedWallet = ref(null)
-const loadingWalletTransactions = ref(false)
-
-const router = useRouter()
 
 onMounted(async () => {
-  await tokenService.init()
-  await setSavedWalletAddress()
-
+  setSavedWalletAddress()
   setTimeout(() => {
     startAutoRefresh()
   }, 600000)
@@ -220,36 +251,29 @@ onBeforeUnmount(() => {
   stopAutoRefresh()
 })
 
-// Wallet management functions
-
 const updateWalletAddress = async (address) => {
-  walletAddress.value = address
+  walletAddress.value = address || ''
   saveWalletAddress()
-  loadingWalletTransactions.value = true
   await loadData()
-  loadingWalletTransactions.value = false
 }
 
 const saveWalletAddress = () => {
   const address = walletAddress.value
-  router.push({ query: { address } })
-  localStorage.setItem('positions:walletAddress', address)
+  if (address && route.query.address !== address) {
+    router.replace({ query: { address } })
+  }
+  localStorage.setItem('positions:walletAddress', address || '')
 }
 
-const setSavedWalletAddress = async () => {
-  let localWalletAddress = useRoute().query.address
+const setSavedWalletAddress = () => {
+  let localWalletAddress = route.query.address
   if (!localWalletAddress) {
     localWalletAddress = localStorage.getItem('positions:walletAddress')
   }
   if (localWalletAddress) {
-    if (isSolanaDomain(localWalletAddress)) {
-      localWalletAddress = await resolveDomainToAddress(localWalletAddress)
-    }
     selectedWallet.value = localWalletAddress
   }
 }
-
-// Formatted data
 
 const sortedPositions = computed(() => {
   if (!sortField.value) {
@@ -257,16 +281,13 @@ const sortedPositions = computed(() => {
   }
 
   return [...formattedPositions.value].sort((a, b) => {
-    let aValue, bValue
+    let aValue
+    let bValue
 
     switch (sortField.value) {
       case 'pair':
         aValue = `${a.token1?.symbol}/${a.token2?.symbol}`
         bValue = `${b.token1?.symbol}/${b.token2?.symbol}`
-        break
-      case 'age':
-        aValue = a.ageValue
-        bValue = b.ageValue
         break
       case 'value':
         aValue = a.valueNum
@@ -280,13 +301,9 @@ const sortedPositions = computed(() => {
         aValue = a.uncolFee.sortValue
         bValue = b.uncolFee.sortValue
         break
-      case 'upnl':
-        aValue = a.upnl.sortValue
-        bValue = b.upnl.sortValue
-        break
       case 'range':
-        aValue = a.range.sortValue
-        bValue = b.range.sortValue
+        aValue = a.isOutOfRange ? 1 : 0
+        bValue = b.isOutOfRange ? 1 : 0
         break
       default:
         return 0
@@ -295,207 +312,35 @@ const sortedPositions = computed(() => {
     if (typeof aValue === 'string') {
       const comparison = aValue.localeCompare(bValue)
       return sortDirection.value === 'asc' ? comparison : -comparison
-    } else {
-      const comparison = aValue - bValue
-      return sortDirection.value === 'asc' ? comparison : -comparison
     }
+    const comparison = aValue - bValue
+    return sortDirection.value === 'asc' ? comparison : -comparison
   })
 })
 
-const formattedPositions = computed(() => {
-  const dataToUse =
-    fullPositionsData.value.length > 0
-      ? fullPositionsData.value
-      : positionsData.value
+const getQuoteGroupId = (position) => {
+  const mints = [position.token1?.mint, position.token2?.mint]
+  const symbols = [position.token1?.symbol, position.token2?.symbol]
+  if (mints.includes(USDC_MINT) || symbols.includes('USDC')) return 'USDC'
+  if (mints.includes(SOL_MINT) || symbols.includes('SOL')) return 'SOL'
+  return 'OTHER'
+}
 
-  return dataToUse
-    .map((position, index) => {
-      const multiplier = position.token2?.symbol === 'USDC' ? 1000 : 1
-      const collectedFeeAmount = (position.collectedFeesValue || 0) * multiplier
-      const uncolFeeAmount = (position.unCollectedFeesValue || 0) * multiplier
-      const positionValue = (position.value || 0) * multiplier
+const groupedPositionSections = computed(() => {
+  const sections = [
+    { id: 'SOL', label: 'SOL pairs', icon: SOL_ICON, positions: [] },
+    { id: 'USDC', label: 'USDC pairs', icon: USDC_ICON, positions: [] },
+    { id: 'OTHER', label: 'Other pairs', icon: null, positions: [] },
+  ]
+  const byId = Object.fromEntries(sections.map((section) => [section.id, section]))
 
-      const totalFees = collectedFeeAmount + uncolFeeAmount
-      const upnlPercentage =
-        positionValue > 0 ? (totalFees / positionValue) * 100 : 0
-      const binData = position.position.positionData.positionBinData
-      let positionKey = position.position.pair.publicKey.toBase58()
+  sortedPositions.value.forEach((position) => {
+    const groupId = getQuoteGroupId(position)
+    byId[groupId].positions.push(position)
+  })
 
-      return {
-        id: `position-${index}`,
-        token1: position.token1,
-        token2: position.token2,
-        age: formatAge(position.age),
-        ageValue: getAgeInHours(position.age),
-        value: positionValue.toFixed(2),
-        valueNum: positionValue,
-        collectedFee: {
-          amount: formatFeeAmount(collectedFeeAmount),
-          percentage: formatPercentage(collectedFeeAmount, positionValue),
-          sortValue: collectedFeeAmount,
-        },
-        uncolFee: {
-          amount: formatFeeAmount(uncolFeeAmount),
-          percentage: formatPercentage(uncolFeeAmount, positionValue),
-          color: uncolFeeAmount > 0 ? 'positive' : 'neutral',
-          sortValue: uncolFeeAmount,
-        },
-        upnl: {
-          amount: formatFeeAmount(totalFees),
-          percentage: formatUpnlPercentage(upnlPercentage),
-          color: getUpnlColor(upnlPercentage),
-          sortValue: upnlPercentage,
-        },
-        isOutOfRange: getOutOfRangeStatus(position.priceRange),
-        binData,
-        positionKey,
-        walletName: position.walletName,
-      }
-    })
-    .filter(
-      (position) =>
-        position.value > 0 ||
-        position.uncolFee.amount > 0 ||
-        position.collectedFee.amount > 0,
-    )
+  return sections.filter((section) => section.positions.length > 0)
 })
-
-// Methods
-
-const loadData = async (withLoading = true) => {
-  if (loading.value) return
-
-  if (withLoading) {
-    loading.value = true
-  }
-  try {
-    if (isInitialLoad.value) {
-      loading.value = true
-    }
-    error.value = null
-
-    lastUpdateTime.value = DateTime.now()
-    let positionList = await fetchPositionsData()
-
-    if (!positionList) positionList = []
-    positionsData.value = positionList
-    fullPositionsData.value = positionList
-    fullPositionsData.value = await Promise.all(
-      positionList.map(async (position) => {
-        const token1 = await getTokenInfoInternal(position.tokenX.toString())
-        const token2 = await getTokenInfoInternal(position.tokenY.toString())
-
-        // If position is out of range, fetch DexScreener price for tokenX (the base token)
-        const isOutOfRange = getOutOfRangeStatus(position.priceRange)
-        if (isOutOfRange && position.tokenX && position.tokenY) {
-          const tokenXMint = position.tokenX.toString()
-          const tokenYMint = position.tokenY.toString()
-
-          // Check if tokenY is a stablecoin (USDC, USDT) - if so, use DexScreener price directly
-          // DexScreener returns price in USD, which is approximately equal to USDC/USDT price
-          const isStablecoin =
-            tokenYMint === 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v' || // USDC
-            tokenYMint === 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB' // USDT
-
-          let newPrice = null
-
-          if (isStablecoin) {
-            // For stablecoin pairs, DexScreener price (in USD) is approximately the price in stablecoins
-            const tokenPrice = await fetchTokenPrice(tokenXMint)
-            if (tokenPrice && position.priceRange) {
-              position.priceRange.currentPrice = tokenPrice
-              newPrice = tokenPrice
-            }
-          } else {
-            // For non-stablecoin pairs, fetch both prices and calculate ratio
-            const [priceX, priceY] = await Promise.all([
-              fetchTokenPrice(tokenXMint),
-              fetchTokenPrice(tokenYMint),
-            ])
-
-            if (priceX && priceY && priceY > 0 && position.priceRange) {
-              const calculatedPrice = priceX / priceY
-              position.priceRange.currentPrice = calculatedPrice
-              newPrice = calculatedPrice
-            }
-          }
-
-          if (isOutOfRange === 'lower' && newPrice && position.currentValue) {
-            const tokenXAmount = position.currentValue.tokenX?.toNumber() || 0
-            const tokenYAmount = position.currentValue.tokenY?.toNumber() || 0
-            const newValue = (tokenXAmount * newPrice + tokenYAmount) / 10 ** 9
-            if (newValue > 0) {
-              position.value = newValue
-            }
-          }
-        }
-
-        return {
-          ...position,
-          token1,
-          token2,
-        }
-      }),
-    )
-
-    if (isInitialLoad.value) {
-      isInitialLoad.value = false
-    }
-  } catch (err) {
-    console.error('Error loading positions:', err)
-    error.value = err.message || 'Failed to load positions'
-  } finally {
-    if (withLoading) {
-      loading.value = false
-    }
-  }
-}
-
-const fetchPositionsData = async () => {
-  const { loadPositionsData } = await import('~/utils/dlmm-analyzer/index.ts')
-  loadingLabel.value = 'Loading positions...'
-
-  const positions = []
-  if (walletAddress.value === 'All wallets') {
-    const wallets = await getAllAddresses()
-    for (const wallet of wallets) {
-      loadingLabel.value = `Loading positions for ${wallet.name}...`
-      const data = await loadPositionsData(wallet.address)
-      data.positions.forEach((position) => {
-        position.walletName = wallet.name
-        positions.push(position)
-      })
-    }
-  } else {
-    loadingLabel.value = `Loading positions for ${walletAddress.value}...`
-    const data = await loadPositionsData(walletAddress.value)
-    data.positions.forEach((position) => {
-      position.wallet = walletAddress.value.name
-      positions.push(position)
-    })
-  }
-  loadingLabel.value = 'Loading token info...'
-  return positions
-}
-
-// Display functions
-
-const formatAge = (age) => {
-  if (!age) return '0m'
-
-  if (age.days > 0) {
-    return `${age.days}d ${age.hours}h`
-  } else if (age.hours > 0) {
-    return `${age.hours}h ${age.minutes}m`
-  } else {
-    return `${age.minutes}m`
-  }
-}
-
-const getAgeInHours = (age) => {
-  if (!age) return 0
-  return age.days * 24 + age.hours + age.minutes / 60
-}
 
 const formatFeeAmount = (amount) => {
   if (!amount || amount === 0) return '0'
@@ -510,72 +355,217 @@ const formatPercentage = (fee, total) => {
   return `${percentage.toFixed(2)}%`
 }
 
-const formatUpnlPercentage = (percentage) => {
-  if (!percentage || percentage === 0) return '0%'
-  if (Math.abs(percentage) < 0.01) {
-    return percentage > 0 ? '< 0.01%' : '< -0.01%'
-  }
-  return `${percentage.toFixed(2)}%`
-}
+const formattedPositions = computed(() => {
+  return positionsData.value
+    .map((position) => {
+      const valueNum = Number(position.valueUsd) || 0
+      const uncolFeeAmount = Number(position.unclaimedFeeUsd) || 0
 
-const getUpnlColor = (percentage) => {
-  if (!percentage || percentage === 0) return 'neutral'
-  return percentage > 0 ? 'positive' : 'negative'
-}
-
-const fetchTokenPrice = async (tokenMint) => {
-  if (!tokenMint) return null
-
-  try {
-    const response = await fetch(
-      `https://api.dexscreener.com/latest/dex/tokens/${tokenMint}`,
+      return {
+        id: position.id || position.positionAddress,
+        token1: {
+          symbol: position.tokenX,
+          icon: position.tokenXIcon,
+          mint: position.tokenXMint,
+        },
+        token2: {
+          symbol: position.tokenY,
+          icon: position.tokenYIcon,
+          mint: position.tokenYMint,
+        },
+        value: valueNum.toFixed(2),
+        valueNum,
+        collectedFee: {
+          amount: '0',
+          percentage: '0%',
+          sortValue: 0,
+        },
+        uncolFee: {
+          amount: formatFeeAmount(uncolFeeAmount),
+          percentage: formatPercentage(uncolFeeAmount, valueNum),
+          color: uncolFeeAmount > 0 ? 'positive' : 'neutral',
+          sortValue: uncolFeeAmount,
+        },
+        isOutOfRange: position.outOfRangeSide || (position.isOutOfRange ? 'upper' : null),
+        binData: position.binData || null,
+        minPrice: position.minPrice,
+        maxPrice: position.maxPrice,
+        poolActivePrice: position.poolActivePrice,
+        positionKey: position.poolAddress,
+        walletName: position.walletName,
+        enriched: !!position.enriched,
+      }
+    })
+    .filter(
+      (position) =>
+        position.valueNum > 0 ||
+        Number(position.uncolFee.sortValue) > 0,
     )
+})
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
-    }
+const loadData = async (withLoading = true) => {
+  if (!walletAddress.value) return
+  if (loading.value) return
 
-    const data = await response.json()
+  const requestId = ++loadRequestId
+  enrichRequestId += 1
+  const enrichId = enrichRequestId
 
-    if (!data.pairs || data.pairs.length === 0) {
-      return null
-    }
+  if (withLoading) {
+    loading.value = true
+  }
+  try {
+    error.value = null
+    lastUpdateTime.value = DateTime.now()
+    loadingLabel.value = 'Loading positions...'
 
-    // Find the pair with highest volume for most accurate price
-    const pair = data.pairs.reduce((best, current) => {
-      const currentVolume = current.volume?.h24 || 0
-      const bestVolume = best.volume?.h24 || 0
-      return currentVolume > bestVolume ? current : best
+    const positions = await fetchPositionsFromApi((label) => {
+      if (requestId === loadRequestId) loadingLabel.value = label
     })
 
-    const price = parseFloat(pair.priceUsd)
+    if (requestId !== loadRequestId) return
 
-    if (price && !isNaN(price)) {
-      tokenPrices.value.set(tokenMint, price)
-      return price
+    positionsData.value = positions
+    if (isInitialLoad.value) {
+      isInitialLoad.value = false
     }
-  } catch (error) {
-    console.error(`Error fetching DexScreener price for ${tokenMint}:`, error)
+
+    if (withLoading) {
+      loading.value = false
+    }
+
+    // Second pass: enrich bins via on-chain SDK without blocking first paint
+    void enrichPositionsFromSdk(positions, enrichId).catch(() => {})
+  } catch (err) {
+    console.error('Error loading positions:', err)
+    if (requestId === loadRequestId) {
+      const message = err?.message || String(err)
+      error.value = /NetworkError|Failed to fetch|Load failed/i.test(message)
+        ? 'Network error talking to Meteora API. Retry, or check adblock / offline mode.'
+        : message || 'Failed to load positions'
+      positionsData.value = []
+    }
+  } finally {
+    if (withLoading && requestId === loadRequestId) {
+      loading.value = false
+    }
+  }
+}
+
+const fetchPositionsFromApi = async (onLabel) => {
+  const positions = []
+
+  if (walletAddress.value === ALL_WALLETS) {
+    const wallets = await getAllAddresses()
+    if (!wallets.length) {
+      throw new Error('No wallets found. Add wallets first.')
+    }
+    for (let i = 0; i < wallets.length; i++) {
+      const wallet = wallets[i]
+      const label = wallet.name || wallet.domain || wallet.address
+      onLabel(`Loading ${label} (${i + 1}/${wallets.length})...`)
+      const result = await loadOpenPositions(wallet.address, (progress) => {
+        if (progress.stage === 'positions') {
+          onLabel(
+            `${label}: positions ${progress.loaded}/${progress.totalCount}`,
+          )
+        } else {
+          onLabel(`${label}: pools ${progress.loaded}/${progress.totalCount || '?'}`)
+        }
+      })
+      result.positions.forEach((position) => {
+        positions.push({
+          ...position,
+          walletName: label,
+          walletAddress: wallet.address,
+        })
+      })
+    }
+  } else {
+    onLabel(`Loading positions for ${walletAddress.value}...`)
+    const result = await loadOpenPositions(walletAddress.value, (progress) => {
+      if (progress.stage === 'positions') {
+        onLabel(`Loading positions ${progress.loaded}/${progress.totalCount}`)
+      } else {
+        onLabel(`Loading pools ${progress.loaded}/${progress.totalCount || '?'}`)
+      }
+    })
+    result.positions.forEach((position) => {
+      positions.push({
+        ...position,
+        walletAddress: walletAddress.value,
+      })
+    })
   }
 
-  return null
+  return positions
 }
 
-const getOutOfRangeStatus = (priceRange) => {
-  if (
-    !priceRange ||
-    !priceRange.currentPrice ||
-    !priceRange.minPrice ||
-    !priceRange.maxPrice
-  ) return null
+const enrichPositionsFromSdk = async (apiPositions, enrichId) => {
+  if (!apiPositions?.length) return
 
-  const { minPrice, maxPrice, currentPrice } = priceRange
-  if (currentPrice < minPrice) return 'lower'
-  if (currentPrice > maxPrice) return 'upper'
-  return null
+  const walletsToEnrich =
+    walletAddress.value === ALL_WALLETS
+      ? [
+          ...new Map(
+            apiPositions
+              .filter((p) => p.walletAddress)
+              .map((p) => [p.walletAddress, p.walletName]),
+          ).entries(),
+        ].map(([address, name]) => ({ address, name }))
+      : [{ address: walletAddress.value, name: null }]
+
+  enriching.value = true
+  try {
+    let loadPositionsData
+    try {
+      const mod = await import('~/utils/dlmm-analyzer/index.ts')
+      loadPositionsData = mod.loadPositionsData
+    } catch {
+      console.log('SDK bins skipped: analyzer unavailable')
+      return
+    }
+
+    const binByPosition = new Map()
+
+    for (const wallet of walletsToEnrich) {
+      if (enrichId !== enrichRequestId) return
+      const data = await loadPositionsData(wallet.address)
+      ;(data?.positions || []).forEach((item) => {
+        try {
+          const positionPk =
+            item.position?.publicKey?.toBase58?.() ||
+            item.position?.publicKey?.toString?.()
+          const bins = item.position?.positionData?.positionBinData
+          if (positionPk && bins?.length) {
+            binByPosition.set(positionPk, bins)
+          }
+        } catch {
+          // ignore malformed SDK position
+        }
+      })
+    }
+
+    if (enrichId !== enrichRequestId) return
+    if (!binByPosition.size) return
+
+    positionsData.value = positionsData.value.map((position) => {
+      const bins = binByPosition.get(position.positionAddress)
+      if (!bins) return position
+      return {
+        ...position,
+        binData: bins,
+        enriched: true,
+      }
+    })
+  } catch {
+    console.log('SDK bins skipped: enrichment failed')
+  } finally {
+    if (enrichId === enrichRequestId) {
+      enriching.value = false
+    }
+  }
 }
-
-// Sorting functions
 
 const sort = (field) => {
   if (sortField.value === field) {
@@ -592,8 +582,6 @@ const getSortClass = (field) => {
   }
   return sortDirection.value === 'asc' ? 'sort-asc' : 'sort-desc'
 }
-
-// Refresh functions
 
 const refreshData = async (withLoading = true) => {
   await loadData(withLoading)
@@ -612,10 +600,8 @@ const stopAutoRefresh = () => {
   }
 }
 
-// Watch functions
-
 watch(selectedWallet, (address) => {
-  updateWalletAddress(address)
+  updateWalletAddress(address || '')
 })
 </script>
 
@@ -706,6 +692,32 @@ watch(selectedWallet, (address) => {
 .table-rows {
   display: flex;
   flex-direction: column;
+}
+
+.quote-group-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: #1f1f1f;
+  border-bottom: 1px solid #2a2a2a;
+  color: #ddd;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.quote-group-icon {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+}
+
+.quote-group-count {
+  margin-left: auto;
+  color: #888;
+  font-weight: 500;
 }
 
 .table-row {
