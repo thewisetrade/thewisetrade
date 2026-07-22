@@ -122,6 +122,14 @@ const props = defineProps({
 const chartType = ref('profit')
 const groupBy = ref('day')
 
+const CHART_POSITIVE = '#3DDC84'
+const CHART_POSITIVE_HOVER = '#6BF0A8'
+const CHART_POSITIVE_BORDER = '#22C55E'
+const CHART_NEGATIVE = '#FF4757'
+const CHART_NEGATIVE_HOVER = '#FF6B7A'
+const CHART_PROGRESS_INNER = '#1B4D32'
+const CHART_PROGRESS_OUTER = '#0D1110'
+
 const getDateKey = (date) => {
   if (groupBy.value === 'week') {
     return date.toFormat("yyyy-'W'WW")
@@ -257,14 +265,14 @@ const createGradient = (ctx, color, invert = false) => {
   let gradient = ctx.createLinearGradient(0, 0, 0, 600)
   if (chartType.value === 'progress') {
     gradient = ctx.createRadialGradient(600, 600, 0, 600, 600, 800)
-    gradient.addColorStop(0, `#224422`)
-    gradient.addColorStop(1, `#111111`)
+    gradient.addColorStop(0, CHART_PROGRESS_INNER)
+    gradient.addColorStop(1, CHART_PROGRESS_OUTER)
   } else if (invert) {
-    gradient.addColorStop(0, `${color}00`)
+    gradient.addColorStop(0, `${color}55`)
     gradient.addColorStop(1, `${color}FF`)
   } else {
     gradient.addColorStop(0, `${color}FF`)
-    gradient.addColorStop(1, `${color}00`)
+    gradient.addColorStop(1, `${color}55`)
   }
   return gradient
 }
@@ -310,23 +318,21 @@ const chartData = computed(() => ({
         fees: item.fees,
         tokens: item.tokens,
       })),
-      borderColor: '#99FF99',
+      borderColor: CHART_POSITIVE_BORDER,
       borderWidth: chartType.value === 'progress' && progressContext.value ? 1 : 0,
       fill: true,
       pointRadius: 0,
       hoverBackgroundColor: (context) => {
-        const chart = context.chart
-        const { ctx } = chart
         const value = context.raw ? context.raw.y : 0
-        return value >= 0 ? '#BBFFBB' : '#FFBBBB'
+        return value >= 0 ? CHART_POSITIVE_HOVER : CHART_NEGATIVE_HOVER
       },
       backgroundColor: (context) => {
         const chart = context.chart
         const { ctx } = chart
         const value = context.raw ? context.raw.y : 0
         return value >= 0
-          ? createGradient(ctx, '#99FF99')
-          : createGradient(ctx, '#FF9999', true)
+          ? createGradient(ctx, CHART_POSITIVE)
+          : createGradient(ctx, CHART_NEGATIVE, true)
       },
       tension: 0.3,
     },

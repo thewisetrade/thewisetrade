@@ -138,11 +138,11 @@ const drawChart = () => {
 
   const priceChange = prices[prices.length - 1] - prices[0]
   const isPositive = priceChange >= 0
-  const color = isPositive ? '#99FF99' : '#FF9999'
+  const color = isPositive ? '#3DDC84' : '#FF4757'
 
   // Draw price chart first
   ctx.strokeStyle = color
-  ctx.lineWidth = 1.5
+  ctx.lineWidth = 2
   ctx.beginPath()
 
   prices.forEach((price, index) => {
@@ -162,8 +162,8 @@ const drawChart = () => {
   ctx.lineTo(0, height)
   ctx.closePath()
   ctx.fillStyle = isPositive
-    ? 'rgba(153, 255, 153, 0.1)'
-    : 'rgba(255, 153, 153, 0.1)'
+    ? 'rgba(61, 220, 132, 0.22)'
+    : 'rgba(255, 71, 87, 0.22)'
   ctx.fill()
 
   // Draw reference lines on top if enabled

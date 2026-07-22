@@ -1121,11 +1121,11 @@ useHead({
 }
 
 .win-rate {
-  color: #aea;
+  color: #3DDC84;
 }
 
 .win-rate.negative {
-  color: #ff0000;
+  color: #FF4757;
 }
 
 .pair-block {
@@ -1175,11 +1175,11 @@ useHead({
 }
 
 .positive {
-  color: #afa;
+  color: #3DDC84;
 }
 
 .negative {
-  color: #f99;
+  color: #FF4757;
 }
 
 .position-transactions {

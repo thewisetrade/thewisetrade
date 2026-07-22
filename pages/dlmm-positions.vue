@@ -902,11 +902,11 @@ watch(selectedWallet, (address) => {
 }
 
 .positive {
-  color: #10b981 !important;
+  color: #3DDC84 !important;
 }
 
 .negative {
-  color: #ef4444 !important;
+  color: #FF4757 !important;
 }
 
 .neutral {
