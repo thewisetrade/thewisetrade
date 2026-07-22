@@ -8,7 +8,6 @@ import {
 } from '@/utils/portfolio-history-db'
 
 const METEORA_UPSTREAM = 'https://dlmm.datapi.meteora.ag'
-const METEORA_PROXY_PREFIX = '/api/meteora'
 const MAX_DAYS_BACK = 365
 const PAGE_SIZE = 50
 const MAX_PAGINATION_PAGES = 100
@@ -74,13 +73,7 @@ const toBlockTimeSeconds = (value) => {
   return n > 1e12 ? Math.floor(n / 1000) : Math.floor(n)
 }
 
-const getMeteoraBase = () => {
-  // Same-origin proxy avoids browser CORS / NetworkError on datapi.meteora.ag
-  if (typeof window !== 'undefined') {
-    return `${window.location.origin}${METEORA_PROXY_PREFIX}`
-  }
-  return METEORA_UPSTREAM
-}
+const getMeteoraBase = () => METEORA_UPSTREAM
 
 const buildUrl = (path, params = {}) => {
   const normalizedPath = path.startsWith('/') ? path : `/${path}`
