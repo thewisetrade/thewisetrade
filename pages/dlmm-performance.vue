@@ -69,7 +69,19 @@
       v-if="isDataVisible"
     >
       <div class="chart-header">
-        <div class="chart-period">{{ dateRange }}</div>
+        <div class="chart-header-top">
+          <div class="chart-period">{{ dateRange }}</div>
+          <PerformanceShareButton
+            :chart-ref="performanceChartRef"
+            :wallet-label="walletLabel"
+            :period-label="sharePeriodLabel"
+            :quote-token="quoteToken"
+            :win-rate="winRate"
+            :total-profit="totalProfit"
+            :total-fees="totalFees"
+            :win-rate-color="winRateColor"
+          />
+        </div>
         <div class="chart-stats">
           <div class="stat-card">
             <span class="stat-label">Win rate</span>
@@ -99,6 +111,7 @@
       </div>
 
       <PerformanceChart
+        ref="performanceChartRef"
         :positions="positions"
         :sort-by="sortBy"
         :time-period="timePeriod"
@@ -344,7 +357,10 @@ definePageMeta({
   layout: 'app',
 })
 
+const performanceChartRef = ref(null)
+const walletLabel = ref('')
 const walletAddress = ref(null)
+
 const selectedWallet = ref(null)
 const loadingWalletTransactions = ref(false)
 const loadingProgress = ref('')
@@ -545,6 +561,35 @@ const winRateStyle = computed(() => {
   return { color: `hsl(${hue}, 62%, 52%)` }
 })
 
+const winRateColor = computed(() => winRateStyle.value.color)
+
+const formatWalletLabel = (address) => {
+  if (!address) return ''
+  if (address === ALL_WALLETS) return ALL_WALLETS
+  if (address.length <= 10) return address
+  return `${address.slice(0, 4)}...${address.slice(-4)}`
+}
+
+const refreshWalletLabel = async (address) => {
+  if (!address) {
+    walletLabel.value = ''
+    return
+  }
+  if (address === ALL_WALLETS) {
+    walletLabel.value = ALL_WALLETS
+    return
+  }
+
+  try {
+    const wallets = await getAllAddresses()
+    const wallet = wallets.find((item) => item.address === address)
+    walletLabel.value =
+      wallet?.name || wallet?.domain || formatWalletLabel(address)
+  } catch (error) {
+    walletLabel.value = formatWalletLabel(address)
+  }
+}
+
 const isWalletAddressValid = computed(() => {
   return (
     walletAddress.value &&
@@ -581,6 +626,11 @@ const dateRange = computed(() => {
   )
 })
 
+const sharePeriodLabel = computed(() => {
+  const periodName = timePeriod.value?.name || 'All'
+  return `${periodName} · ${dateRange.value}`
+})
+
 onMounted(() => {
   setSavedWalletAddress()
 })
@@ -598,6 +648,7 @@ const setSavedWalletAddress = () => {
 const updateWalletAddress = async (address) => {
   if (!address) {
     walletAddress.value = ''
+    walletLabel.value = ''
     saveWalletAddress()
     rawPositions.value = []
     positions.value = []
@@ -611,6 +662,7 @@ const updateWalletAddress = async (address) => {
 
   walletAddress.value = address
   saveWalletAddress()
+  await refreshWalletLabel(address)
   await useWallet()
 }
 
@@ -1111,6 +1163,14 @@ useHead({
   padding: 1.25rem 1.5rem 1rem;
   background: #121218;
   border-bottom: 1px solid #252525;
+}
+
+.chart-header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  width: 100%;
 }
 
 .chart-period {

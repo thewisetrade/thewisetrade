@@ -61,7 +61,7 @@
       rel="noopener noreferrer"
       title="Use my Meteora referral code"
     >
-      <span class="meteora-ref__brand">Meteora</span>
+      <span class="meteora-ref__brand">Meteora Referral</span>
       <span class="meteora-ref__code">49QVJBQZQZ</span>
     </a>
     <a

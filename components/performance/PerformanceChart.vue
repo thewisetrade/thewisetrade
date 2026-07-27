@@ -337,7 +337,24 @@ const chartData = computed(() => ({
   ],
 }))
 
-const chartOptions = {
+const yScaleBounds = computed(() => {
+  const items = data.value || []
+  if (!items.length) {
+    return { min: -1, max: 1 }
+  }
+
+  const values = items.map((item) => item.y)
+  const limit = Math.max(
+    Math.abs(Math.max(...values)),
+    Math.abs(Math.min(...values)),
+    0.01,
+  )
+  const padded = limit * 1.08
+
+  return { min: -padded, max: padded }
+})
+
+const chartOptions = computed(() => ({
   responsive: true,
   interaction: {
     mode: 'index',
@@ -384,22 +401,72 @@ const chartOptions = {
       },
     },
     y: {
+      min: yScaleBounds.value.min,
+      max: yScaleBounds.value.max,
       border: {
         display: true,
         color: '#333',
       },
       grid: {
         display: chartType.value === 'profit',
-        color: '#222',
+        color: (context) => (context.tick.value === 0 ? '#555' : '#222'),
+        lineWidth: (context) => (context.tick.value === 0 ? 1.5 : 1),
+      },
+      ticks: {
+        callback: (value) => {
+          const rounded = Math.round(value * 100) / 100
+          return Number.isInteger(rounded) ? rounded : rounded.toFixed(2)
+        },
       },
     },
   },
-}
+}))
 
 watch(progressContext, () => {
   if (!progressContext.value) {
     chartType.value = 'profit'
   }
+})
+
+const chartRef = ref(null)
+const chartProgressRef = ref(null)
+
+const getActiveChart = () => {
+  if (chartType.value === 'progress' && progressContext.value) {
+    return chartProgressRef.value?.chart
+  }
+  return chartRef.value?.chart
+}
+
+const getChartImage = () => {
+  const chart = getActiveChart()
+  if (!chart) return null
+
+  const previousPadding = chart.options.layout?.padding
+  chart.options.layout = {
+    ...chart.options.layout,
+    padding: {
+      top: 8,
+      right: 24,
+      bottom: 8,
+      left: 8,
+    },
+  }
+  chart.update('none')
+
+  const image = chart.toBase64Image('image/png', 2)
+
+  chart.options.layout = {
+    ...chart.options.layout,
+    padding: previousPadding ?? 0,
+  }
+  chart.update('none')
+
+  return image
+}
+
+defineExpose({
+  getChartImage,
 })
 </script>
 
