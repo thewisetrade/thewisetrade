@@ -17,6 +17,26 @@ const drawRoundedRect = (ctx, x, y, width, height, radius) => {
   ctx.closePath()
 }
 
+const drawOverlayPanel = (ctx, x, y, width, height) => {
+  ctx.save()
+  drawRoundedRect(ctx, x, y, width, height, 14)
+  ctx.fillStyle = 'rgba(10, 10, 12, 0.72)'
+  ctx.fill()
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)'
+  ctx.lineWidth = 1
+  ctx.stroke()
+  ctx.restore()
+}
+
+const truncateText = (ctx, text, maxWidth) => {
+  if (ctx.measureText(text).width <= maxWidth) return text
+  let trimmed = text
+  while (trimmed.length > 1 && ctx.measureText(`${trimmed}...`).width > maxWidth) {
+    trimmed = trimmed.slice(0, -1)
+  }
+  return `${trimmed}...`
+}
+
 const loadImage = (src) =>
   new Promise((resolve, reject) => {
     const image = new Image()
@@ -50,29 +70,6 @@ const drawCenteredText = (ctx, text, centerX, centerY) => {
   ctx.fillText(text, centerX, centerY)
   ctx.textAlign = 'left'
   ctx.textBaseline = 'alphabetic'
-}
-
-const drawPeriodCapsule = (ctx, periodLabel, cardWidth) => {
-  const periodText = periodLabel || 'Period'
-  ctx.font = '600 18px ui-sans-serif, system-ui, sans-serif'
-  const textWidth = ctx.measureText(periodText).width
-  const panelPaddingX = 28
-  const panelWidth = Math.min(textWidth + panelPaddingX * 2, cardWidth - 80)
-  const panelHeight = 46
-  const panelX = (cardWidth - panelWidth) / 2
-  const panelY = 28
-
-  drawOverlayPanel(ctx, panelX, panelY, panelWidth, panelHeight)
-
-  ctx.fillStyle = '#f0f0f0'
-  drawCenteredText(
-    ctx,
-    truncateText(ctx, periodText, panelWidth - panelPaddingX * 2),
-    cardWidth / 2,
-    panelY + panelHeight / 2,
-  )
-
-  return panelY + panelHeight
 }
 
 const drawDoubleChevronUp = (ctx, x, y, size, color) => {
@@ -173,24 +170,27 @@ const drawStatsRow = (ctx, stats, cardWidth, topY) => {
   return topY + statHeight
 }
 
-const drawOverlayPanel = (ctx, x, y, width, height) => {
-  ctx.save()
-  drawRoundedRect(ctx, x, y, width, height, 14)
-  ctx.fillStyle = 'rgba(10, 10, 12, 0.72)'
-  ctx.fill()
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)'
-  ctx.lineWidth = 1
-  ctx.stroke()
-  ctx.restore()
-}
+const drawPeriodCapsule = (ctx, periodLabel, cardWidth) => {
+  const periodText = periodLabel || 'Period'
+  ctx.font = '600 18px ui-sans-serif, system-ui, sans-serif'
+  const textWidth = ctx.measureText(periodText).width
+  const panelPaddingX = 28
+  const panelWidth = Math.min(textWidth + panelPaddingX * 2, cardWidth - 80)
+  const panelHeight = 46
+  const panelX = (cardWidth - panelWidth) / 2
+  const panelY = 28
 
-const truncateText = (ctx, text, maxWidth) => {
-  if (ctx.measureText(text).width <= maxWidth) return text
-  let trimmed = text
-  while (trimmed.length > 1 && ctx.measureText(`${trimmed}…`).width > maxWidth) {
-    trimmed = trimmed.slice(0, -1)
-  }
-  return `${trimmed}…`
+  drawOverlayPanel(ctx, panelX, panelY, panelWidth, panelHeight)
+
+  ctx.fillStyle = '#f0f0f0'
+  drawCenteredText(
+    ctx,
+    truncateText(ctx, periodText, panelWidth - panelPaddingX * 2),
+    cardWidth / 2,
+    panelY + panelHeight / 2,
+  )
+
+  return panelY + panelHeight
 }
 
 export const buildShareTweetText = ({
@@ -209,7 +209,7 @@ export const buildShareTweetText = ({
   return [
     `My Meteora DLMM performance (${walletLabel})`,
     `${periodLabel}`,
-    `Win rate ${win} · P&L ${pnl} · Fees ${fees}`,
+    `Win rate ${win} | P&L ${pnl} | Fees ${fees}`,
     SHARE_PAGE_URL,
   ].join('\n')
 }
@@ -219,7 +219,6 @@ export const getShareTweetUrl = (text) =>
 
 export const renderPerformanceShareCard = async ({
   chartImageUrl,
-  walletLabel,
   periodLabel,
   quoteToken,
   winRate,

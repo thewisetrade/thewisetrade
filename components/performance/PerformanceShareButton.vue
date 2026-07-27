@@ -53,13 +53,8 @@
 
 <script setup>
 import { ShareIcon } from '@heroicons/vue/24/outline'
-import {
-  buildShareTweetText,
-  copyDataUrlToClipboard,
-  downloadDataUrl,
-  getShareTweetUrl,
-  renderPerformanceShareCard,
-} from '@/utils/performance-share-card'
+
+const shareCardApi = () => import('@/utils/performanceShareCard.client.js')
 
 const props = defineProps({
   chartRef: {
@@ -135,6 +130,10 @@ const buildCard = async () => {
       throw new Error('Chart is not ready yet. Try again in a moment.')
     }
 
+    const {
+      renderPerformanceShareCard,
+    } = await shareCardApi()
+
     previewUrl.value = await renderPerformanceShareCard({
       chartImageUrl,
       walletLabel: props.walletLabel || 'Wallet',
@@ -166,8 +165,9 @@ const closeModal = () => {
   shareHint.value = ''
 }
 
-const getTweetText = () =>
-  buildShareTweetText({
+const getTweetText = async () => {
+  const { buildShareTweetText } = await shareCardApi()
+  return buildShareTweetText({
     walletLabel: props.walletLabel || 'Wallet',
     periodLabel: props.periodLabel,
     quoteToken: props.quoteToken,
@@ -175,13 +175,15 @@ const getTweetText = () =>
     totalProfit: props.totalProfit,
     totalFees: props.totalFees,
   })
+}
 
 const shareOnX = async () => {
   if (!previewUrl.value) return
   shareHint.value = ''
   copyError.value = ''
 
-  const tweetText = getTweetText()
+  const { getShareTweetUrl, copyDataUrlToClipboard } = await shareCardApi()
+  const tweetText = await getTweetText()
   window.open(getShareTweetUrl(tweetText), '_blank', 'noopener,noreferrer')
 
   if (canCopy.value) {
@@ -200,8 +202,9 @@ const shareOnX = async () => {
     'Post composer opened. Download the PNG and attach it to your post on X.'
 }
 
-const downloadCard = () => {
+const downloadCard = async () => {
   if (!previewUrl.value) return
+  const { downloadDataUrl } = await shareCardApi()
   const filename = `dlmm-performance-${sanitizeFilename(props.walletLabel || 'wallet')}.png`
   downloadDataUrl(previewUrl.value, filename)
 }
@@ -210,6 +213,7 @@ const copyCard = async () => {
   if (!previewUrl.value || !canCopy.value) return
   copyError.value = ''
   try {
+    const { copyDataUrlToClipboard } = await shareCardApi()
     await copyDataUrlToClipboard(previewUrl.value)
     copied.value = true
   } catch (error) {
