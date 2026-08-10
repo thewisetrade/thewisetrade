@@ -73,6 +73,12 @@ export default defineNuxtConfig({
           changeOrigin: true,
           rewrite: (p: string) => p.replace(/^\/api\/meteora/, ''),
         },
+        '/api/gecko': {
+          target: 'https://api.geckoterminal.com',
+          changeOrigin: true,
+          rewrite: (p: string) =>
+            p.replace(/^\/api\/gecko/, '/api/v2'),
+        },
       },
     },
   },
@@ -81,6 +87,9 @@ export default defineNuxtConfig({
     routeRules: {
       '/api/meteora/**': {
         proxy: 'https://dlmm.datapi.meteora.ag/**',
+      },
+      '/api/gecko/**': {
+        proxy: 'https://api.geckoterminal.com/api/v2/**',
       },
     },
   },

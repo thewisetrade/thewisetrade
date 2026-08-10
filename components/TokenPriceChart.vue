@@ -1,5 +1,9 @@
 <template>
-  <div class="price-chart">
+  <div
+    ref="rootEl"
+    class="price-chart"
+    :style="{ minWidth: `${width}px`, height: `${height}px` }"
+  >
     <div v-if="loading" class="loading">...</div>
     <div v-else-if="error" class="error">-</div>
     <canvas
@@ -12,10 +16,16 @@
 </template>
 
 <script setup>
+import { getGeckoOhlcvPrices } from '@/utils/geckoterminal'
+
 const props = defineProps({
   tokenAddress: {
     type: String,
     required: true,
+  },
+  pairAddress: {
+    type: String,
+    default: '',
   },
   width: {
     type: Number,
@@ -31,87 +41,41 @@ const props = defineProps({
   },
 })
 
+const rootEl = ref(null)
 const chartCanvas = ref(null)
 const loading = ref(true)
 const error = ref(false)
 const priceData = ref([])
+const hasFetched = ref(false)
+let observer = null
+
+const showPrices = async (prices) => {
+  if (!prices?.length) return false
+  priceData.value = prices
+  loading.value = false
+  error.value = false
+  await nextTick()
+  drawChart()
+  return true
+}
 
 const fetchPriceData = async () => {
+  if (!props.pairAddress) {
+    error.value = true
+    loading.value = false
+    return
+  }
+
   try {
     loading.value = true
     error.value = false
+    hasFetched.value = true
 
-    const response = await fetch(
-      `https://api.dexscreener.com/latest/dex/tokens/${props.tokenAddress}`,
-    )
+    // Real 72h OHLCV only — no Tokleo / DexScreener synthetic curves
+    const prices = await getGeckoOhlcvPrices(props.pairAddress)
+    if (await showPrices(prices)) return
 
-    if (!response.ok) {
-      throw new Error('Failed to fetch price data')
-    }
-
-    const data = await response.json()
-
-    if (!data.pairs || data.pairs.length === 0) {
-      throw new Error('No pairs found')
-    }
-
-    // Find the pair with highest liquidity for most accurate data
-    const pair = data.pairs.reduce((best, current) => {
-      const currentLiq = current.liquidity?.usd || 0
-      const bestLiq = best.liquidity?.usd || 0
-      return currentLiq > bestLiq ? current : best
-    })
-
-    const pairAddress = pair.pairAddress
-
-    try {
-      const geckoResponse = await fetch(
-        `https://api.geckoterminal.com/api/v2/networks/solana/pools/${pairAddress}/ohlcv/hour?aggregate=4&limit=24`,
-      )
-
-      if (geckoResponse.ok) {
-        const geckoData = await geckoResponse.json()
-
-        if (
-          geckoData.data?.attributes?.ohlcv_list &&
-          geckoData.data.attributes.ohlcv_list.length > 0
-        ) {
-          // GeckoTerminal returns [timestamp, open, high, low, close, volume]
-          const prices = geckoData.data.attributes.ohlcv_list.map(
-            (candle) => candle[4],
-          )
-          if (prices.length > 0 && prices.every((p) => p > 0)) {
-            priceData.value = prices.reverse()
-            drawChart()
-            return
-          }
-        }
-      }
-    } catch (err) {
-    }
-
-    // Create a fake chart based on the price and price change
-    if (pair.priceUsd && pair.priceChange) {
-      const currentPrice = parseFloat(pair.priceUsd)
-      const change24h = pair.priceChange.h24 || 0
-
-      const points = 24
-      const prices = []
-
-      for (let i = 0; i < points; i++) {
-        const progress = i / (points - 1)
-        const changeMultiplier = 1 - change24h / 100
-        const historicalPrice =
-          currentPrice * (changeMultiplier + progress * (1 - changeMultiplier))
-        prices.push(historicalPrice)
-      }
-
-      priceData.value = prices
-
-      drawChart()
-    } else {
-      throw new Error('No price data available')
-    }
+    throw new Error('No OHLCV data')
   } catch (err) {
     console.error('Error fetching price data:', err)
     error.value = true
@@ -132,15 +96,16 @@ const drawChart = () => {
 
   const prices = priceData.value
   const currentPrice = prices[prices.length - 1]
-  const minPrice = 0
-  const maxPrice = Math.max(...prices)
+  const rawMin = Math.min(...prices)
+  const rawMax = Math.max(...prices)
+  const minPrice = props.showMinus50Line ? 0 : rawMin * 0.98
+  const maxPrice = props.showMinus50Line ? rawMax : rawMax * 1.02
   const priceRange = maxPrice - minPrice || 1
 
   const priceChange = prices[prices.length - 1] - prices[0]
   const isPositive = priceChange >= 0
   const color = isPositive ? '#3DDC84' : '#FF4757'
 
-  // Draw price chart first
   ctx.strokeStyle = color
   ctx.lineWidth = 2
   ctx.beginPath()
@@ -166,16 +131,14 @@ const drawChart = () => {
     : 'rgba(255, 71, 87, 0.22)'
   ctx.fill()
 
-  // Draw reference lines on top if enabled
   if (props.showMinus50Line && currentPrice > 0) {
-    const percentages = [0.5, 0.25] // -50%, -70%, -75%
+    const percentages = [0.5, 0.25]
     const labels = ['-50%', '-75%']
 
     percentages.forEach((percentage, index) => {
       const linePrice = currentPrice * percentage
       const lineY = height - ((linePrice - minPrice) / priceRange) * height
 
-      // Only draw if the line is within the visible range
       if (lineY >= 0 && lineY <= height) {
         ctx.strokeStyle = '#888'
         ctx.lineWidth = 1
@@ -186,7 +149,6 @@ const drawChart = () => {
         ctx.stroke()
         ctx.setLineDash([])
 
-        // Add label
         ctx.fillStyle = '#888'
         ctx.font = '10px sans-serif'
         ctx.textAlign = 'left'
@@ -196,19 +158,60 @@ const drawChart = () => {
   }
 }
 
+const observeVisibility = () => {
+  if (!rootEl.value || typeof IntersectionObserver === 'undefined') {
+    fetchPriceData()
+    return
+  }
+
+  observer = new IntersectionObserver(
+    (entries) => {
+      const visible = entries.some((entry) => entry.isIntersecting)
+      if (!visible || hasFetched.value) return
+      fetchPriceData()
+      if (observer) {
+        observer.disconnect()
+        observer = null
+      }
+    },
+    {
+      // Only queue charts actually on screen — reduces Gecko bursts
+      rootMargin: '0px',
+      threshold: 0.15,
+    },
+  )
+
+  observer.observe(rootEl.value)
+}
+
 onMounted(() => {
-  fetchPriceData()
+  observeVisibility()
+})
+
+onUnmounted(() => {
+  if (observer) {
+    observer.disconnect()
+    observer = null
+  }
 })
 
 watch(
-  () => props.tokenAddress,
+  () => [props.tokenAddress, props.pairAddress, props.showMinus50Line],
   () => {
-    fetchPriceData()
+    hasFetched.value = false
+    priceData.value = []
+    loading.value = true
+    error.value = false
+    if (observer) {
+      observer.disconnect()
+      observer = null
+    }
+    observeVisibility()
   },
 )
 
 watch(
-  () => [props.width, props.height, props.showMinus50Line],
+  () => [props.width, props.height],
   () => {
     if (priceData.value.length > 0) {
       drawChart()
@@ -222,8 +225,6 @@ watch(
   display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 120px;
-  height: 40px;
 }
 
 .loading,

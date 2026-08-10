@@ -1,4 +1,5 @@
 // TokenService.js - Separate file for token info management
+import { getDexScreenerPairs } from '@/utils/dexscreener'
 
 export class TokenService {
   constructor() {
@@ -165,31 +166,23 @@ export const getTokenInfoInternal = async (tokenAddress) => {
     return infoCache.get(tokenAddress)
   }
 
-  let icon = ''
+  let icon = `https://dd.dexscreener.com/ds-data/tokens/solana/${tokenAddress}.png`
   if (tokenAddress === 'So11111111111111111111111111111111111111112') {
     icon =
       'https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png'
   }
-  icon = `https://dd.dexscreener.com/ds-data/tokens/solana/${tokenAddress}.png`
+
   try {
-    const response = await fetch(
-      `https://api.dexscreener.com/latest/dex/tokens/${tokenAddress}`,
-    )
+    const pairs = await getDexScreenerPairs(tokenAddress)
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
-    }
-
-    const data = await response.json()
-
-    if (!data.pairs || data.pairs.length === 0) {
+    if (!pairs || pairs.length === 0) {
       return null
     }
 
     // Filter to Solana chain only - DexScreener returns pairs from multiple chains
     // (e.g. FOGO uses same address as SOL for wrapped native token, causing SOL to show as FOGO)
-    const solanaPairs = data.pairs.filter((p) => p.chainId === 'solana')
-    const pairsToUse = solanaPairs.length > 0 ? solanaPairs : data.pairs
+    const solanaPairs = pairs.filter((p) => p.chainId === 'solana')
+    const pairsToUse = solanaPairs.length > 0 ? solanaPairs : pairs
     const pair = pairsToUse[0]
     let symbol, name
 
@@ -199,11 +192,6 @@ export const getTokenInfoInternal = async (tokenAddress) => {
     } else {
       symbol = pair.quoteToken.symbol
       name = pair.quoteToken.name
-    }
-
-    if (tokenAddress === 'So11111111111111111111111111111111111111112') {
-      icon =
-        'https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png'
     }
 
     const result = {

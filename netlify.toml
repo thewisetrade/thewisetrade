@@ -3,3 +3,9 @@
   to = "https://dlmm.datapi.meteora.ag/:splat"
   status = 200
   force = true
+
+[[redirects]]
+  from = "/api/gecko/*"
+  to = "https://api.geckoterminal.com/api/v2/:splat"
+  status = 200
+  force = true

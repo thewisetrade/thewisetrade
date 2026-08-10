@@ -97,7 +97,9 @@
                 @click.stop
               >
                 <TokenPriceChart
+                  :key="`spark-v4-${pool.meteora_address}`"
                   :tokenAddress="pool.meteora_degenTokenAddress"
+                  :pairAddress="pool.meteora_address"
                   :width="120"
                   :height="40"
                 />
@@ -123,7 +125,9 @@
             class="expanded-chart-container"
           >
             <TokenPriceChart
+              :key="`expand-v4-${pool.meteora_address}`"
               :tokenAddress="pool.meteora_degenTokenAddress"
+              :pairAddress="pool.meteora_address"
               :width="chartWidth"
               :height="200"
               :showMinus50Line="true"
@@ -137,10 +141,13 @@
 
 <script setup>
 import { fetchPoolsData } from '@/utils/dlmm'
+import { clearGeckoOhlcvCache } from '@/utils/geckoterminal'
 
 definePageMeta({
   layout: 'app',
 })
+
+clearGeckoOhlcvCache()
 
 const isLoading = ref(true)
 const displayedPools = ref([])
