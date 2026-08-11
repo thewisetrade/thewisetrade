@@ -25,10 +25,10 @@
         class="quote-filter"
         label="Pairs"
         :values="[
-          { text: 'All pairs', value: 'ALL' },
-          { text: 'SOL pairs', value: 'SOL' },
-          { text: 'USDC pairs', value: 'USDC' },
-          { text: 'EURC pairs', value: 'EURC' },
+          { text: 'All', value: 'ALL' },
+          { text: 'SOL', value: 'SOL' },
+          { text: 'USDC', value: 'USDC' },
+          { text: 'EURC', value: 'EURC' },
         ]"
         v-model="quoteFilter"
       />
