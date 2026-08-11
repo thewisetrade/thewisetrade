@@ -279,8 +279,37 @@ const USDC_ICON =
 const route = useRoute()
 const router = useRouter()
 
-const sortField = ref('uncolFee')
-const sortDirection = ref('desc')
+const SORT_STORAGE_KEY = 'positions:sort'
+const ALLOWED_SORT_FIELDS = [
+  'pair',
+  'value',
+  'collectedFee',
+  'uncolFee',
+  'upnl',
+  'range',
+  'age',
+]
+
+const loadSavedSort = () => {
+  try {
+    const raw = localStorage.getItem(SORT_STORAGE_KEY)
+    if (!raw) {
+      return { field: 'upnl', direction: 'asc' }
+    }
+    const parsed = JSON.parse(raw)
+    const field = ALLOWED_SORT_FIELDS.includes(parsed?.field)
+      ? parsed.field
+      : 'upnl'
+    const direction = parsed?.direction === 'desc' ? 'desc' : 'asc'
+    return { field, direction }
+  } catch (error) {
+    return { field: 'upnl', direction: 'asc' }
+  }
+}
+
+const savedSort = loadSavedSort()
+const sortField = ref(savedSort.field)
+const sortDirection = ref(savedSort.direction)
 const quoteFilter = ref('ALL')
 const rangeFilter = ref('ALL')
 
@@ -789,6 +818,16 @@ const enrichPositionsFromSdk = async (apiPositions, enrichId) => {
   }
 }
 
+const saveSort = () => {
+  localStorage.setItem(
+    SORT_STORAGE_KEY,
+    JSON.stringify({
+      field: sortField.value,
+      direction: sortDirection.value,
+    }),
+  )
+}
+
 const sort = (field) => {
   if (sortField.value === field) {
     sortDirection.value = sortDirection.value === 'asc' ? 'desc' : 'asc'
@@ -796,6 +835,7 @@ const sort = (field) => {
     sortField.value = field
     sortDirection.value = 'asc'
   }
+  saveSort()
 }
 
 const getSortClass = (field) => {
