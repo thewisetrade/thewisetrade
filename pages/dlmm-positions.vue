@@ -6,43 +6,39 @@
       title="DLMM Positions"
     />
 
-    <div class="flex flex-row gap-2 items-center">
-      <WalletSelector v-model="selectedWallet" with-all-wallets />
-      <div class="flex-1"></div>
-      <div class="italic text-sm text-gray-500 mr-2" v-if="lastUpdateTime">
+    <div class="positions-toolbar">
+      <div class="toolbar-left">
+        <WalletSelector v-model="selectedWallet" with-all-wallets />
+        <template v-if="walletAddress">
+          <ToggleButtons
+            class="quote-filter"
+            label="Pairs"
+            :values="[
+              { text: 'All', value: 'ALL' },
+              { text: 'SOL', value: 'SOL' },
+              { text: 'USDC', value: 'USDC' },
+              { text: 'EURC', value: 'EURC' },
+            ]"
+            v-model="quoteFilter"
+          />
+          <ToggleButtons
+            class="range-filter"
+            label="Range"
+            :values="[
+              { text: 'All', value: 'ALL' },
+              { text: 'In range', value: 'IN_RANGE' },
+              { text: 'Low', value: 'LOWER' },
+              { text: 'High', value: 'UPPER' },
+            ]"
+            v-model="rangeFilter"
+          />
+        </template>
+      </div>
+      <div class="last-updated" v-if="lastUpdateTime">
         Last updated: {{ lastUpdateTime.toFormat('HH:mm:ss') }}
-        <span v-if="loadingMore"> · {{ loadingLabel }}</span>
         <span v-if="enriching"> · enriching bins…</span>
       </div>
-      <RefreshButton @refresh="refreshData" />
-    </div>
-
-    <div
-      class="flex flex-row flex-wrap gap-4 mt-4 mb-3 justify-center"
-      v-if="walletAddress"
-    >
-      <ToggleButtons
-        class="quote-filter"
-        label="Pairs"
-        :values="[
-          { text: 'All', value: 'ALL' },
-          { text: 'SOL', value: 'SOL' },
-          { text: 'USDC', value: 'USDC' },
-          { text: 'EURC', value: 'EURC' },
-        ]"
-        v-model="quoteFilter"
-      />
-      <ToggleButtons
-        class="range-filter"
-        label="Range"
-        :values="[
-          { text: 'All', value: 'ALL' },
-          { text: 'In range', value: 'IN_RANGE' },
-          { text: 'Low', value: 'LOWER' },
-          { text: 'High', value: 'UPPER' },
-        ]"
-        v-model="rangeFilter"
-      />
+      <RefreshButton class="toolbar-refresh" @refresh="refreshData" />
     </div>
 
     <div class="table-wrapper">
@@ -882,6 +878,38 @@ watch(selectedWallet, (address) => {
   padding-top: 0;
   min-width: 960px;
   height: 78vh;
+}
+
+.positions-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.75rem 1rem;
+  margin: 0.25rem 0 0.75rem;
+}
+
+.toolbar-left {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.75rem 1rem;
+}
+
+.last-updated {
+  margin-left: auto;
+  align-self: center;
+  font-size: 0.875rem;
+  font-style: italic;
+  color: #6b7280;
+  line-height: 1.3;
+}
+
+.toolbar-refresh {
+  align-self: flex-end;
+}
+
+.toolbar-left + .toolbar-refresh {
+  margin-left: auto;
 }
 
 .table-wrapper {

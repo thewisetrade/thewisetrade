@@ -6,58 +6,54 @@
       title="DLMM Performance"
     />
 
-    <div class="flex flex-row gap-2">
+    <div class="performance-toolbar">
       <WalletSelector v-model="selectedWallet" with-all-wallets />
-      <div class="flex-1"></div>
-    </div>
-
-    <div
-      class="flex flex-row gap-2 text-lg mt-6 mb-4 justify-center"
-      v-if="isWalletAddressValid"
-    >
-      <ToggleButtons
-        class="mr-5 filter"
-        label="Quote token"
-        :values="[
-          { text: 'SOL', value: 'SOL' },
-          { text: 'USDC', value: 'USDC' },
-          { text: 'EURC', value: 'EURC' },
-        ]"
-        v-model="quoteToken"
-      />
-      <ToggleButtons
-        class="mr-5 filter"
-        label="Sort by"
-        :values="[
-          { text: 'Profit', value: 'profit' },
-          { text: 'Date', value: 'date' },
-        ]"
-        v-model="sortBy"
-      />
-      <ToggleButtons
-        class="mr-5 filter"
-        label="Sort order"
-        :values="[
-          { text: 'Asc.', value: 'asc' },
-          { text: 'Desc.', value: 'desc' },
-        ]"
-        v-model="sortOrder"
-      />
-      <ToggleButtons
-        class="mr-5 filter"
-        label="Group by"
-        :values="[
-          { text: 'Position', value: 'position' },
-          { text: 'Pair', value: 'pair' },
-        ]"
-        v-model="groupBy"
-      />
-      <Dropdown
-        class="filter"
-        label="Time range"
-        :values="timePeriodOptions"
-        v-model="timePeriod"
-      />
+      <template v-if="isWalletAddressValid">
+        <ToggleButtons
+          class="filter"
+          label="Quote token"
+          :values="[
+            { text: 'SOL', value: 'SOL' },
+            { text: 'USDC', value: 'USDC' },
+            { text: 'EURC', value: 'EURC' },
+          ]"
+          v-model="quoteToken"
+        />
+        <ToggleButtons
+          class="filter"
+          label="Sort by"
+          :values="[
+            { text: 'Profit', value: 'profit' },
+            { text: 'Date', value: 'date' },
+          ]"
+          v-model="sortBy"
+        />
+        <ToggleButtons
+          class="filter"
+          label="Sort order"
+          :values="[
+            { text: 'Asc.', value: 'asc' },
+            { text: 'Desc.', value: 'desc' },
+          ]"
+          v-model="sortOrder"
+        />
+        <ToggleButtons
+          class="filter"
+          label="Group by"
+          :values="[
+            { text: 'Position', value: 'position' },
+            { text: 'Pair', value: 'pair' },
+          ]"
+          v-model="groupBy"
+        />
+        <Dropdown
+          v-if="!isDataVisible"
+          compact
+          class="filter"
+          :values="timePeriodOptions"
+          v-model="timePeriod"
+        />
+      </template>
     </div>
 
     <div v-if="!isWalletAddressValid" class="empty-hint">
@@ -70,7 +66,15 @@
     >
       <div class="chart-header">
         <div class="chart-header-top">
-          <div class="chart-period">{{ dateRange }}</div>
+          <div class="chart-period-row">
+            <Dropdown
+              compact
+              class="chart-time-range"
+              :values="timePeriodOptions"
+              v-model="timePeriod"
+            />
+            <div class="chart-period">{{ dateRange }}</div>
+          </div>
           <PerformanceShareButton
             :chart-ref="performanceChartRef"
             :wallet-label="walletLabel"
@@ -1141,6 +1145,15 @@ useHead({
 </script>
 
 <style scoped>
+.performance-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 0.75rem 1rem;
+  margin: 0.5rem 0 1rem;
+}
+
 .empty-hint {
   text-align: center;
   color: #999;
@@ -1173,12 +1186,24 @@ useHead({
   width: 100%;
 }
 
+.chart-period-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.chart-time-range {
+  flex-shrink: 0;
+}
+
 .chart-period {
   font-size: 0.8125rem;
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: #888;
+  white-space: nowrap;
 }
 
 .chart-stats {

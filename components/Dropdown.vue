@@ -1,17 +1,23 @@
 <template>
-  <div class="dropdown-container relative">
+  <div
+    ref="rootEl"
+    class="dropdown-container relative"
+    :class="{ compact: compact }"
+  >
     <span
-      class="option-name uppercase tracking-[.1em] justify-center flex mb-1 font-bold"
+      v-if="label"
+      class="option-name"
     >
       {{ label }}
     </span>
     <button
+      type="button"
       @click="isOpen = !isOpen"
-      class="dropdown-button w-full p-2 flex items-center justify-between bg-gray-800 border-gray-700 border rounded-md text-gray-200"
+      class="dropdown-button flex items-center justify-between"
     >
-      <span>{{ selectedText }}</span>
+      <span class="dropdown-label">{{ selectedText }}</span>
       <svg
-        class="w-4 h-4 transition-transform"
+        class="dropdown-chevron transition-transform"
         :class="{ 'rotate-180': isOpen }"
         viewBox="0 0 24 24"
         fill="none"
@@ -29,13 +35,14 @@
     <div
       v-if="isOpen"
       ref="dropdownMenu"
-      class="dropdown-menu absolute w-full mt-1 bg-gray-800 border-gray-700 border rounded-md shadow-lg z-10"
+      class="dropdown-menu absolute mt-1 shadow-lg z-10"
     >
       <button
         v-for="(val, index) in props.values"
         :key="val.text || index"
+        type="button"
         @click="update(val.value)"
-        class="option w-full p-2 text-left transition-colors"
+        class="option w-full text-left transition-colors"
         :class="{ 'active-option': isActive(val.value) }"
       >
         {{ val.text }}
@@ -47,6 +54,7 @@
 <script setup>
 const model = defineModel()
 const isOpen = ref(false)
+const rootEl = ref(null)
 const dropdownMenu = ref(null)
 
 const props = defineProps({
@@ -62,6 +70,10 @@ const props = defineProps({
     type: String,
     default: 'Select an option',
   },
+  compact: {
+    type: Boolean,
+    default: false,
+  },
 })
 
 const selectedText = computed(() => {
@@ -76,8 +88,21 @@ const update = (value) => {
 
 const isActive = (value) => {
   return (
-    value === model.value || (value.name && value.name === model.value.name)
+    value === model.value ||
+    (value?.name && value.name === model.value?.name)
   )
+}
+
+const onPointerDownOutside = (event) => {
+  if (!isOpen.value || !rootEl.value) return
+  if (rootEl.value.contains(event.target)) return
+  isOpen.value = false
+}
+
+const onKeyDown = (event) => {
+  if (event.key === 'Escape' && isOpen.value) {
+    isOpen.value = false
+  }
 }
 
 watch(isOpen, (newValue) => {
@@ -90,41 +115,127 @@ watch(isOpen, (newValue) => {
     })
   }
 })
+
+onMounted(() => {
+  document.addEventListener('pointerdown', onPointerDownOutside, true)
+  document.addEventListener('keydown', onKeyDown)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('pointerdown', onPointerDownOutside, true)
+  document.removeEventListener('keydown', onKeyDown)
+})
 </script>
 
-<style>
-.option-name {
-  font-size: 0.8em;
-}
-
+<style scoped>
 .dropdown-container {
   cursor: pointer;
   min-width: 200px;
 }
 
+.dropdown-container.compact {
+  min-width: 160px;
+  max-width: 220px;
+}
+
+.option-name {
+  display: block;
+  margin-bottom: 0.4em;
+  font-size: 0.7em;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #8b8fa8;
+  text-align: center;
+}
+
 .dropdown-button {
-  border: 1px solid #607cf6;
+  width: 100%;
+  appearance: none;
+  border: 1px solid rgba(96, 124, 246, 0.28);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  color: #e6e8f2;
+  font: inherit;
+  font-size: 0.85em;
+  font-weight: 500;
+  line-height: 1.2;
+  padding: 0.45em 0.75em;
   cursor: pointer;
-  background-color: #111;
-  font-weight: normal;
-  font-size: 16px;
-  padding: 5px 8px;
+  gap: 0.5em;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+
+/* Match ToggleButtons .toggle-group height: 3px + 3px + 0.8em + 1.2em at 0.85em font */
+.compact .dropdown-button {
+  box-sizing: border-box;
+  height: calc(6px + 2em);
+  padding: 0 0.75em;
+  font-size: 0.85em;
+}
+
+.dropdown-button:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(96, 124, 246, 0.45);
+}
+
+.dropdown-button:focus-visible {
+  outline: 2px solid rgba(96, 124, 246, 0.7);
+  outline-offset: 1px;
+}
+
+.dropdown-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
+  flex: 1;
+  min-width: 0;
+}
+
+.dropdown-chevron {
+  width: 1em;
+  height: 1em;
+  flex-shrink: 0;
+  color: #9aa0b8;
 }
 
 .dropdown-menu {
+  left: 0;
+  right: 0;
   max-height: 250px;
   overflow-y: auto;
-  background-color: #111;
-  border: 1px solid #223;
+  background: #15151f;
+  border: 1px solid rgba(96, 124, 246, 0.28);
+  border-radius: 10px;
+  padding: 3px;
+  cursor: pointer;
+}
+
+.option {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: #c5c9da;
+  font: inherit;
+  font-size: 0.85em;
+  padding: 0.45em 0.7em;
+  border-radius: 7px;
   cursor: pointer;
 }
 
 .option:hover {
-  background-color: #506cb6;
-  cursor: pointer;
+  background: rgba(80, 108, 182, 0.55);
+  color: #fff;
 }
 
 .active-option {
-  background-color: #405cd6;
+  background: linear-gradient(180deg, #4d68e8 0%, #405cd6 100%);
+  color: #fff;
+  font-weight: 600;
 }
 </style>

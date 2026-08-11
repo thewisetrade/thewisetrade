@@ -1,21 +1,23 @@
 <template>
-<div>
-  <Dropdown
-    :values="walletOptions"
-    placeholder="Select a wallet"
-    v-model="selectedWallet"
-    v-if="wallets.length > 0"
-  />
-  <div v-else>
-    No wallets found, please <NuxtLink to="/dlmm-wallets">add a wallet first</NuxtLink>
+  <div class="wallet-selector">
+    <Dropdown
+      v-if="wallets.length > 0"
+      compact
+      :values="walletOptions"
+      placeholder="Select a wallet"
+      v-model="selectedWallet"
+    />
+    <div v-else class="wallet-empty">
+      No wallets found, please
+      <NuxtLink to="/dlmm-wallets">add a wallet first</NuxtLink>
+    </div>
   </div>
-</div>
 </template>
 
 <script setup>
 const loading = ref(false)
 const wallets = ref([])
-const selectedWallet  = defineModel()
+const selectedWallet = defineModel()
 
 const props = defineProps({
   withAllWallets: {
@@ -28,22 +30,22 @@ const loadData = async () => {
   try {
     loading.value = true
     const addressesData = await getAllAddresses()
-    wallets.value = addressesData.map(item => ({
+    wallets.value = addressesData.map((item) => ({
       id: item.id,
       name: item.name || item.domain || item.address,
       domain: item.domain,
       address: item.address,
-      groupTag: item.groupTag || null
+      groupTag: item.groupTag || null,
     }))
   } catch (error) {
     console.error('Error loading data:', error)
-    console.error('Make sure you have imported the database functions and they are working properly')
+    console.error(
+      'Make sure you have imported the database functions and they are working properly',
+    )
   } finally {
     loading.value = false
   }
 }
-
-
 
 onMounted(async () => {
   await loadData()
@@ -60,3 +62,17 @@ const walletOptions = computed(() => {
   return walletList
 })
 </script>
+
+<style scoped>
+.wallet-selector {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.wallet-empty {
+  font-size: 0.85em;
+  color: #9aa0b8;
+  white-space: nowrap;
+}
+</style>
