@@ -85,7 +85,6 @@ const fetchOhlcv = async (pairAddress) => {
     throw err
   }
 
-  // Success clears the cooldown window early
   rateLimitedUntil = 0
 
   const data = await response.json()
@@ -105,18 +104,15 @@ const processQueue = async () => {
       item.resolve(prices)
     } catch (error) {
       const rateLimited = error?.status === 429
-      // Keep waiting through cooldowns instead of failing the sparkline early
-      const maxAttempts = rateLimited ? 20 : 2
+      // Fail fast on 429 so UI can show Dex fallback instead of hanging
+      const maxAttempts = rateLimited ? 1 : 2
 
       if (item.attempts >= maxAttempts) {
         item.resolve([])
         continue
       }
 
-      if (!rateLimited) {
-        await sleep(1500)
-      }
-
+      await sleep(rateLimited ? 0 : 1500)
       queue.push({
         ...item,
         attempts: item.attempts + 1,
@@ -130,6 +126,8 @@ const processQueue = async () => {
   }
 }
 
+export const isGeckoRateLimited = () => Date.now() < rateLimitedUntil
+
 export const getGeckoOhlcvPrices = async (pairAddress) => {
   const address = String(pairAddress || '').trim()
   if (!address) return []
@@ -137,6 +135,11 @@ export const getGeckoOhlcvPrices = async (pairAddress) => {
   const key = cacheKey(address)
   const cached = getCached(key)
   if (cached !== null) return cached
+
+  // While Gecko is cooling down, skip the queue so charts can fallback immediately
+  if (isGeckoRateLimited()) {
+    return []
+  }
 
   if (inFlight.has(key)) {
     return inFlight.get(key)

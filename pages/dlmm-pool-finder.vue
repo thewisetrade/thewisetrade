@@ -141,13 +141,10 @@
 
 <script setup>
 import { fetchPoolsData } from '@/utils/dlmm'
-import { clearGeckoOhlcvCache } from '@/utils/geckoterminal'
 
 definePageMeta({
   layout: 'app',
 })
-
-clearGeckoOhlcvCache()
 
 const isLoading = ref(true)
 const displayedPools = ref([])

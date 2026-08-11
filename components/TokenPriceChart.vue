@@ -16,6 +16,7 @@
 </template>
 
 <script setup>
+import { getDexScreenerPairByAddress } from '@/utils/dexscreener'
 import { getGeckoOhlcvPrices } from '@/utils/geckoterminal'
 
 const props = defineProps({
@@ -49,6 +50,68 @@ const priceData = ref([])
 const hasFetched = ref(false)
 let observer = null
 
+const priceFromChange = (currentPrice, changePct) => {
+  if (!Number.isFinite(changePct)) return null
+  const denominator = 1 + changePct / 100
+  if (!Number.isFinite(denominator) || Math.abs(denominator) < 1e-9) return null
+  const price = currentPrice / denominator
+  return price > 0 ? price : null
+}
+
+// DexScreener m5/h1/h6/h24 fallback when Gecko is rate-limited
+const buildSyntheticPrices = (pair) => {
+  const currentPrice = parseFloat(pair?.priceUsd)
+  if (!Number.isFinite(currentPrice) || currentPrice <= 0) return null
+
+  const pc = pair?.priceChange || {}
+  const anchors = [{ hour: 0, price: currentPrice }]
+  const windows = [
+    { hour: 5 / 60, change: pc.m5 },
+    { hour: 1, change: pc.h1 },
+    { hour: 6, change: pc.h6 },
+    { hour: 24, change: pc.h24 },
+  ]
+
+  for (const window of windows) {
+    const price = priceFromChange(currentPrice, window.change)
+    if (price) anchors.push({ hour: window.hour, price })
+  }
+
+  if (anchors.length < 2) return null
+
+  const oldest = anchors[anchors.length - 1]
+  if (oldest.hour < 72) {
+    anchors.push({ hour: 72, price: oldest.price })
+  }
+
+  anchors.sort((a, b) => b.hour - a.hour)
+
+  const points = 72
+  const prices = []
+
+  for (let i = 0; i < points; i++) {
+    const hourAgo = 72 - (i / (points - 1)) * 72
+
+    let left = anchors[0]
+    let right = anchors[anchors.length - 1]
+    for (let j = 0; j < anchors.length - 1; j++) {
+      if (hourAgo <= anchors[j].hour && hourAgo >= anchors[j + 1].hour) {
+        left = anchors[j]
+        right = anchors[j + 1]
+        break
+      }
+    }
+
+    const span = left.hour - right.hour || 1
+    const t = Math.min(1, Math.max(0, (left.hour - hourAgo) / span))
+    const logPrice =
+      Math.log(left.price) * (1 - t) + Math.log(right.price) * t
+    prices.push(Math.exp(logPrice))
+  }
+
+  return prices
+}
+
 const showPrices = async (prices) => {
   if (!prices?.length) return false
   priceData.value = prices
@@ -71,14 +134,30 @@ const fetchPriceData = async () => {
     error.value = false
     hasFetched.value = true
 
-    // Real 72h OHLCV only — no Tokleo / DexScreener synthetic curves
+    // 1) Dex fallback first — always something on screen even if Gecko is blocked
+    let synthetic = null
+    try {
+      const pair = await getDexScreenerPairByAddress(props.pairAddress)
+      synthetic = buildSyntheticPrices(pair)
+      if (synthetic) {
+        await showPrices(synthetic)
+      }
+    } catch (err) {
+      console.warn('DexScreener fallback failed:', err)
+    }
+
+    // 2) Upgrade to real 72h OHLCV when Gecko allows it
     const prices = await getGeckoOhlcvPrices(props.pairAddress)
     if (await showPrices(prices)) return
 
-    throw new Error('No OHLCV data')
+    if (!synthetic) {
+      throw new Error('No price data available')
+    }
   } catch (err) {
     console.error('Error fetching price data:', err)
-    error.value = true
+    if (priceData.value.length === 0) {
+      error.value = true
+    }
   } finally {
     loading.value = false
   }
@@ -175,7 +254,6 @@ const observeVisibility = () => {
       }
     },
     {
-      // Only queue charts actually on screen — reduces Gecko bursts
       rootMargin: '0px',
       threshold: 0.15,
     },
