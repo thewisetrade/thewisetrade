@@ -340,18 +340,29 @@ const chartData = computed(() => ({
 const yScaleBounds = computed(() => {
   const items = data.value || []
   if (!items.length) {
-    return { min: -1, max: 1 }
+    return { min: 0, max: 1 }
   }
 
   const values = items.map((item) => item.y)
-  const limit = Math.max(
-    Math.abs(Math.max(...values)),
-    Math.abs(Math.min(...values)),
-    0.01,
-  )
-  const padded = limit * 1.08
+  const dataMin = Math.min(...values)
+  const dataMax = Math.max(...values)
 
-  return { min: -padded, max: padded }
+  // Keep zero on-scale, but don't reserve a mirrored empty half when all
+  // values are positive (or all negative).
+  const rawMin = Math.min(0, dataMin)
+  const rawMax = Math.max(0, dataMax)
+
+  if (rawMin === 0 && rawMax === 0) {
+    return { min: -0.01, max: 0.01 }
+  }
+
+  const range = Math.max(rawMax - rawMin, 0.01)
+  const pad = range * 0.08
+
+  return {
+    min: rawMin < 0 ? rawMin - pad : 0,
+    max: rawMax > 0 ? rawMax + pad : 0,
+  }
 })
 
 const chartOptions = computed(() => ({
