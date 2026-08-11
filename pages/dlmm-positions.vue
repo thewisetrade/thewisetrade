@@ -257,6 +257,7 @@ import BinRepresentation from '@/components/positions/BinRepresentation.vue'
 import PositionRangeBar from '@/components/positions/PositionRangeBar.vue'
 import { DateTime } from 'luxon'
 import { loadOpenPositions } from '@/utils/meteora-api'
+import { pickAllowed, replaceQuery } from '@/utils/query-state'
 import { getAllAddresses } from '@/utils/wallets'
 
 definePageMeta({
@@ -285,6 +286,8 @@ const ALLOWED_SORT_FIELDS = [
   'range',
   'age',
 ]
+const ALLOWED_QUOTE_FILTERS = ['ALL', 'SOL', 'USDC', 'EURC']
+const ALLOWED_RANGE_FILTERS = ['ALL', 'IN_RANGE', 'LOWER', 'UPPER']
 
 const loadSavedSort = () => {
   try {
@@ -293,9 +296,7 @@ const loadSavedSort = () => {
       return { field: 'upnl', direction: 'asc' }
     }
     const parsed = JSON.parse(raw)
-    const field = ALLOWED_SORT_FIELDS.includes(parsed?.field)
-      ? parsed.field
-      : 'upnl'
+    const field = pickAllowed(parsed?.field, ALLOWED_SORT_FIELDS, 'upnl')
     const direction = parsed?.direction === 'desc' ? 'desc' : 'asc'
     return { field, direction }
   } catch (error) {
@@ -304,10 +305,20 @@ const loadSavedSort = () => {
 }
 
 const savedSort = loadSavedSort()
-const sortField = ref(savedSort.field)
-const sortDirection = ref(savedSort.direction)
-const quoteFilter = ref('ALL')
-const rangeFilter = ref('ALL')
+const sortField = ref(
+  pickAllowed(route.query.sort, ALLOWED_SORT_FIELDS, savedSort.field),
+)
+const sortDirection = ref(
+  route.query.dir === 'desc' || route.query.dir === 'asc'
+    ? route.query.dir
+    : savedSort.direction,
+)
+const quoteFilter = ref(
+  pickAllowed(route.query.pairs, ALLOWED_QUOTE_FILTERS, 'ALL'),
+)
+const rangeFilter = ref(
+  pickAllowed(route.query.range, ALLOWED_RANGE_FILTERS, 'ALL'),
+)
 
 const loading = ref(false)
 const loadingMore = ref(false)
@@ -328,6 +339,7 @@ const selectedWallet = ref(null)
 
 onMounted(async () => {
   setSavedWalletAddress()
+  syncPositionsQuery()
   setTimeout(() => {
     startAutoRefresh()
   }, 600000)
@@ -343,12 +355,19 @@ const updateWalletAddress = async (address) => {
   await loadData()
 }
 
+const syncPositionsQuery = () => {
+  replaceQuery(router, route, {
+    address: walletAddress.value || undefined,
+    pairs: quoteFilter.value,
+    range: rangeFilter.value,
+    sort: sortField.value,
+    dir: sortDirection.value,
+  })
+}
+
 const saveWalletAddress = () => {
-  const address = walletAddress.value
-  if (address && route.query.address !== address) {
-    router.replace({ query: { address } })
-  }
-  localStorage.setItem('positions:walletAddress', address || '')
+  localStorage.setItem('positions:walletAddress', walletAddress.value || '')
+  syncPositionsQuery()
 }
 
 const setSavedWalletAddress = () => {
@@ -822,6 +841,7 @@ const saveSort = () => {
       direction: sortDirection.value,
     }),
   )
+  syncPositionsQuery()
 }
 
 const sort = (field) => {
@@ -833,6 +853,10 @@ const sort = (field) => {
   }
   saveSort()
 }
+
+watch([quoteFilter, rangeFilter], () => {
+  syncPositionsQuery()
+})
 
 const getSortClass = (field) => {
   if (sortField.value !== field) {

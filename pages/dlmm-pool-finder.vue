@@ -141,19 +141,37 @@
 
 <script setup>
 import { fetchPoolsData } from '@/utils/dlmm'
+import { replaceQuery } from '@/utils/query-state'
 
 definePageMeta({
   layout: 'app',
 })
 
+const route = useRoute()
+const router = useRouter()
+
+const ALLOWED_BIN_STEPS = [250, 200, 100, 80, 20]
+const ALLOWED_MARKET_CAPS = [1, 10, 100]
+const ALLOWED_LIQUIDITIES = [10, 100, 500]
+const ALLOWED_AGES = [1, 3, 7]
+
+const pickAllowedNumber = (value, allowed, fallback) => {
+  const parsed = Number(value)
+  return allowed.includes(parsed) ? parsed : fallback
+}
+
 const isLoading = ref(true)
 const displayedPools = ref([])
 let pools = []
 
-const marketCap = ref(10)
-const binStep = ref(100)
-const liquidity = ref(10)
-const age = ref(1)
+const marketCap = ref(
+  pickAllowedNumber(route.query.mcap, ALLOWED_MARKET_CAPS, 10),
+)
+const binStep = ref(pickAllowedNumber(route.query.bin, ALLOWED_BIN_STEPS, 100))
+const liquidity = ref(
+  pickAllowedNumber(route.query.liq, ALLOWED_LIQUIDITIES, 10),
+)
+const age = ref(pickAllowedNumber(route.query.age, ALLOWED_AGES, 1))
 const expandedCharts = ref({})
 const poolsContainerRef = ref(null)
 const chartWidth = ref(800)
@@ -179,7 +197,17 @@ const updateChartWidth = () => {
   })
 }
 
+const syncPoolFinderQuery = () => {
+  replaceQuery(router, route, {
+    bin: binStep.value,
+    mcap: marketCap.value,
+    liq: liquidity.value,
+    age: age.value,
+  })
+}
+
 onMounted(() => {
+  syncPoolFinderQuery()
   loadPoolsData()
   setInterval(loadPoolsData, 1000 * 60 * 5)
   updateChartWidth()
@@ -207,10 +235,10 @@ const resetDisplayedPools = () => {
     .sort((pa, pb) => pb.meteora_feeTvlRatio.h24 - pa.meteora_feeTvlRatio.h24)
 }
 
-watch(binStep, resetDisplayedPools)
-watch(marketCap, resetDisplayedPools)
-watch(liquidity, resetDisplayedPools)
-watch(age, resetDisplayedPools)
+watch([binStep, marketCap, liquidity, age], () => {
+  resetDisplayedPools()
+  syncPoolFinderQuery()
+})
 
 const description = 'Meteora DLMM - Active Pool Finder'
 const title = 'The Wise Trade | Meteora DLMM - Active Pool Finder'

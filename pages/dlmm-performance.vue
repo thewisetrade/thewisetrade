@@ -340,6 +340,7 @@ import {
   getPositionDetails,
   setPositionDetails,
 } from '@/utils/portfolio-history-db'
+import { pickAllowed, replaceQuery } from '@/utils/query-state'
 
 import {
   ArrowTurnRightDownIcon,
@@ -356,6 +357,10 @@ const route = useRoute()
 const router = useRouter()
 
 const ALL_WALLETS = 'All wallets'
+const ALLOWED_QUOTE_TOKENS = ['SOL', 'USDC', 'EURC']
+const ALLOWED_SORT_BY = ['profit', 'date']
+const ALLOWED_SORT_ORDER = ['asc', 'desc']
+const ALLOWED_GROUP_BY = ['position', 'pair']
 
 definePageMeta({
   layout: 'app',
@@ -370,10 +375,14 @@ const loadingWalletTransactions = ref(false)
 const loadingProgress = ref('')
 const loadingDetails = ref({})
 
-const quoteToken = ref('SOL')
-const sortBy = ref('profit')
-const sortOrder = ref('asc')
-const groupBy = ref('pair')
+const quoteToken = ref(
+  pickAllowed(route.query.quote, ALLOWED_QUOTE_TOKENS, 'SOL'),
+)
+const sortBy = ref(pickAllowed(route.query.sort, ALLOWED_SORT_BY, 'profit'))
+const sortOrder = ref(
+  pickAllowed(route.query.dir, ALLOWED_SORT_ORDER, 'asc'),
+)
+const groupBy = ref(pickAllowed(route.query.group, ALLOWED_GROUP_BY, 'pair'))
 
 const rawPositions = shallowRef([])
 const positions = shallowRef([])
@@ -541,6 +550,18 @@ const timePeriodOptions = computed(() => {
   ]
 })
 
+const resolveTimePeriodFromQuery = (periodName) => {
+  if (!periodName) return allTimePeriod
+  const match = timePeriodOptions.value.find(
+    (option) => option.value?.name === periodName,
+  )
+  return match?.value || allTimePeriod
+}
+
+timePeriod.value = resolveTimePeriodFromQuery(
+  route.query.period ? String(route.query.period) : '',
+)
+
 const isDataVisible = computed(() => {
   return walletAddress.value && positions.value.length > 0
 })
@@ -637,6 +658,7 @@ const sharePeriodLabel = computed(() => {
 
 onMounted(() => {
   setSavedWalletAddress()
+  syncPerformanceQuery()
 })
 
 const setSavedWalletAddress = () => {
@@ -670,12 +692,20 @@ const updateWalletAddress = async (address) => {
   await useWallet()
 }
 
+const syncPerformanceQuery = () => {
+  replaceQuery(router, route, {
+    address: walletAddress.value || undefined,
+    quote: quoteToken.value,
+    sort: sortBy.value,
+    dir: sortOrder.value,
+    group: groupBy.value,
+    period: timePeriod.value?.name,
+  })
+}
+
 const saveWalletAddress = () => {
-  const address = walletAddress.value
-  if (address && route.query.address !== address) {
-    router.replace({ query: { address } })
-  }
   localStorage.setItem('walletAddress', walletAddress.value || '')
+  syncPerformanceQuery()
 }
 
 const applyCachedPortfolio = async (requestId) => {
@@ -1113,6 +1143,9 @@ watch(timePeriod, scheduleFilterReload)
 watch(groupBy, scheduleFilterReload)
 watch(sortBy, resetPositions)
 watch(sortOrder, resetPositions)
+watch([quoteToken, sortBy, sortOrder, groupBy, timePeriod], () => {
+  syncPerformanceQuery()
+})
 watch(selectedWallet, (address) => {
   updateWalletAddress(address || '')
 })
