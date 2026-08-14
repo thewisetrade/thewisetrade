@@ -3,7 +3,7 @@
     <img
       class="m-auto max-w-sm"
       src="~/assets/images/illustrations/dlmms-tools.svg"
-    >
+    />
   </div>
 
   <h1>Meteora DLMMs guide Part 2 - Community Tools</h1>
@@ -76,7 +76,7 @@
     <img
       class="illustration"
       src="~/assets/images/articles/dlmms/metlex-pools.png"
-    >
+    />
   </p>
 
   <p>
@@ -89,7 +89,7 @@
     <img
       class="illustration small"
       src="~/assets/images/articles/dlmms/metlex-pools-2.png"
-    >
+    />
   </p>
 
   <h3>Active DLMMs (dlmm 100)</h3>
@@ -105,7 +105,7 @@
     <img
       class="illustration"
       src="~/assets/images/articles/dlmms/metlex-active-dlmm.png"
-    >
+    />
   </p>
 
   <p>
@@ -117,7 +117,7 @@
     <img
       class="illustration small"
       src="~/assets/images/articles/dlmms/metlex-active-dlmm-2.png"
-    >
+    />
   </p>
 
   <h3>Pools info (dex legend)</h3>
@@ -134,7 +134,7 @@
     <img
       class="illustration"
       src="~/assets/images/articles/dlmms/metlex-token-infos.png"
-    >
+    />
   </p>
 
   <p>
@@ -146,7 +146,7 @@
     <img
       class="illustration small"
       src="~/assets/images/articles/dlmms/metlex-token-infos-2.png"
-    >
+    />
   </p>
 
   <h3>Transaction PNL (pnl top)</h3>
@@ -165,7 +165,7 @@
     <img
       class="illustration"
       src="~/assets/images/articles/dlmms/metlex-transaction-hash.png"
-    >
+    />
   </p>
 
   <p>
@@ -186,7 +186,7 @@
     <img
       class="illustration small"
       src="~/assets/images/articles/dlmms/metlex-pnl.png"
-    >
+    />
   </p>
 
   <p>The generated picture will look like this:</p>
@@ -195,7 +195,7 @@
     <img
       class="illustration"
       src="~/assets/images/articles/dlmms/metlex-share.png"
-    >
+    />
   </p>
 
   <h3>Fees count</h3>
@@ -211,7 +211,7 @@
     <img
       class="illustration small"
       src="~/assets/images/articles/dlmms/metlex-fees.png"
-    >
+    />
   </p>
 
   <h3>Conclusion</h3>
@@ -252,7 +252,7 @@
     <img
       class="illustration"
       src="~/assets/images/articles/dlmms/hawksight-new-position.png"
-    >
+    />
   </p>
 
   <p>
@@ -265,7 +265,7 @@
     <img
       class="illustration small"
       src="~/assets/images/articles/dlmms/hawksight-new-position-2.png"
-    >
+    />
   </p>
 
   <p>
@@ -277,7 +277,7 @@
     <img
       class="illustration small"
       src="~/assets/images/articles/dlmms/hawksight-new-position-3.png"
-    >
+    />
   </p>
 
   <p>
@@ -290,7 +290,7 @@
     <img
       class="illustration small"
       src="~/assets/images/articles/dlmms/hawksight-new-position-4.png"
-    >
+    />
   </p>
 
   <p>Once the transaction is confirmed, it will show this popup:</p>
@@ -299,7 +299,7 @@
     <img
       class="illustration small"
       src="~/assets/images/articles/dlmms/hawksight-new-position-5.png"
-    >
+    />
   </p>
 
   <p>
@@ -321,7 +321,7 @@
     <img
       class="illustration small"
       src="~/assets/images/articles/dlmms/hawksight-autocompound.png"
-    >
+    />
   </p>
 
   <p>See there the result of this activity:</p>
@@ -330,7 +330,7 @@
     <img
       class="illustration small"
       src="~/assets/images/articles/dlmms/hawksight-position-activity.png"
-    >
+    />
   </p>
 
   <h3>Take profit / Stop loss</h3>
@@ -346,14 +346,14 @@
     <img
       class="illustration small"
       src="~/assets/images/articles/dlmms/hawksight-take-profit.png"
-    >
+    />
   </p>
 
   <p class="has-text-centered">
     <img
       class="illustration small"
       src="~/assets/images/articles/dlmms/hawksight-take-profit-2.png"
-    >
+    />
   </p>
 
   <p>
@@ -368,7 +368,7 @@
     <img
       class="illustration small"
       src="~/assets/images/articles/dlmms/hawksight-stop-loss.png"
-    >
+    />
   </p>
 
   <p>
@@ -400,7 +400,7 @@
     <img
       class="illustration small"
       src="~/assets/images/articles/dlmms/hawksight-autorebalance.png"
-    >
+    />
   </p>
 
   <h3>Conclusion</h3>
@@ -439,7 +439,7 @@
     <img
       class="illustration"
       src="~/assets/images/articles/dlmms/lp4fun-positions.png"
-    >
+    />
   </p>
 
   <h3>Estimated value</h3>
@@ -463,7 +463,7 @@
     <img
       class="illustration"
       src="~/assets/images/articles/dlmms/lp4fun-estimated-value.png"
-    >
+    />
   </p>
 
   <h3>History breakdown</h3>
@@ -478,7 +478,7 @@
     <img
       class="illustration"
       src="~/assets/images/articles/dlmms/lp4fun-history.png"
-    >
+    />
   </p>
 
   <h3>Conclusion</h3>
@@ -527,7 +527,7 @@
     <img
       class="illustration small"
       src="~/assets/images/articles/dlmms/geeklad-all-time-performance.png"
-    >
+    />
   </p>
 
   <p>
@@ -553,7 +553,7 @@
     <img
       class="illustration small"
       src="~/assets/images/articles/dlmms/geeklad-all-time-performance-2.png"
-    >
+    />
   </p>
 
   <h3>SOL Profit</h3>
@@ -587,7 +587,7 @@
     <img
       class="illustration"
       src="~/assets/images/articles/dlmms/geeklad-sol-profit.png"
-    >
+    />
   </p>
 
   <p>
@@ -600,7 +600,7 @@
     <img
       class="illustration small"
       src="~/assets/images/articles/dlmms/geeklad-position-zoom.png"
-    >
+    />
   </p>
 
   <h3>USDC profit (and other tokens)</h3>
@@ -615,7 +615,7 @@
     <img
       class="illustration"
       src="~/assets/images/articles/dlmms/geeklad-usdc-profit.png"
-    >
+    />
   </p>
 
   <h3>Date filters</h3>
@@ -631,7 +631,7 @@
     <img
       class="illustration"
       src="~/assets/images/articles/dlmms/geeklad-filters.png"
-    >
+    />
   </p>
 
   <h3>Data export</h3>

@@ -104,8 +104,7 @@ const buildSyntheticPrices = (pair) => {
 
     const span = left.hour - right.hour || 1
     const t = Math.min(1, Math.max(0, (left.hour - hourAgo) / span))
-    const logPrice =
-      Math.log(left.price) * (1 - t) + Math.log(right.price) * t
+    const logPrice = Math.log(left.price) * (1 - t) + Math.log(right.price) * t
     prices.push(Math.exp(logPrice))
   }
 

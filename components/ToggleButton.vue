@@ -1,9 +1,5 @@
 <template>
-  <button
-    type="button"
-    class="toggle-btn"
-    :class="{ active: props.active }"
-  >
+  <button type="button" class="toggle-btn" :class="{ active: props.active }">
     {{ props.text }}
   </button>
 </template>

@@ -9,7 +9,7 @@
     </div>
 
     <div class="mb-4">
-      <button class="button" @click="showAddWallet = true; addingWalletErrorMessage = null">
+      <button class="button" @click="openAddWallet">
         Add a wallet to your list
       </button>
     </div>
@@ -85,7 +85,7 @@
         <form @submit.prevent="addWallet">
           <div class="form-group">
             <label>Wallet Name</label>
-            <input v-model="newWallet.name" type="text" >
+            <input v-model="newWallet.name" type="text" />
           </div>
           <div class="form-group">
             <label>Wallet Address</label>
@@ -125,7 +125,7 @@
               type="text"
               placeholder="Enter group name"
               required
-            >
+            />
           </div>
 
           <div class="form-group">
@@ -142,7 +142,7 @@
                     type="checkbox"
                     :value="wallet.id"
                     class="wallet-checkbox"
-                  >
+                  />
                   <div class="wallet-item-info">
                     <div class="wallet-name-small">{{ wallet.name }}</div>
                     <div class="wallet-address-small">
@@ -224,6 +224,13 @@ const filteredWallets = computed(() => {
     (wallet) => wallet.groupTag === selectedGroupFilter.value,
   )
 })
+
+// Two statements, so this stays a named handler: an inline `a = 1; b = 2`
+// handler is reformatted by Prettier into something Vue cannot parse.
+const openAddWallet = () => {
+  showAddWallet.value = true
+  addingWalletErrorMessage.value = null
+}
 
 const formatAddress = (address) => {
   if (!address) return ''

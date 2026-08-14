@@ -4,10 +4,7 @@
     class="dropdown-container relative"
     :class="{ compact: compact }"
   >
-    <span
-      v-if="label"
-      class="option-name"
-    >
+    <span v-if="label" class="option-name">
       {{ label }}
     </span>
     <button
@@ -88,8 +85,7 @@ const update = (value) => {
 
 const isActive = (value) => {
   return (
-    value === model.value ||
-    (value?.name && value.name === model.value?.name)
+    value === model.value || (value?.name && value.name === model.value?.name)
   )
 }
 

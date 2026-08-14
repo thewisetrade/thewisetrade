@@ -269,9 +269,12 @@ export const getChartDexScreenerPairs = async (
 
   if (preferredAddress) {
     try {
-      const preferredPair = await getDexScreenerPairByAddress(preferredAddress, {
-        chainId,
-      })
+      const preferredPair = await getDexScreenerPairByAddress(
+        preferredAddress,
+        {
+          chainId,
+        },
+      )
       if (preferredPair) {
         pairs.push(preferredPair)
       } else {

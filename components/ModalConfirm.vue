@@ -7,7 +7,10 @@
       {{ title }}
     </h1>
     <slot />
-    <button class="mt-1 ml-auto p-2 border cursor-pointer rounded-lg" @click="emit('confirm')">
+    <button
+      class="mt-1 ml-auto p-2 border cursor-pointer rounded-lg"
+      @click="emit('confirm')"
+    >
       Confirm
     </button>
   </VueFinalModal>
@@ -19,12 +22,12 @@ import { VueFinalModal } from 'vue-final-modal'
 defineProps({
   title: {
     type: String,
-    required: true
-  }
+    required: true,
+  },
 })
 
 const emit = defineEmits({
-  confirm: () => true
+  confirm: () => true,
 })
 </script>
 

@@ -37,7 +37,10 @@ export const resolveDomainToAddress = async (domain) => {
   try {
     const cleanDomain = domain.toLowerCase().replace('.sol', '')
     const { pubkey } = await getDomainKey(cleanDomain)
-    const { registry } = await NameRegistryState.retrieve(getConnection(), pubkey)
+    const { registry } = await NameRegistryState.retrieve(
+      getConnection(),
+      pubkey,
+    )
     return registry.owner.toBase58()
   } catch (error) {
     console.error('Error resolving .sol domain:', error)

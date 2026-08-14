@@ -24,7 +24,11 @@
         </div>
 
         <template v-else-if="previewUrl">
-          <img :src="previewUrl" alt="DLMM performance share card" class="preview" >
+          <img
+            :src="previewUrl"
+            alt="DLMM performance share card"
+            class="preview"
+          />
           <div class="modal-actions">
             <button class="action-btn x-btn" type="button" @click="shareOnX">
               Share on X
@@ -113,7 +117,10 @@ onMounted(() => {
 })
 
 const sanitizeFilename = (value) =>
-  value.replace(/[^a-zA-Z0-9._-]+/g, '-').replace(/-+/g, '-').slice(0, 80)
+  value
+    .replace(/[^a-zA-Z0-9._-]+/g, '-')
+    .replace(/-+/g, '-')
+    .slice(0, 80)
 
 const buildCard = async () => {
   generating.value = true
@@ -130,9 +137,7 @@ const buildCard = async () => {
       throw new Error('Chart is not ready yet. Try again in a moment.')
     }
 
-    const {
-      renderPerformanceShareCard,
-    } = await shareCardApi()
+    const { renderPerformanceShareCard } = await shareCardApi()
 
     previewUrl.value = await renderPerformanceShareCard({
       chartImageUrl,
@@ -239,7 +244,9 @@ const copyCard = async () => {
   font-size: 0.8125rem;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s ease, color 0.2s ease;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
 }
 
 .share-btn:hover:not(:disabled) {

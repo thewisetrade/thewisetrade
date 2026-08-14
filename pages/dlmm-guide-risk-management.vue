@@ -3,7 +3,7 @@
     <img
       class="m-auto max-w-sm"
       src="~/assets/images/illustrations/dlmms-risk-management.png"
-    >
+    />
   </div>
 
   <div class="content-container">
@@ -373,7 +373,7 @@
 
     <div class="author-info mt-4">
       <p>
-        Written by Chives <br >
+        Written by Chives <br />
         <em>(Not affiliated with Meteora Team)</em>
       </p>
       <p>

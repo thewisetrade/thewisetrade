@@ -1,48 +1,48 @@
-import type { PublicKey } from '@solana/web3.js';
-import type BN from 'bn.js';
+import type { PublicKey } from '@solana/web3.js'
+import type BN from 'bn.js'
 
 export interface TransactionSignature {
-  signature: string;
-  slot: number;
-  blockTime: number;
-  confirmationStatus: string;
+  signature: string
+  slot: number
+  blockTime: number
+  confirmationStatus: string
 }
 
 export interface ParsedInstruction {
-  programId: PublicKey;
-  parsed?: any;
-  accounts: PublicKey[];
-  data: string;
+  programId: PublicKey
+  parsed?: any
+  accounts: PublicKey[]
+  data: string
 }
 
 export interface TransactionDetails {
-  signature: string;
-  slot: number;
-  blockTime: number;
+  signature: string
+  slot: number
+  blockTime: number
   transaction: {
     message: {
-      instructions: ParsedInstruction[];
-      accountKeys: PublicKey[];
-    };
-  };
+      instructions: ParsedInstruction[]
+      accountKeys: PublicKey[]
+    }
+  }
   meta: {
-    err: any;
-    fee: number;
-    preBalances: number[];
-    postBalances: number[];
-    logMessages: string[];
-  };
+    err: any
+    fee: number
+    preBalances: number[]
+    postBalances: number[]
+    logMessages: string[]
+  }
 }
 
 export interface PositionOpenEvent {
-  signature: string;
-  blockTime: number;
-  positionPubkey: PublicKey;
-  lbPair: PublicKey;
-  owner: PublicKey;
-  binIds: number[];
+  signature: string
+  blockTime: number
+  positionPubkey: PublicKey
+  lbPair: PublicKey
+  owner: PublicKey
+  binIds: number[]
   amounts: {
-    tokenX: BN;
-    tokenY: BN;
-  };
+    tokenX: BN
+    tokenY: BN
+  }
 }

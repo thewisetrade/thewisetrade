@@ -16,7 +16,7 @@
         Progress
       </button>
     </div>
-    <div class="flex-1"/>
+    <div class="flex-1" />
     <div v-if="props.sortBy === 'date'" class="toolbar-group">
       <button
         class="mode"
@@ -323,7 +323,8 @@ const chartData = computed(() => ({
         tokens: item.tokens,
       })),
       borderColor: CHART_POSITIVE_BORDER,
-      borderWidth: chartType.value === 'progress' && progressContext.value ? 1 : 0,
+      borderWidth:
+        chartType.value === 'progress' && progressContext.value ? 1 : 0,
       fill: true,
       pointRadius: 0,
       hoverBackgroundColor: (context) => {
@@ -515,7 +516,9 @@ defineExpose({
   border: none;
   border-radius: 6px;
   background: transparent;
-  transition: color 0.15s ease, background 0.15s ease;
+  transition:
+    color 0.15s ease,
+    background 0.15s ease;
 }
 
 .mode:hover {

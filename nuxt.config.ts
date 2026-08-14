@@ -76,8 +76,7 @@ export default defineNuxtConfig({
         '/api/gecko': {
           target: 'https://api.geckoterminal.com',
           changeOrigin: true,
-          rewrite: (p: string) =>
-            p.replace(/^\/api\/gecko/, '/api/v2'),
+          rewrite: (p: string) => p.replace(/^\/api\/gecko/, '/api/v2'),
         },
       },
     },

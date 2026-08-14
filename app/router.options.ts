@@ -19,5 +19,5 @@ export default {
     }
 
     return { top: 0, behavior: 'smooth' }
-  }
+  },
 } satisfies RouterConfig

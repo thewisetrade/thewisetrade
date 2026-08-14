@@ -1,15 +1,13 @@
 <template>
   <div>
-    <div
-      class="flex wallet-address-container gap-2"
-    >
+    <div class="flex wallet-address-container gap-2">
       <div class="flex flex-row gap-2">
         <input
           ref="walletAddressInput"
           v-model="walletAddress"
           class="input w-full max-w-md border-2 border-gray-300 rounded-md p-2"
           type="text"
-        >
+        />
       </div>
 
       <div v-if="errors.invalidAddress" class="error-message text-red-500 pl-2">
@@ -31,8 +29,7 @@
 import { useTemplateRef } from 'vue'
 
 const props = defineProps({
-  currentWalletAddress: {
-  },
+  currentWalletAddress: {},
   loading: {
     type: Boolean,
     default: false,
@@ -130,7 +127,7 @@ watch(
     text-align: left;
 
     &:focus {
-      border: 2px solid #607CF6;
+      border: 2px solid #607cf6;
       outline: none;
       transition: all 0.5s ease;
     }

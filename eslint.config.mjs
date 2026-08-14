@@ -30,6 +30,10 @@ export default withNuxt(
       // it, and the single-root requirement would only matter if page
       // transitions were enabled, which they are not.
       'vue/no-multiple-template-root': 'off',
+
+      // Prettier owns how void elements are written and closes them as `<input />`,
+      // which is exactly what this rule objects to. Leave it to Prettier.
+      'vue/html-self-closing': 'off',
     },
   },
   {

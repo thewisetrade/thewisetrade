@@ -48,21 +48,21 @@
           @click="sort('pair')"
         >
           <span>Position</span>
-          <div class="sort-icon" :class="getSortClass('pair')"/>
+          <div class="sort-icon" :class="getSortClass('pair')" />
         </div>
         <div
           class="header-cell value-cell-header sortable"
           @click="sort('value')"
         >
           <span>Value</span>
-          <div class="sort-icon" :class="getSortClass('value')"/>
+          <div class="sort-icon" :class="getSortClass('value')" />
         </div>
         <div
           class="header-cell fee-cell-header sortable"
           @click="sort('uncolFee')"
         >
           <span>Uncol. Fee</span>
-          <div class="sort-icon" :class="getSortClass('uncolFee')"/>
+          <div class="sort-icon" :class="getSortClass('uncolFee')" />
         </div>
         <!--div
           class="header-cell fee-cell-header sortable"
@@ -75,22 +75,28 @@
           <span>Age</span>
           <div class="sort-icon" :class="getSortClass('age')"></div>
         </div-->
-        <div class="header-cell upnl-cell-header sortable" @click="sort('upnl')">
+        <div
+          class="header-cell upnl-cell-header sortable"
+          @click="sort('upnl')"
+        >
           <span>uPnL</span>
-          <div class="sort-icon" :class="getSortClass('upnl')"/>
+          <div class="sort-icon" :class="getSortClass('upnl')" />
         </div>
         <div
           class="header-cell range-cell-header sortable flex items-center"
           @click="sort('range')"
         >
           <span>Bins</span>
-          <div class="sort-icon" :class="getSortClass('range')"/>
-          <div class="flex-1"/>
+          <div class="sort-icon" :class="getSortClass('range')" />
+          <div class="flex-1" />
         </div>
       </div>
 
       <div class="table-content">
-        <div v-if="loading && sortedPositions.length === 0" class="loading-state">
+        <div
+          v-if="loading && sortedPositions.length === 0"
+          class="loading-state"
+        >
           <div class="flex flex-column items-center gap-2">
             <Loader class="loading" />
             <span>{{ loadingLabel }}</span>
@@ -111,10 +117,7 @@
         </div>
 
         <div v-else class="table-rows">
-          <template
-            v-for="group in displayedPositionSections"
-            :key="group.id"
-          >
+          <template v-for="group in displayedPositionSections" :key="group.id">
             <div class="quote-group-summary">
               <div class="cell position-cell">
                 <img
@@ -122,7 +125,7 @@
                   :src="group.icon"
                   :alt="group.label"
                   class="quote-group-icon"
-                >
+                />
                 <span class="quote-group-label">{{ group.label }}</span>
                 <span class="quote-group-count">{{ group.totals.count }}</span>
               </div>
@@ -132,7 +135,7 @@
                   :src="group.icon"
                   :alt="group.label"
                   class="value-icon mr-2"
-                >
+                />
                 <span class="group-total-value">{{ group.totals.value }}</span>
               </div>
               <div class="cell fee-cell">
@@ -143,66 +146,68 @@
                   {{ group.totals.upnl }}
                 </span>
               </div>
-              <div class="cell range-cell"/>
+              <div class="cell range-cell" />
             </div>
             <template v-for="position in group.positions" :key="position.id">
               <div v-if="walletAddress === 'All wallets'" class="wallet-name">
                 {{ position.walletName }}
               </div>
               <div class="table-row">
-              <div class="cell position-cell">
-                <a
-                  class="flex flex-row bin-container"
-                  :href="`https://edge.meteora.ag/dlmm/${position.positionKey}`"
-                  target="_blank"
-                >
-                  <div class="token-pair">
-                    <div class="token-icons">
-                      <img
-                        :src="position.token1?.icon"
-                        :alt="position.token1?.symbol"
-                        class="token-icon"
-                      >
-                      <img
-                        :src="position.token2?.icon"
-                        :alt="position.token2?.symbol"
-                        class="token-icon token-icon-overlap"
+                <div class="cell position-cell">
+                  <a
+                    class="flex flex-row bin-container"
+                    :href="`https://edge.meteora.ag/dlmm/${position.positionKey}`"
+                    target="_blank"
+                  >
+                    <div class="token-pair">
+                      <div class="token-icons">
+                        <img
+                          :src="position.token1?.icon"
+                          :alt="position.token1?.symbol"
+                          class="token-icon"
+                        />
+                        <img
+                          :src="position.token2?.icon"
+                          :alt="position.token2?.symbol"
+                          class="token-icon token-icon-overlap"
+                        />
+                      </div>
+                      <span
+                        class="pair-name"
+                        :class="{
+                          'out-of-range-lower':
+                            position.isOutOfRange === 'lower',
+                          'out-of-range-upper':
+                            position.isOutOfRange === 'upper',
+                        }"
+                        >{{ position.token1?.symbol }} /
+                        {{ position.token2?.symbol }}</span
                       >
                     </div>
-                    <span
-                      class="pair-name"
-                      :class="{
-                        'out-of-range-lower': position.isOutOfRange === 'lower',
-                        'out-of-range-upper': position.isOutOfRange === 'upper',
-                      }"
-                      >{{ position.token1?.symbol }} /
-                      {{ position.token2?.symbol }}</span
-                    >
-                  </div>
-                </a>
-              </div>
+                  </a>
+                </div>
 
-              <div class="cell value-cell">
-                <img
-                  :src="position.token2?.icon"
-                  :alt="position.token2?.symbol"
-                  class="value-icon mr-2"
-                >
-                <span class="value-amount">{{ position.value }}</span>
-              </div>
-
-              <div class="cell fee-cell">
-                <div class="fee-amount flex items-center">
+                <div class="cell value-cell">
                   <img
                     :src="position.token2?.icon"
                     :alt="position.token2?.symbol"
                     class="value-icon mr-2"
-                  >
-                  {{ position.uncolFee.amount }}
+                  />
+                  <span class="value-amount">{{ position.value }}</span>
                 </div>
-              </div>
 
-              <!--div class="cell fee-cell">
+                <div class="cell fee-cell">
+                  <div class="fee-amount flex items-center">
+                    <img
+                      :src="position.token2?.icon"
+                      :alt="position.token2?.symbol"
+                      class="value-icon mr-2"
+                    />
+                    {{ position.uncolFee.amount }}
+                  </div>
+                </div>
+
+                <!--div class="cell fee-cell">
                 <div class="fee-amount flex items-center">
                   <img
                     :src="position.token2?.icon"
@@ -213,37 +218,37 @@
                 </div>
               </div-->
 
-              <!--div class="cell age-cell">
+                <!--div class="cell age-cell">
                 {{ position.age }}
               </div-->
-              <div class="cell upnl-cell">
-                <div class="fee-amount" :class="position.upnl.color">
-                  {{ position.upnl.amount }}
+                <div class="cell upnl-cell">
+                  <div class="fee-amount" :class="position.upnl.color">
+                    {{ position.upnl.amount }}
+                  </div>
+                  <div class="fee-percentage" :class="position.upnl.color">
+                    {{ position.upnl.percentage }}
+                  </div>
                 </div>
-                <div class="fee-percentage" :class="position.upnl.color">
-                  {{ position.upnl.percentage }}
-                </div>
-              </div>
 
-              <div class="cell range-cell">
-                <BinRepresentation
-                  v-if="position.binData?.length"
-                  :bin-data="position.binData"
-                  :position-key="position.positionKey"
-                  :position-token1="position.token1"
-                  :position-token2="position.token2"
-                  :active-price="position.poolActivePrice"
-                />
-                <PositionRangeBar
-                  v-else
-                  :position-key="position.positionKey"
-                  :min-price="position.minPrice"
-                  :max-price="position.maxPrice"
-                  :active-price="position.poolActivePrice"
-                  :is-out-of-range="!!position.isOutOfRange"
-                />
+                <div class="cell range-cell">
+                  <BinRepresentation
+                    v-if="position.binData?.length"
+                    :bin-data="position.binData"
+                    :position-key="position.positionKey"
+                    :position-token1="position.token1"
+                    :position-token2="position.token2"
+                    :active-price="position.poolActivePrice"
+                  />
+                  <PositionRangeBar
+                    v-else
+                    :position-key="position.positionKey"
+                    :min-price="position.minPrice"
+                    :max-price="position.maxPrice"
+                    :active-price="position.poolActivePrice"
+                    :is-out-of-range="!!position.isOutOfRange"
+                  />
+                </div>
               </div>
-            </div>
             </template>
           </template>
         </div>
@@ -427,7 +432,10 @@ const sortedPositions = computed(() => {
   })
 })
 
-const normalizeSymbol = (symbol) => String(symbol || '').trim().toUpperCase()
+const normalizeSymbol = (symbol) =>
+  String(symbol || '')
+    .trim()
+    .toUpperCase()
 
 const getQuoteGroupId = (position) => {
   const candidates = [
@@ -456,7 +464,9 @@ const groupedPositionSections = computed(() => {
     { id: 'EURC', label: 'EURC pairs', icon: null, positions: [] },
     { id: 'OTHER', label: 'Other pairs', icon: null, positions: [] },
   ]
-  const byId = Object.fromEntries(sections.map((section) => [section.id, section]))
+  const byId = Object.fromEntries(
+    sections.map((section) => [section.id, section]),
+  )
 
   sortedPositions.value.forEach((position) => {
     const groupId = getQuoteGroupId(position)
@@ -522,10 +532,14 @@ const formatPercentage = (fee, total) => {
 
 const isSolQuotePosition = (position) =>
   position.tokenYMint === SOL_MINT ||
-  String(position.tokenY || '').trim().toUpperCase() === 'SOL'
+  String(position.tokenY || '')
+    .trim()
+    .toUpperCase() === 'SOL'
 
 const isStableQuotePosition = (position) => {
-  const symbol = String(position.tokenY || '').trim().toUpperCase()
+  const symbol = String(position.tokenY || '')
+    .trim()
+    .toUpperCase()
   return (
     position.tokenYMint === USDC_MINT ||
     position.tokenYMint === EURC_MINT ||
@@ -561,7 +575,10 @@ const formatGroupAmount = (amount, groupId) => {
 }
 
 const computeSectionTotals = (positions, groupId) => {
-  const value = positions.reduce((sum, position) => sum + (position.valueNum || 0), 0)
+  const value = positions.reduce(
+    (sum, position) => sum + (position.valueNum || 0),
+    0,
+  )
   const fee = positions.reduce(
     (sum, position) => sum + (position.uncolFee?.sortValue || 0),
     0,
@@ -604,8 +621,11 @@ const getQuoteDisplayAmounts = (position) => {
 const formattedPositions = computed(() => {
   return positionsData.value
     .map((position) => {
-      const { value: valueNum, fee: uncolFeeAmount, pnl: upnlAmount } =
-        getQuoteDisplayAmounts(position)
+      const {
+        value: valueNum,
+        fee: uncolFeeAmount,
+        pnl: upnlAmount,
+      } = getQuoteDisplayAmounts(position)
       const upnlPct = Number(position.pnlPctChange)
 
       return {
@@ -639,7 +659,8 @@ const formattedPositions = computed(() => {
           color: getUpnlColor(upnlAmount),
           sortValue: upnlAmount,
         },
-        isOutOfRange: position.outOfRangeSide || (position.isOutOfRange ? 'upper' : null),
+        isOutOfRange:
+          position.outOfRangeSide || (position.isOutOfRange ? 'upper' : null),
         binData: position.binData || null,
         minPrice: position.minPrice,
         maxPrice: position.maxPrice,
@@ -651,8 +672,7 @@ const formattedPositions = computed(() => {
     })
     .filter(
       (position) =>
-        position.valueNum > 0 ||
-        Number(position.uncolFee.sortValue) > 0,
+        position.valueNum > 0 || Number(position.uncolFee.sortValue) > 0,
     )
 })
 
@@ -733,7 +753,9 @@ const fetchPositionsFromApi = async (onLabel, onPartial) => {
             `${label}: positions ${progress.loaded}/${progress.totalCount}`,
           )
         } else {
-          onLabel(`${label}: pools ${progress.loaded}/${progress.totalCount || '?'}`)
+          onLabel(
+            `${label}: pools ${progress.loaded}/${progress.totalCount || '?'}`,
+          )
         }
       })
       result.positions.forEach((position) => {
@@ -753,7 +775,9 @@ const fetchPositionsFromApi = async (onLabel, onPartial) => {
       if (progress.stage === 'positions') {
         onLabel(`Loading positions ${progress.loaded}/${progress.totalCount}`)
       } else {
-        onLabel(`Loading pools ${progress.loaded}/${progress.totalCount || '?'}`)
+        onLabel(
+          `Loading pools ${progress.loaded}/${progress.totalCount || '?'}`,
+        )
       }
     })
     result.positions.forEach((position) => {
@@ -1190,11 +1214,11 @@ watch(selectedWallet, (address) => {
 }
 
 .positive {
-  color: #3DDC84 !important;
+  color: #3ddc84 !important;
 }
 
 .negative {
-  color: #FF4757 !important;
+  color: #ff4757 !important;
 }
 
 .neutral {

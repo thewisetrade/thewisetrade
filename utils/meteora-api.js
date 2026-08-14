@@ -146,7 +146,8 @@ const quoteSymbolFromMint = (mint, fallbackSymbol) => {
   if (isSolMint(mint)) return 'SOL'
   if (isUsdcMint(mint)) return 'USDC'
   if (isEurcMint(mint)) return 'EURC'
-  if (fallbackSymbol === 'USDC' || fallbackSymbol === 'EURC') return fallbackSymbol
+  if (fallbackSymbol === 'USDC' || fallbackSymbol === 'EURC')
+    return fallbackSymbol
   return fallbackSymbol || 'UNKNOWN'
 }
 
@@ -165,7 +166,11 @@ const mapPoolToPosition = (pool, quoteToken) => {
     token_y_mint: pool.tokenYMint,
     token_x_icon: pool.tokenXIcon,
     token_y_icon: pool.tokenYIcon,
-    deposit: pickQuoteAmount(pool.totalDeposit, pool.totalDepositSol, quoteToken),
+    deposit: pickQuoteAmount(
+      pool.totalDeposit,
+      pool.totalDepositSol,
+      quoteToken,
+    ),
     withdrawal: pickQuoteAmount(
       pool.totalWithdrawal,
       pool.totalWithdrawalSol,
@@ -198,7 +203,11 @@ const mapPnlPosition = (position, pool, quoteToken) => {
     quote_symbol: quoteSymbol,
     token_x_mint: pool?.tokenXMint || position.tokenX,
     token_y_mint: pool?.tokenYMint || position.tokenY,
-    deposit: pickQuoteAmount(deposits.total?.usd, deposits.total?.sol, quoteToken),
+    deposit: pickQuoteAmount(
+      deposits.total?.usd,
+      deposits.total?.sol,
+      quoteToken,
+    ),
     withdrawal: pickQuoteAmount(
       withdrawals.total?.usd,
       withdrawals.total?.sol,
@@ -206,7 +215,9 @@ const mapPnlPosition = (position, pool, quoteToken) => {
     ),
     fee_amount: pickQuoteAmount(fees.total?.usd, fees.total?.sol, quoteToken),
     profit: pickQuoteAmount(position.pnlUsd, position.pnlSol, quoteToken),
-    block_time: toBlockTimeSeconds(position.closedAt || position.updatedAt || position.createdAt),
+    block_time: toBlockTimeSeconds(
+      position.closedAt || position.updatedAt || position.createdAt,
+    ),
     position_is_open: !position.isClosed,
     transactions: [],
     events_loaded: false,
@@ -235,17 +246,22 @@ const mapHistoricalEvent = (event, quoteToken) => {
 
   if (event.eventType === 'add') row.deposit = amount
   else if (event.eventType === 'remove') row.withdrawal = amount
-  else if (event.eventType === 'claim_fee' || event.eventType === 'claim_reward') {
+  else if (
+    event.eventType === 'claim_fee' ||
+    event.eventType === 'claim_reward'
+  ) {
     row.fee_amount = amount
   }
 
   return row
 }
 
-const fetchPortfolioTotal = (user) =>
-  meteoraFetch('/portfolio/total', { user })
+const fetchPortfolioTotal = (user) => meteoraFetch('/portfolio/total', { user })
 
-const fetchPortfolioPage = (user, { page = 1, pageSize = PAGE_SIZE, daysBack = MAX_DAYS_BACK } = {}) =>
+const fetchPortfolioPage = (
+  user,
+  { page = 1, pageSize = PAGE_SIZE, daysBack = MAX_DAYS_BACK } = {},
+) =>
   meteoraFetch('/portfolio', {
     user,
     page,
@@ -253,7 +269,10 @@ const fetchPortfolioPage = (user, { page = 1, pageSize = PAGE_SIZE, daysBack = M
     days_back: daysBack,
   })
 
-const fetchAllPortfolioPools = async (user, { daysBack = MAX_DAYS_BACK, onProgress } = {}) => {
+const fetchAllPortfolioPools = async (
+  user,
+  { daysBack = MAX_DAYS_BACK, onProgress } = {},
+) => {
   const pools = []
   let page = 1
   let hasNext = true
@@ -358,7 +377,10 @@ const fetchAllPoolPositions = async (
   }
 }
 
-const fetchPositionHistorical = (positionAddress, { orderDirection = 'asc' } = {}) =>
+const fetchPositionHistorical = (
+  positionAddress,
+  { orderDirection = 'asc' } = {},
+) =>
   meteoraFetch(`/positions/${positionAddress}/historical`, {
     order_direction: orderDirection,
   })
@@ -467,7 +489,10 @@ const loadCachedClosedPortfolio = async (
   }
 }
 
-const syncPortfolioPools = async (user, { daysBack = MAX_DAYS_BACK, onProgress, storedPools = null } = {}) => {
+const syncPortfolioPools = async (
+  user,
+  { daysBack = MAX_DAYS_BACK, onProgress, storedPools = null } = {},
+) => {
   let stored = storedPools
   if (!stored) {
     try {
@@ -490,7 +515,9 @@ const syncPortfolioPools = async (user, { daysBack = MAX_DAYS_BACK, onProgress, 
     localCount = Math.max(await countStoredPools(user), merged.length)
   } catch (error) {
     console.warn('Local portfolio history unavailable, using API only:', error)
-    merged = stored.length ? mergePoolsByAddress(apiResult.pools, stored) : apiResult.pools
+    merged = stored.length
+      ? mergePoolsByAddress(apiResult.pools, stored)
+      : apiResult.pools
     localCount = merged.length
   }
 
@@ -509,7 +536,12 @@ const syncPortfolioPools = async (user, { daysBack = MAX_DAYS_BACK, onProgress, 
   }
 }
 
-const loadPortfolioAsPairs = async (user, quoteToken, timePeriod, onProgress) => {
+const loadPortfolioAsPairs = async (
+  user,
+  quoteToken,
+  timePeriod,
+  onProgress,
+) => {
   const daysBack = daysBackFromPeriod(timePeriod)
   const result = await syncPortfolioPools(user, { daysBack, onProgress })
   const allMapped = (result.pools || [])
@@ -530,7 +562,12 @@ const loadPortfolioAsPairs = async (user, quoteToken, timePeriod, onProgress) =>
   }
 }
 
-const loadPortfolioAsPositions = async (user, quoteToken, timePeriod, onProgress) => {
+const loadPortfolioAsPositions = async (
+  user,
+  quoteToken,
+  timePeriod,
+  onProgress,
+) => {
   const daysBack = daysBackFromPeriod(timePeriod)
 
   let storedPools = []
@@ -563,9 +600,13 @@ const loadPortfolioAsPositions = async (user, quoteToken, timePeriod, onProgress
     }
 
     if (!Array.isArray(mapped)) {
-      const { positions } = await fetchAllPoolPositions(pool.poolAddress, user, {
-        status: 'closed',
-      })
+      const { positions } = await fetchAllPoolPositions(
+        pool.poolAddress,
+        user,
+        {
+          status: 'closed',
+        },
+      )
       mapped = positions.map((position) =>
         mapPnlPosition(position, pool, quoteToken),
       )
@@ -617,7 +658,12 @@ const loadPortfolioAsPositions = async (user, quoteToken, timePeriod, onProgress
 
 const fetchOpenPortfolioPage = (
   user,
-  { page = 1, pageSize = 50, sortBy = 'current_balances', sortDirection = 'desc' } = {},
+  {
+    page = 1,
+    pageSize = 50,
+    sortBy = 'current_balances',
+    sortDirection = 'desc',
+  } = {},
 ) =>
   meteoraFetch('/portfolio/open', {
     user,
@@ -766,9 +812,13 @@ const loadOpenPositions = async (user, onProgress) => {
   const nested = await mapWithConcurrency(pools, 4, async (pool) => {
     let mapped = []
     try {
-      const { positions } = await fetchAllPoolPositions(pool.poolAddress, user, {
-        status: 'open',
-      })
+      const { positions } = await fetchAllPoolPositions(
+        pool.poolAddress,
+        user,
+        {
+          status: 'open',
+        },
+      )
       mapped = positions
         .filter((position) => !position.isClosed)
         .map((position) => mapOpenPnlToUi(position, pool))
@@ -802,7 +852,9 @@ const loadOpenPositions = async (user, onProgress) => {
 
 const loadPositionEvents = async (positionAddress, quoteToken) => {
   const data = await fetchPositionHistorical(positionAddress)
-  return (data.events || []).map((event) => mapHistoricalEvent(event, quoteToken))
+  return (data.events || []).map((event) =>
+    mapHistoricalEvent(event, quoteToken),
+  )
 }
 
 const applySortBy = (sortBy, positions) =>
@@ -814,7 +866,11 @@ const applySortOrder = (sortOrder, positions) =>
   sortOrder === 'desc' ? [...positions].reverse() : positions
 
 const applyTimePeriod = (timePeriod, positions) => {
-  if (!timePeriod?.start || !timePeriod?.end || typeof timePeriod.start.toJSDate !== 'function') {
+  if (
+    !timePeriod?.start ||
+    !timePeriod?.end ||
+    typeof timePeriod.start.toJSDate !== 'function'
+  ) {
     return positions
   }
   if (timePeriod.name === 'All') return positions

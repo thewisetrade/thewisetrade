@@ -3,7 +3,7 @@
     <img
       class="m-auto max-w-sm"
       src="~/assets/images/illustrations/dlmms-guide.png"
-    >
+    />
   </div>
 
   <h1>Meteora DLMMs guide</h1>
@@ -86,7 +86,7 @@
     <img
       class="illustration"
       src="~/assets/images/articles/dlmms/liquidity-pool.png"
-    >
+    />
   </p>
 
   <h2>2. Liquidity Pairs Farming (LPs)</h2>
@@ -149,7 +149,7 @@
   <img
     class="illustration"
     src="~/assets/images/articles/dlmms/liquidity-pool-il.png"
-  >
+  />
 
   <h2>4. Slippage</h2>
 
@@ -182,7 +182,7 @@
   <img
     class="illustration"
     src="~/assets/images/articles/dlmms/dlmm-guide-01.png"
-  >
+  />
 
   <p>
     To help with this problem, DEX proposed concentrated LPs, where the fees are
@@ -280,7 +280,7 @@
     <img
       class="illustration"
       src="~/assets/images/articles/dlmms/default-strategies.png"
-    >
+    />
   </p>
 
   <p>
@@ -309,7 +309,7 @@
   <img
     class="illustration"
     src="~/assets/images/articles/dlmms/pool-working.gif"
-  >
+  />
 
   <h2>8. How to choose the right pool?</h2>
 
@@ -321,7 +321,7 @@
   <img
     class="illustration"
     src="~/assets/images/articles/dlmms/pool-settings.png"
-  >
+  />
 
   <p>
     So, the first thing to check about a pool is the fees collected daily. Once
@@ -376,18 +376,18 @@
     To select the fees amount per bin, you have to consider how wide will the
     movements be. The positions with a high percentage won't catch many
     transactions, but if the price movements are big they will be fully used and
-    that way gives you a lot of fees and cover you impermanent loss faster.
-    But if the range tends to move slowly, it's the opposite. With high fees,
-  you will catch very few transactions and potentially miss many opportunities.
-    In that case, bin with smaller fees will perform better.
+    that way gives you a lot of fees and cover you impermanent loss faster. But
+    if the range tends to move slowly, it's the opposite. With high fees, you
+    will catch very few transactions and potentially miss many opportunities. In
+    that case, bin with smaller fees will perform better.
   </p>
 
   <h3>Covered Range</h3>
 
   <p>
-  All pools can cover any range involving at most 1400 bins. But sometimes,
-  it's simpler to stick with the default range. The following table resume the
-  range covered by default positions proposed by Meteora:
+    All pools can cover any range involving at most 1400 bins. But sometimes,
+    it's simpler to stick with the default range. The following table resume the
+    range covered by default positions proposed by Meteora:
   </p>
 
   <table class="w-full my-4">
@@ -439,7 +439,7 @@
       <tr>
         <td>200</td>
         <td>-74.50% - 0</td>
-        <td>-49%  - +96.07%</td>
+        <td>-49% - +96.07%</td>
         <td>0 - +292.11%</td>
       </tr>
       <tr>
@@ -480,7 +480,7 @@
   <img
     class="illustration mb-5"
     src="~/assets/images/articles/dlmms/stable-volume.png"
-  >
+  />
 
   <p>
     The goal here is to set the pair bins that the pool will use to swap tokens.
@@ -505,7 +505,7 @@
   <img
     class="illustration mb-5"
     src="~/assets/images/articles/dlmms/stable-bins.png"
-  >
+  />
 
   <h3>B. Similar tokens</h3>
 
@@ -528,12 +528,12 @@
   <img
     class="illustration mb-5"
     src="~/assets/images/articles/dlmms/similar-pair.png"
-  >
+  />
 
   <img
     class="illustration mb-5"
     src="~/assets/images/articles/dlmms/similar-pair-curve.png"
-  >
+  />
 
   <h3>C. Selling Limit</h3>
 
@@ -562,7 +562,7 @@
   <img
     class="illustration"
     src="~/assets/images/articles/dlmms/selling-limit.png"
-  >
+  />
 
   <h3>D. Swinging pairs</h3>
 
@@ -576,7 +576,7 @@
   <img
     class="illustration"
     src="~/assets/images/articles/dlmms/swinging-pair.png"
-  >
+  />
 
   <p>
     To deal with it, you can simply use the ask/bid option proposed by Meteora.
@@ -586,7 +586,7 @@
     with a different strategy).
   </p>
 
-  <img class="illustration" src="~/assets/images/articles/dlmms/ask-bid.png" >
+  <img class="illustration" src="~/assets/images/articles/dlmms/ask-bid.png" />
 
   <h3>E. Acquiring a new token: one-sided pool</h3>
 
@@ -613,7 +613,7 @@
   <img
     class="illustration mb-5"
     src="~/assets/images/articles/dlmms/single-sided.png"
-  >
+  />
 
   <h2>Conclusion</h2>
 
@@ -654,10 +654,9 @@
       </a>
     </li>
     <li>
-      <a
-        target="_blank"
-        href="https://tokleo.com"
-        >Highly active pairs finder</a>
+      <a target="_blank" href="https://tokleo.com"
+        >Highly active pairs finder</a
+      >
     </li>
     <li>
       <a
@@ -667,36 +666,32 @@
       >
     </li>
     <li>
-      <a target="_blank" href="https://app.lpagent.io/">Positions
-      performance</a>
+      <a target="_blank" href="https://app.lpagent.io/"
+        >Positions performance</a
+      >
     </li>
     <li>
       <a target="_blank" href="https://www.hawkfi.ag/">Automations</a>
     </li>
- </ul>
+  </ul>
 
   <h3>Resources</h3>
 
   <ul>
     <li>
-      <a
-        target="_blank"
-        href="https://www.youtube.com/@meteora-ag"
+      <a target="_blank" href="https://www.youtube.com/@meteora-ag"
         >Meteora Youtube Playlist: Bootcamps and JAM sessions</a
       >
     </li>
     <li>
-      <a
-        target="_blank"
-        href="https://www.lparmy.com/strategies"
-      >
+      <a target="_blank" href="https://www.lparmy.com/strategies">
         Advanced strategies
       </a>
     </li>
   </ul>
   <p>&nbsp;</p>
 
-  <hr >
+  <hr />
 
   <h1>Additional Tips</h1>
 
@@ -814,9 +809,7 @@
     </li>
     <li>Use only small capital amount.</li>
     <li>Stay in front of your computer during the process.</li>
-    <li>
-      Join a DLMM community like the LP Army and trade with them.
-    </li>
+    <li>Join a DLMM community like the LP Army and trade with them.</li>
     <li>
       These tokens can rug at any time, in that case, your funds are lost. This
       is why the risk is very high.
@@ -847,7 +840,7 @@
     <li>Duration: 10 minutes to a few hours.</li>
   </ul>
 
-  <hr >
+  <hr />
 
   <h2>Communities</h2>
 
@@ -861,7 +854,9 @@
       <a href="https://discord.com/invite/meteora">The Meteora Community</a>
     </li>
     <li>
-      <a href="https://www.lparmy.com/">LP Army (Community for advanced users)</a>
+      <a href="https://www.lparmy.com/"
+        >LP Army (Community for advanced users)</a
+      >
     </li>
   </ul>
 </template>

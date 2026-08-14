@@ -6,7 +6,7 @@
     :title="title"
   >
     <div class="track">
-      <div class="track-fill" :style="trackStyle"/>
+      <div class="track-fill" :style="trackStyle" />
       <div
         class="active-marker"
         :class="{ 'out-of-range': isOutOfRange }"

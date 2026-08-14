@@ -60,7 +60,7 @@
       <span class="gen-fees">24h fees</span>
       <span class="two-fees">2h fees</span>
       <span class="chart-col">72h Chart</span>
-      <span class="flex-1"/>
+      <span class="flex-1" />
       <span class="liq">Liquidity</span>
       <span class="mc">MC</span>
     </div>
@@ -107,11 +107,13 @@
               <button
                 class="chart-toggle-button"
                 :class="{ active: expandedCharts[pool.meteora_address] }"
-                @click.stop="$event => toggleChart(pool.meteora_address, $event)"
+                @click.stop="
+                  ($event) => toggleChart(pool.meteora_address, $event)
+                "
               >
                 {{ expandedCharts[pool.meteora_address] ? '−' : '+' }}
               </button>
-              <span class="flex-1"/>
+              <span class="flex-1" />
               <span class="data"
                 >{{ Math.round(pool.meteora_liquidity / 1000) }}K</span
               >

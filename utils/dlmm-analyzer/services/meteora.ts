@@ -183,8 +183,8 @@ export class MeteoraService {
     const connection = await this.quickNodeService.getConnection()
     const userPositions = await DLMM.getAllLbPairPositionsByUser(
       connection,
-      walletAddress
-    );
+      walletAddress,
+    )
     return Array.from(userPositions.values())
   }
 }

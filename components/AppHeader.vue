@@ -1,12 +1,7 @@
 <template>
   <div class="app-header flex flex-row items-center mb-8 w-100">
     <h1 v-if="title" class="app-title">{{ title }}</h1>
-    <a
-      v-if="author"
-      class="credit"
-      :href="link"
-      target="_blank"
-    >
+    <a v-if="author" class="credit" :href="link" target="_blank">
       Powered by {{ author }}
     </a>
   </div>
@@ -15,14 +10,14 @@
 <script setup>
 defineProps({
   link: {
-    type: String
+    type: String,
   },
   author: {
-    type: String
+    type: String,
   },
   title: {
-    type: String
-  }
+    type: String,
+  },
 })
 </script>
 
@@ -40,7 +35,7 @@ defineProps({
 }
 
 .credit {
-  color: #CCE;
+  color: #cce;
   font-size: 0.8em;
 }
 </style>

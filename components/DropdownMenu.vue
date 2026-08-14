@@ -3,7 +3,9 @@
     <span class="cursor-pointer title text-purple font-bold text-darkblue">
       {{ title }}
     </span>
-    <div class="submenu absolute mt-2 w-64 bg-paper rounded-md shadow-lg ring-1 ring-black ring-opacity-5 invisible group-hover:visible hover:visible opacity-0 group-hover:opacity-100 hover:opacity-100 transition-all duration-100 z-10">
+    <div
+      class="submenu absolute mt-2 w-64 bg-paper rounded-md shadow-lg ring-1 ring-black ring-opacity-5 invisible group-hover:visible hover:visible opacity-0 group-hover:opacity-100 hover:opacity-100 transition-all duration-100 z-10"
+    >
       <div class="py-1">
         <NuxtLink
           v-for="item in items"
@@ -13,7 +15,7 @@
           :target="item.external ? '_blank' : null"
         >
           <span class="entry mr-1">{{ item.label }}</span>
-          <span v-if="item.external" >↗</span>
+          <span v-if="item.external">↗</span>
         </NuxtLink>
       </div>
     </div>
@@ -24,14 +26,15 @@
 defineProps({
   title: {
     type: String,
-    required: true
+    required: true,
   },
   items: {
     type: Array,
     required: true,
-    validator: (value) => value.every(item => 'to' in item && 'label' in item)
-  }
-});
+    validator: (value) =>
+      value.every((item) => 'to' in item && 'label' in item),
+  },
+})
 </script>
 
 <style scoped>
@@ -40,7 +43,7 @@ defineProps({
 }
 
 .submenu {
-  border: 3px solid #4e43A3;
+  border: 3px solid #4e43a3;
   left: -20px;
   z-index: 200;
 }
