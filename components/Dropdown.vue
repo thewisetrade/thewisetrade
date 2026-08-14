@@ -12,8 +12,8 @@
     </span>
     <button
       type="button"
-      @click="isOpen = !isOpen"
       class="dropdown-button flex items-center justify-between"
+      @click="isOpen = !isOpen"
     >
       <span class="dropdown-label">{{ selectedText }}</span>
       <svg
@@ -41,9 +41,9 @@
         v-for="(val, index) in props.values"
         :key="val.text || index"
         type="button"
-        @click="update(val.value)"
         class="option w-full text-left transition-colors"
         :class="{ 'active-option': isActive(val.value) }"
+        @click="update(val.value)"
       >
         {{ val.text }}
       </button>

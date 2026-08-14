@@ -11,9 +11,9 @@
           Your Solana Portfolio
         </h2>
 
-        <hr class="tagline-divider mt-2" />
+        <hr class="tagline-divider mt-2" >
         <h4 class="mt-6 text-2xl mb-10 subtagline">
-          Guides and Resources for<br /> Liquidity Providing
+          Guides and Resources for<br > Liquidity Providing
         </h4>
         <div class="flex flex-row">
           <router-link :to="'/dlmm-guide'" class="px-4 py-2 cta-button">
@@ -22,7 +22,7 @@
         </div>
       </div>
       <div class="">
-        <img class="illustration" src="~/assets/images/wise-power-up.png" />
+        <img class="illustration" src="~/assets/images/wise-power-up.png" >
       </div>
     </div>
 
@@ -33,28 +33,28 @@
         <img
           class="mb-2"
           src="~/assets/images/illustrations/dlmms-guide.png"
-        />
+        >
         <h3>Getting Started</h3>
       </NuxtLink>
       <NuxtLink class="guide-link" to="dlmm-guide-2">
         <img
           class="mb-2"
           src="~/assets/images/illustrations/dlmms-tools.svg"
-        />
+        >
         <h3>DLMM Apps</h3>
       </NuxtLink>
       <NuxtLink class="guide-link" to="dlmm-guide-multidays">
         <img
           class="mb-2"
           src="~/assets/images/illustrations/dlmms-multiday-positions.svg"
-        />
+        >
         <h3>Multiday Positions</h3>
       </NuxtLink>
       <NuxtLink class="guide-link" to="dlmm-guide-risk-management">
         <img
           class="mb-2"
           src="~/assets/images/illustrations/dlmms-risk-management.svg"
-        />
+        >
         <h3>Risk Management</h3>
       </NuxtLink>
    </div>
@@ -66,21 +66,21 @@
           <img
             class="mb-2"
             src="~/assets/images/illustrations/dlmms-pool-finder.svg"
-          />
+          >
           <h3>Pool Finder</h3>
         </NuxtLink>
         <NuxtLink class="guide-link" to="dlmm-performance">
           <img
             class="mb-2"
             src="~/assets/images/illustrations/dlmms-performance.svg"
-          />
+          >
           <h3>Pool Performance</h3>
         </NuxtLink>
         <NuxtLink class="guide-link" to="dlmm-positions">
           <img
             class="mb-2"
             src="~/assets/images/illustrations/dlmms-performance.svg"
-          />
+          >
           <h3>Opened Positions</h3>
         </NuxtLink>
       </div>
@@ -92,14 +92,14 @@
         <img
           class="mb-2"
           src="~/assets/images/illustrations/sanctum-guide.png"
-        />
+        >
         <h3>Guide</h3>
       </NuxtLink>
       <NuxtLink class="guide-link" to="lsts">
         <img
           src="~/assets/images/illustrations/sanctum-lsts.png"
           class="mb-2"
-        />
+        >
         <h3>Interest rates</h3>
       </NuxtLink>
       </div>

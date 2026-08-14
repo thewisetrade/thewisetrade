@@ -6,21 +6,21 @@
       <div class="flex flex-row gap-2">
         <input
           ref="walletAddressInput"
+          v-model="walletAddress"
           class="input w-full max-w-md border-2 border-gray-300 rounded-md p-2"
           type="text"
-          v-model="walletAddress"
-        />
+        >
       </div>
 
-      <div class="error-message text-red-500 pl-2" v-if="errors.invalidAddress">
+      <div v-if="errors.invalidAddress" class="error-message text-red-500 pl-2">
         Invalid wallet address
       </div>
 
-      <div class="error-message text-red-500 pl-2" v-if="errors.invalidDomain">
+      <div v-if="errors.invalidDomain" class="error-message text-red-500 pl-2">
         Invalid domain name
       </div>
 
-      <div class="domain-name text-green-500 pl-2" v-if="domainName">
+      <div v-if="domainName" class="domain-name text-green-500 pl-2">
         {{ domainName }}
       </div>
     </div>
@@ -42,8 +42,7 @@ const props = defineProps({
 let emitedWalletAddress = ''
 
 const emit = defineEmits({
-  resetWalletAddress: () => true,
-  walletAddressChanged: (payload) => true,
+  walletAddressChanged: () => true,
 })
 
 const walletAddress = ref(null)
@@ -58,15 +57,6 @@ const walletAddressInput = useTemplateRef('walletAddressInput')
 onMounted(() => {
   walletAddress.value = props.currentWalletAddress || ''
   walletAddressInput?.value?.focus()
-})
-
-const isWalletAddressValid = computed(() => {
-  return (
-    walletAddress.value &&
-    walletAddress.value !== null &&
-    walletAddress.value !== '' &&
-    walletAddress.value !== 'undefined'
-  )
 })
 
 const checkWalletAddress = async () => {
@@ -90,17 +80,6 @@ const checkWalletAddress = async () => {
       domain: solanaDomain,
     })
   }
-}
-
-const resetWalletAddress = () => {
-  walletAddress.value = ''
-  domainName.value = ''
-  errors.value.invalidAddress = false
-  errors.value.invalidDomain = false
-  emit('walletAddressChanged', '')
-  nextTick(() => {
-    walletAddressInput?.value?.focus()
-  })
 }
 
 watch(walletAddress, (newVal) => {

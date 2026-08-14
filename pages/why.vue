@@ -3,7 +3,7 @@
     <div>
 
       <div class="text-center mt-8 mb-14">
-        <img class="m-auto" src="~/assets/images/title.png" width="500" />
+        <img class="m-auto" src="~/assets/images/title.png" width="500" >
       </div>
 
       <h1>Why</h1>

@@ -3,7 +3,7 @@
     <img
       class="m-auto max-w-sm"
       src="~/assets/images/illustrations/dlmms-guide.png"
-    />
+    >
   </div>
 
   <h1>Meteora DLMMs guide</h1>
@@ -86,7 +86,7 @@
     <img
       class="illustration"
       src="~/assets/images/articles/dlmms/liquidity-pool.png"
-    />
+    >
   </p>
 
   <h2>2. Liquidity Pairs Farming (LPs)</h2>
@@ -149,7 +149,7 @@
   <img
     class="illustration"
     src="~/assets/images/articles/dlmms/liquidity-pool-il.png"
-  />
+  >
 
   <h2>4. Slippage</h2>
 
@@ -182,7 +182,7 @@
   <img
     class="illustration"
     src="~/assets/images/articles/dlmms/dlmm-guide-01.png"
-  />
+  >
 
   <p>
     To help with this problem, DEX proposed concentrated LPs, where the fees are
@@ -280,7 +280,7 @@
     <img
       class="illustration"
       src="~/assets/images/articles/dlmms/default-strategies.png"
-    />
+    >
   </p>
 
   <p>
@@ -309,7 +309,7 @@
   <img
     class="illustration"
     src="~/assets/images/articles/dlmms/pool-working.gif"
-  />
+  >
 
   <h2>8. How to choose the right pool?</h2>
 
@@ -321,7 +321,7 @@
   <img
     class="illustration"
     src="~/assets/images/articles/dlmms/pool-settings.png"
-  />
+  >
 
   <p>
     So, the first thing to check about a pool is the fees collected daily. Once
@@ -480,7 +480,7 @@
   <img
     class="illustration mb-5"
     src="~/assets/images/articles/dlmms/stable-volume.png"
-  />
+  >
 
   <p>
     The goal here is to set the pair bins that the pool will use to swap tokens.
@@ -505,7 +505,7 @@
   <img
     class="illustration mb-5"
     src="~/assets/images/articles/dlmms/stable-bins.png"
-  />
+  >
 
   <h3>B. Similar tokens</h3>
 
@@ -528,12 +528,12 @@
   <img
     class="illustration mb-5"
     src="~/assets/images/articles/dlmms/similar-pair.png"
-  />
+  >
 
   <img
     class="illustration mb-5"
     src="~/assets/images/articles/dlmms/similar-pair-curve.png"
-  />
+  >
 
   <h3>C. Selling Limit</h3>
 
@@ -562,7 +562,7 @@
   <img
     class="illustration"
     src="~/assets/images/articles/dlmms/selling-limit.png"
-  />
+  >
 
   <h3>D. Swinging pairs</h3>
 
@@ -576,7 +576,7 @@
   <img
     class="illustration"
     src="~/assets/images/articles/dlmms/swinging-pair.png"
-  />
+  >
 
   <p>
     To deal with it, you can simply use the ask/bid option proposed by Meteora.
@@ -586,7 +586,7 @@
     with a different strategy).
   </p>
 
-  <img class="illustration" src="~/assets/images/articles/dlmms/ask-bid.png" />
+  <img class="illustration" src="~/assets/images/articles/dlmms/ask-bid.png" >
 
   <h3>E. Acquiring a new token: one-sided pool</h3>
 
@@ -613,7 +613,7 @@
   <img
     class="illustration mb-5"
     src="~/assets/images/articles/dlmms/single-sided.png"
-  />
+  >
 
   <h2>Conclusion</h2>
 
@@ -696,7 +696,7 @@
   </ul>
   <p>&nbsp;</p>
 
-  <hr />
+  <hr >
 
   <h1>Additional Tips</h1>
 
@@ -847,7 +847,7 @@
     <li>Duration: 10 minutes to a few hours.</li>
   </ul>
 
-  <hr />
+  <hr >
 
   <h2>Communities</h2>
 

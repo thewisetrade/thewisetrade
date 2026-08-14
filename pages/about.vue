@@ -1,7 +1,7 @@
 <template>
   <div class="container max-w-screen-md mx-auto">
     <p class="flex justify-center mt-16 flex-wrap">
-      <img class="rounded-lg shadow mr-5 mb-5" src="~/assets/images/defilogist.png" />
+      <img class="rounded-lg shadow mr-5 mb-5" src="~/assets/images/defilogist.png" >
     </p>
 
     <h1>About me</h1>

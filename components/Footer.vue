@@ -1,6 +1,6 @@
 <template>
 <div class="mt-16 italic text-center">
-<hr class="mb-6" />
+<hr class="mb-6" >
 </div>
 <div class="mt-2 italic text-center">
   <p>

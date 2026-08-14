@@ -103,7 +103,6 @@ export class QuickNodeService {
 
         for (const sig of result) {
           if (cutoffTime && sig.blockTime && sig.blockTime * 1000 < cutoffTime) {
-            const date = new Date(sig.blockTime * 1000) // Convert to milliseconds
             hasMore = false
             break
           }
@@ -154,12 +153,8 @@ export class QuickNodeService {
     // Process in chunks to avoid rate limits
     const chunks = chunkArray(signaturesToFetch, 50)
 
-    let analyzedSignaturesLength = 0
     for (const chunk of chunks) {
-      analyzedSignaturesLength += chunk.length
-
       try {
-        const startTime = performance.now()
         const results = await this.connection.getParsedTransactions(chunk, {
           commitment: 'confirmed',
           maxSupportedTransactionVersion: 0,

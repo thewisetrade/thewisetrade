@@ -2,13 +2,13 @@
 <div class="flex flex-col h-screen main-container">
   <h1>Sanctum LST Interest Rates (APYs)</h1>
   <div v-if="loading" class="loader-container">
-    <div class="loader"></div>
+    <div class="loader"/>
   </div>
   <div v-else class="table-container">
     <table class="text-center">
       <thead>
         <tr>
-          <th></th>
+          <th/>
           <th>Name</th>
           <th>Symbol</th>
           <th>Apy</th>
@@ -18,7 +18,7 @@
       </thead>
       <tbody class="tbody">
         <tr v-for="lst in lsts" :key="lst.symbol">
-          <td><img :src="lst.logo_uri" width="32" /></td>
+          <td><img :src="lst.logo_uri" width="32" ></td>
           <td>{{ lst.name }}</td>
           <td>{{ lst.symbol }}</td>
           <td>{{ (apys[lst.mint] * 100 || 0).toFixed(2) }}%</td>

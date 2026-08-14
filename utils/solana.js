@@ -24,7 +24,7 @@ export const isValidSolanaAddress = (address) => {
     if (!address) return false
     const publicKey = new PublicKey(address)
     return PublicKey.isOnCurve(publicKey.toBytes())
-  } catch (error) {
+  } catch {
     return false
   }
 }

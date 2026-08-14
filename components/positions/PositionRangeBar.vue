@@ -6,12 +6,12 @@
     :title="title"
   >
     <div class="track">
-      <div class="track-fill" :style="trackStyle"></div>
+      <div class="track-fill" :style="trackStyle"/>
       <div
         class="active-marker"
         :class="{ 'out-of-range': isOutOfRange }"
         :style="{ left: markerPercent + '%' }"
-      ></div>
+      />
     </div>
     <div class="labels">
       <span>{{ formatPrice(minPrice) }}</span>

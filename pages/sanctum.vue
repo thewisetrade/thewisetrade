@@ -3,7 +3,7 @@
     <img
       class="m-auto max-w-sm"
       src="~/assets/images/illustrations/sanctum-guide.png"
-    />
+    >
   </div>
 
   <h1>Sanctum Guide</h1>
@@ -51,7 +51,7 @@
   <img
     class="illustration"
     src="~/assets/images/articles/sanctum/staking.png"
-  />
+  >
 
   <h2>2. Liquid staking</h2>
 
@@ -91,7 +91,7 @@
   <img
     class="illustration"
     src="~/assets/images/articles/sanctum/liquid-staking.png"
-  />
+  >
 
   <h2>3. Liquid staking for any project</h2>
 
@@ -120,7 +120,7 @@
     class="illustration"
     style="max-width: 400px"
     src="~/assets/images/articles/sanctum/sanctum.png"
-  />
+  >
 
   <h2>4. Staking gamified (Wonderland)</h2>
 
@@ -140,7 +140,7 @@
   <img
     class="illustration"
     src="~/assets/images/articles/sanctum/wonderland.png"
-  />
+  >
 
   <h2>5. New value proposition for projects</h2>
 
@@ -163,7 +163,7 @@
     class="illustration"
     style="max-width: 400px"
     src="~/assets/images/articles/sanctum/sanctum-guide-tensor.png"
-  />
+  >
 
   <p>
     This value could extend to individuals. If you like a creator, you could buy
@@ -191,7 +191,7 @@
     class="illustration"
     style="max-width: 500px"
     src="~/assets/images/articles/sanctum/sanctum-swap.png"
-  />
+  >
 
   <h2>7. Airdrop</h2>
 
@@ -232,7 +232,7 @@
     class="illustration"
     style="max-width: 600px"
     src="~/assets/images/articles/sanctum/cloud-tokenomic.png"
-  />
+  >
 
   <h2>9. Available validators and LSTs of interests</h2>
 

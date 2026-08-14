@@ -2,10 +2,10 @@
   <div class="wallet-selector">
     <Dropdown
       v-if="wallets.length > 0"
+      v-model="selectedWallet"
       compact
       :values="walletOptions"
       placeholder="Select a wallet"
-      v-model="selectedWallet"
     />
     <div v-else class="wallet-empty">
       No wallets found, please

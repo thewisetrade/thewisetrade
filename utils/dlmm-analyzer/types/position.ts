@@ -1,5 +1,5 @@
-import { PublicKey } from '@solana/web3.js';
-import BN from 'bn.js';
+import type { PublicKey } from '@solana/web3.js';
+import type BN from 'bn.js';
 
 export interface Position {
   pubkey: PublicKey;

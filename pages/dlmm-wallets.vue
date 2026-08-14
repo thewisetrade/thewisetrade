@@ -54,8 +54,8 @@
             <div class="wallet-address">
               {{ formatAddress(wallet.address) }}
               <span
-                class="wallet-domain"
                 v-if="wallet.domain && wallet.domain !== wallet.name"
+                class="wallet-domain"
               >
                 - {{ wallet.domain }}</span
               >
@@ -69,8 +69,8 @@
           </div>
           <button
             class="delete-wallet-btn"
-            @click="deleteWallet(wallet.id)"
             title="Delete wallet"
+            @click="deleteWallet(wallet.id)"
           >
             <trash-icon />
           </button>
@@ -85,11 +85,11 @@
         <form @submit.prevent="addWallet">
           <div class="form-group">
             <label>Wallet Name</label>
-            <input v-model="newWallet.name" type="text" />
+            <input v-model="newWallet.name" type="text" >
           </div>
           <div class="form-group">
             <label>Wallet Address</label>
-            <WalletAddress @walletAddressChanged="updateWalletAddress" />
+            <WalletAddress @wallet-address-changed="updateWalletAddress" />
           </div>
           <!--div class="form-group">
             <label>Group</label>
@@ -101,12 +101,12 @@
             </select>
           </div-->
           <div class="modal-actions">
-            <button type="button" @click="closeModal" class="cancel-btn">
+            <button type="button" class="cancel-btn" @click="closeModal">
               Cancel
             </button>
             <button type="submit" class="button">Add Wallet</button>
           </div>
-          <div class="error-message" v-if="addingWalletErrorMessage">
+          <div v-if="addingWalletErrorMessage" class="error-message">
             {{ addingWalletErrorMessage }}
           </div>
         </form>
@@ -125,7 +125,7 @@
               type="text"
               placeholder="Enter group name"
               required
-            />
+            >
           </div>
 
           <div class="form-group">
@@ -138,11 +138,11 @@
               >
                 <label class="checkbox-label">
                   <input
+                    v-model="newGroup.selectedWallets"
                     type="checkbox"
                     :value="wallet.id"
-                    v-model="newGroup.selectedWallets"
                     class="wallet-checkbox"
-                  />
+                  >
                   <div class="wallet-item-info">
                     <div class="wallet-name-small">{{ wallet.name }}</div>
                     <div class="wallet-address-small">
@@ -159,7 +159,7 @@
           </div>
 
           <div class="modal-actions">
-            <button type="button" @click="closeModal" class="cancel-btn">
+            <button type="button" class="cancel-btn" @click="closeModal">
               Cancel
             </button>
             <button type="submit" class="button">Create Group</button>
@@ -210,8 +210,6 @@ const newGroup = ref({
 onMounted(async () => {
   await loadData()
 })
-
-const totalWallets = computed(() => wallets.value.length)
 
 const filteredWallets = computed(() => {
   if (!selectedGroupFilter.value) {
@@ -280,6 +278,11 @@ const updateGroupWalletCounts = () => {
   })
 }
 
+// Wallet groups are only half-wired: the "Create New Group" modal and the
+// group-filter branches of `filteredWallets` exist in the template, but nothing
+// calls the handlers below, so the modal can never open and the filter is stuck
+// at null. Kept as-is until the buttons that drive them are added.
+/* eslint-disable @typescript-eslint/no-unused-vars */
 const createGroup = () => {
   showCreateGroup.value = true
 }
@@ -295,6 +298,7 @@ const selectAllWallets = () => {
 const clearGroupFilter = () => {
   selectedGroupFilter.value = null
 }
+/* eslint-enable @typescript-eslint/no-unused-vars */
 
 const addWallet = async () => {
   addingWalletErrorMessage.value = null
@@ -340,10 +344,6 @@ const addGroups = async () => {
         for (const walletId of newGroup.value.selectedWallets) {
           const walletIndex = wallets.value.findIndex((w) => w.id === walletId)
           if (walletIndex !== -1) {
-            const walletData = {
-              ...wallets.value[walletIndex],
-              groupTag: newGroup.value.name,
-            }
             await updateAddress(walletId, { groupTag: newGroup.value.name })
             wallets.value[walletIndex].groupTag = newGroup.value.name
           }

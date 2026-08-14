@@ -9,6 +9,7 @@
     <div class="filters">
       <div class="toggle flex flex-row">
         <ToggleButtons
+          v-model="binStep"
           class="mr-5 filter"
           label="Bin Step"
           :values="[
@@ -18,9 +19,9 @@
             { text: '80', value: 80 },
             { text: '20', value: 20 },
           ]"
-          v-model="binStep"
         />
         <ToggleButtons
+          v-model="marketCap"
           class="mr-5 filter"
           label="Market Cap"
           :values="[
@@ -28,9 +29,9 @@
             { text: '> 10M', value: 10 },
             { text: '> 100M', value: 100 },
           ]"
-          v-model="marketCap"
         />
         <ToggleButtons
+          v-model="liquidity"
           class="mr-5 filter"
           label="Liquidity"
           :values="[
@@ -38,9 +39,9 @@
             { text: '> 100k', value: 100 },
             { text: '> 500k', value: 500 },
           ]"
-          v-model="liquidity"
         />
         <ToggleButtons
+          v-model="age"
           class="filter"
           label="Age"
           :values="[
@@ -48,7 +49,6 @@
             { text: '>3d', value: 3 },
             { text: '>7d', value: 7 },
           ]"
-          v-model="age"
         />
         <RefreshButton class="mt-6" @refresh="loadPoolsData" />
       </div>
@@ -60,18 +60,18 @@
       <span class="gen-fees">24h fees</span>
       <span class="two-fees">2h fees</span>
       <span class="chart-col">72h Chart</span>
-      <span class="flex-1"></span>
+      <span class="flex-1"/>
       <span class="liq">Liquidity</span>
       <span class="mc">MC</span>
     </div>
 
-    <div class="pools" ref="poolsContainerRef">
+    <div ref="poolsContainerRef" class="pools">
       <Loader v-if="isLoading" />
       <template v-else>
         <div
+          v-for="pool in displayedPools"
           :key="pool.id"
           class="pool-container"
-          v-for="pool in displayedPools"
         >
           <a
             target="_blank"
@@ -98,20 +98,20 @@
               >
                 <TokenPriceChart
                   :key="`spark-v4-${pool.meteora_address}`"
-                  :tokenAddress="pool.meteora_degenTokenAddress"
-                  :pairAddress="pool.meteora_address"
+                  :token-address="pool.meteora_degenTokenAddress"
+                  :pair-address="pool.meteora_address"
                   :width="120"
                   :height="40"
                 />
               </a>
               <button
                 class="chart-toggle-button"
-                @click.stop="$event => toggleChart(pool.meteora_address, $event)"
                 :class="{ active: expandedCharts[pool.meteora_address] }"
+                @click.stop="$event => toggleChart(pool.meteora_address, $event)"
               >
                 {{ expandedCharts[pool.meteora_address] ? '−' : '+' }}
               </button>
-              <span class="flex-1"></span>
+              <span class="flex-1"/>
               <span class="data"
                 >{{ Math.round(pool.meteora_liquidity / 1000) }}K</span
               >
@@ -126,11 +126,11 @@
           >
             <TokenPriceChart
               :key="`expand-v4-${pool.meteora_address}`"
-              :tokenAddress="pool.meteora_degenTokenAddress"
-              :pairAddress="pool.meteora_address"
+              :token-address="pool.meteora_degenTokenAddress"
+              :pair-address="pool.meteora_address"
               :width="chartWidth"
               :height="200"
-              :showMinus50Line="true"
+              :show-minus50-line="true"
             />
           </div>
         </div>

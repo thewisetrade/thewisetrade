@@ -278,7 +278,7 @@ export const getChartDexScreenerPairs = async (
         // Dex may not index the pool yet; still try OHLCV with this address
         pairs.push({ pairAddress: preferredAddress, chainId })
       }
-    } catch (error) {
+    } catch {
       pairs.push({ pairAddress: preferredAddress, chainId })
     }
   }
@@ -297,7 +297,7 @@ export const getChartDexScreenerPairs = async (
         pairs.push(pair)
         if (pairs.length >= limit) break
       }
-    } catch (error) {
+    } catch {
       // Preferred pool is enough to render a chart
     }
   }

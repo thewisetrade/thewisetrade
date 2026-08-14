@@ -1,7 +1,7 @@
 // src/services/meteora.ts
-import { PublicKey } from '@solana/web3.js'
+import type { PublicKey } from '@solana/web3.js'
 import BN from 'bn.js'
-import { QuickNodeService } from './quicknode.js'
+import type { QuickNodeService } from './quicknode.js'
 import DLMM, { type PositionBinData, type PositionInfo } from '@meteora-ag/dlmm'
 
 interface BinPriceResult {
@@ -93,12 +93,13 @@ export class MeteoraService {
     else {
       const middleBin = bins[Math.floor(bins.length / 2)]
       estimatedPrice = parseFloat(middleBin.price)
+      estimatedPricePerToken = parseFloat(middleBin.pricePerToken)
       referenceBin = middleBin
     }
 
     return {
       currentPrice: estimatedPrice,
-      pricePerToken: estimatedPrice, // Assuming same relationship
+      pricePerToken: estimatedPricePerToken,
       binId: referenceBin.binId,
       positionXAmount: referenceBin.positionXAmount,
       positionYAmount: referenceBin.positionYAmount,
@@ -135,7 +136,6 @@ export class MeteoraService {
   ): { tokenX: BN; tokenY: BN } {
     let totalTokenX = new BN(0)
     let totalTokenY = new BN(0)
-    let total = new BN(0)
 
     // for (let i = 0; i < position.binIds.length; i++) {
     //     const binId = position.binIds[i];

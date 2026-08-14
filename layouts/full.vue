@@ -1,7 +1,7 @@
 <template>
   <div class="flex flex-col h-screen main">
     <Navigation />
-    <div class="content" ref="contentDiv">
+    <div ref="contentDiv" class="content">
       <div class="mx-auto p-0 bg-black shadow-md rounded-lg mt-8">
         <slot />
       </div>

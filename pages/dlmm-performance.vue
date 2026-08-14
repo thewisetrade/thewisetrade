@@ -10,6 +10,7 @@
       <WalletSelector v-model="selectedWallet" with-all-wallets />
       <template v-if="isWalletAddressValid">
         <ToggleButtons
+          v-model="quoteToken"
           class="filter"
           label="Quote token"
           :values="[
@@ -17,41 +18,40 @@
             { text: 'USDC', value: 'USDC' },
             { text: 'EURC', value: 'EURC' },
           ]"
-          v-model="quoteToken"
         />
         <ToggleButtons
+          v-model="sortBy"
           class="filter"
           label="Sort by"
           :values="[
             { text: 'Profit', value: 'profit' },
             { text: 'Date', value: 'date' },
           ]"
-          v-model="sortBy"
         />
         <ToggleButtons
+          v-model="sortOrder"
           class="filter"
           label="Sort order"
           :values="[
             { text: 'Asc.', value: 'asc' },
             { text: 'Desc.', value: 'desc' },
           ]"
-          v-model="sortOrder"
         />
         <ToggleButtons
+          v-model="groupBy"
           class="filter"
           label="Group by"
           :values="[
             { text: 'Position', value: 'position' },
             { text: 'Pair', value: 'pair' },
           ]"
-          v-model="groupBy"
         />
         <Dropdown
           v-if="!isDataVisible"
+          v-model="timePeriod"
           compact
           class="filter"
           :values="timePeriodOptions"
-          v-model="timePeriod"
         />
       </template>
     </div>
@@ -61,17 +61,17 @@
     </div>
 
     <div
-      class="chart-panel"
       v-if="isDataVisible"
+      class="chart-panel"
     >
       <div class="chart-header">
         <div class="chart-header-top">
           <div class="chart-period-row">
             <Dropdown
+              v-model="timePeriod"
               compact
               class="chart-time-range"
               :values="timePeriodOptions"
-              v-model="timePeriod"
             />
             <div class="chart-period">{{ dateRange }}</div>
           </div>
@@ -141,7 +141,7 @@
       <p v-if="loadError" class="api-limit-note">{{ loadError }}</p>
     </div>
 
-    <div class="position-list-panel mt-8" v-if="isWalletAddressValid">
+    <div v-if="isWalletAddressValid" class="position-list-panel mt-8">
       <div class="list-header">
         <span class="list-header-cell pair-col">Pair</span>
         <span class="list-header-cell profit-col">P&L</span>
@@ -173,9 +173,9 @@
 
         <div v-else class="transaction-list">
           <div
-            class="position-item"
-            :key="positionKey(position)"
             v-for="position in positions"
+            :key="positionKey(position)"
+            class="position-item"
           >
             <div
               class="position-row"
@@ -204,12 +204,12 @@
               </div>
               <div class="cell profit-col">
                 <ChevronDoubleUpIcon
-                  class="profit-icon positive"
                   v-if="position.profit > 0"
+                  class="profit-icon positive"
                 />
                 <ChevronDoubleDownIcon
-                  class="profit-icon negative"
                   v-else-if="position.profit < 0"
+                  class="profit-icon negative"
                 />
                 <span
                   class="stat-value"
@@ -237,8 +237,8 @@
               </div>
             </div>
             <div
-              class="position-transactions"
               v-show="collapsedPositions[positionKey(position)]"
+              class="position-transactions"
             >
               <div
                 v-if="loadingDetails[positionKey(position)]"
@@ -254,7 +254,7 @@
                     <th scope="col" class="deposit">Deposit</th>
                     <th scope="col" class="withdrawal">Withdrawal</th>
                     <th scope="col" class="fee">Fee</th>
-                    <th scope="col"></th>
+                    <th scope="col"/>
                   </tr>
                 </thead>
                 <tbody>
@@ -610,7 +610,7 @@ const refreshWalletLabel = async (address) => {
     const wallet = wallets.find((item) => item.address === address)
     walletLabel.value =
       wallet?.name || wallet?.domain || formatWalletLabel(address)
-  } catch (error) {
+  } catch {
     walletLabel.value = formatWalletLabel(address)
   }
 }
@@ -721,7 +721,7 @@ const applyCachedPortfolio = async (requestId) => {
 
   if (walletAddress.value === ALL_WALLETS) {
     const wallets = await getAllAddresses()
-    let cachedPositions = []
+    const cachedPositions = []
     let cachedPoolCount = 0
     let anyShown = false
 

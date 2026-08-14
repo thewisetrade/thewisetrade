@@ -1,11 +1,11 @@
 <template>
   <div class="app-header flex flex-row items-center mb-8 w-100">
-    <h1 class="app-title" v-if="title">{{ title }}</h1>
+    <h1 v-if="title" class="app-title">{{ title }}</h1>
     <a
+      v-if="author"
       class="credit"
       :href="link"
       target="_blank"
-      v-if="author"
     >
       Powered by {{ author }}
     </a>

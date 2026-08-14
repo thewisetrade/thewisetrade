@@ -7,11 +7,11 @@
     <div v-if="loading" class="loading">...</div>
     <div v-else-if="error" class="error">-</div>
     <canvas
+      v-show="!loading && !error"
       ref="chartCanvas"
       :width="width"
       :height="height"
-      v-show="!loading && !error"
-    ></canvas>
+    />
   </div>
 </template>
 

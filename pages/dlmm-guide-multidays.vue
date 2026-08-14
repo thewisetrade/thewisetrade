@@ -3,7 +3,7 @@
     <img
       class="m-auto max-w-sm"
       src="~/assets/images/illustrations/dlmms-multiday-positions.svg"
-    />
+    >
   </div>
 
   <div class="content-container">
@@ -58,7 +58,7 @@
       <img
         class="illustration small"
         src="~/assets/images/articles/dlmms/multiday-1.png"
-      />
+      >
     </p>
 
     <p>
@@ -109,7 +109,7 @@
     <img
       class="illustration"
       src="~/assets/images/articles/dlmms/multiday-1b.png"
-    />
+    >
 
     <p>
       I primarily target 2% and 5% pools, occasionally 1% pools. I've found
@@ -152,7 +152,7 @@
     <img
       class="illustration"
       src="~/assets/images/articles/dlmms/multiday-2.png"
-    />
+    >
 
     <p>
       This is out of over 1,000 positions, and hundreds of individual tokens.
@@ -188,7 +188,7 @@
     <img
       class="illustration"
       src="~/assets/images/articles/dlmms/multiday-3.png"
-    />
+    >
 
     <p>
       Then, I like to add a bit of extra liquidity into those first few bins, so
@@ -199,7 +199,7 @@
     <img
       class="illustration"
       src="~/assets/images/articles/dlmms/multiday-4.png"
-    />
+    >
 
     <p>
       I currently do 87.5% of the position as a bid ask, then the remaining
@@ -210,7 +210,7 @@
     <img
       class="illustration"
       src="~/assets/images/articles/dlmms/multiday-5.png"
-    />
+    >
 
     <h4>Considerations:</h4>
     <ul>
@@ -244,7 +244,7 @@
       <img
         class="illustration small"
         src="~/assets/images/articles/dlmms/multiday-sawtooth.png"
-      />
+      >
     </p>
 
     <p>
@@ -323,7 +323,7 @@
     <img
       class="illustration"
       src="~/assets/images/articles/dlmms/multiday-7.png"
-    />
+    >
 
     <p>
       Creating a 20/.2 position may look like this (20 binstep pool, 0.2% fee).
@@ -398,7 +398,7 @@
       <img
         class="illustration"
         src="~/assets/images/articles/dlmms/multiday-8.png"
-      />
+      >
 
       <li>
         Also consider doing the toothpaste strategy. At around the halfway point
@@ -417,7 +417,7 @@
     <img
       class="illustration"
       src="~/assets/images/articles/dlmms/multiday-9.png"
-    />
+    >
 
     <h2>How to not get rekt: Token Selection</h2>
 
@@ -458,7 +458,7 @@
     <img
       class="illustration"
       src="~/assets/images/articles/dlmms/multiday-10.png"
-    />
+    >
 
     <p>
       Regular swaps are important, as they directly make you money. Pools that
@@ -477,7 +477,7 @@
       <img
         class="illustration"
         src="~/assets/images/articles/dlmms/multiday-11.png"
-      />
+      >
 
       <p>
         Swaps are very common, with flat candles not being over represented.
@@ -490,7 +490,7 @@
       <img
         class="illustration"
         src="~/assets/images/articles/dlmms/multiday-12.png"
-      />
+      >
 
       <p>
         Almost no flat candles, very very active. This will print you amazing
@@ -502,7 +502,7 @@
       <img
         class="illustration"
         src="~/assets/images/articles/dlmms/multiday-13.png"
-      />
+      >
       <p>
         This is another 2% pool on a much more inactive token. This will make
         you very little.
@@ -578,7 +578,7 @@
       <img
         class="illustration"
         src="~/assets/images/articles/dlmms/multiday-14.png"
-      />
+      >
       <p>
         This token here has strong volume, with the moving average at the
         mountain at the end being $60K.
@@ -589,7 +589,7 @@
       <img
         class="illustration"
         src="~/assets/images/articles/dlmms/multiday-15.png"
-      />
+      >
       <p>
         This token doesn't, the moving average is around $2k at max, the average
         being around 500.
@@ -598,7 +598,7 @@
       <img
         class="illustration"
         src="~/assets/images/articles/dlmms/multiday-16.png"
-      />
+      >
     </div>
 
     <p>
@@ -633,7 +633,7 @@
       <img
         class="illustration"
         src="~/assets/images/articles/dlmms/multiday-17.png"
-      />
+      >
       <p>This is a botted pool's volume.</p>
     </div>
 
@@ -641,7 +641,7 @@
       <img
         class="illustration"
         src="~/assets/images/articles/dlmms/multiday-18.png"
-      />
+      >
       <p>
         Notice how the price here dumped quickly once the bot was turned off.
       </p>
@@ -680,7 +680,7 @@
     <img
       class="illustration"
       src="~/assets/images/articles/dlmms/multiday-19.png"
-    />
+    >
     <p>
       I put safe positions that are less volatile in Chill, I often have had
       these open for a day or two.
@@ -739,7 +739,7 @@
       other people employing my low stress method. Good Luck!
     </p>
 
-    <hr class="mt-8" />
+    <hr class="mt-8" >
 
     <div class="author-info mt-4">
       <p>Written by linclonlogging - DLMMer and Goose Dao member</p>

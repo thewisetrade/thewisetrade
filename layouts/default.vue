@@ -1,7 +1,7 @@
 <template>
   <div class="flex flex-col h-screen main">
     <Navigation />
-    <div class="content" ref="contentDiv">
+    <div ref="contentDiv" class="content">
       <div class="container max-w-screen-md mx-auto p-8 bg-paper shadow-md rounded-lg mt-8">
         <slot />
         <Footer />

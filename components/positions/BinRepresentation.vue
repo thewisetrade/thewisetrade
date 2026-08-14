@@ -5,7 +5,7 @@
       :href="`https://edge.meteora.ag/dlmm/${props.positionKey}`"
       target="_blank"
     >
-      <canvas ref="canvas" class="bin-canvas"></canvas>
+      <canvas ref="canvas" class="bin-canvas"/>
     </a>
   </div>
 </template>

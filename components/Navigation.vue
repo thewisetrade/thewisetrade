@@ -6,7 +6,7 @@
       class="text-blue hover:text-darkblue"
       to="/"
     >
-      <img class="logo" src="~/assets/images/title.png" width="160" />
+      <img class="logo" src="~/assets/images/title.png" width="160" >
     </NuxtLink>
   </div>
 
@@ -68,13 +68,13 @@
       href="https://twitter.com/defilogist"
       target="_blank"
     >
-      <img src="~/assets/images/twitter.png" width="25" />
+      <img src="~/assets/images/twitter.png" width="25" >
     </a>
     <a
       href="https://github.com/defilogist"
       target="_blank"
     >
-      <img src="~/assets/images/github.png" width="25" />
+      <img src="~/assets/images/github.png" width="25" >
     </a>
   </div>
   </div>

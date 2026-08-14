@@ -11,6 +11,7 @@
         <WalletSelector v-model="selectedWallet" with-all-wallets />
         <template v-if="walletAddress">
           <ToggleButtons
+            v-model="quoteFilter"
             class="quote-filter"
             label="Pairs"
             :values="[
@@ -19,9 +20,9 @@
               { text: 'USDC', value: 'USDC' },
               { text: 'EURC', value: 'EURC' },
             ]"
-            v-model="quoteFilter"
           />
           <ToggleButtons
+            v-model="rangeFilter"
             class="range-filter"
             label="Range"
             :values="[
@@ -30,11 +31,10 @@
               { text: 'Low', value: 'LOWER' },
               { text: 'High', value: 'UPPER' },
             ]"
-            v-model="rangeFilter"
           />
         </template>
       </div>
-      <div class="last-updated" v-if="lastUpdateTime">
+      <div v-if="lastUpdateTime" class="last-updated">
         Last updated: {{ lastUpdateTime.toFormat('HH:mm:ss') }}
         <span v-if="enriching"> · enriching bins…</span>
       </div>
@@ -48,21 +48,21 @@
           @click="sort('pair')"
         >
           <span>Position</span>
-          <div class="sort-icon" :class="getSortClass('pair')"></div>
+          <div class="sort-icon" :class="getSortClass('pair')"/>
         </div>
         <div
           class="header-cell value-cell-header sortable"
           @click="sort('value')"
         >
           <span>Value</span>
-          <div class="sort-icon" :class="getSortClass('value')"></div>
+          <div class="sort-icon" :class="getSortClass('value')"/>
         </div>
         <div
           class="header-cell fee-cell-header sortable"
           @click="sort('uncolFee')"
         >
           <span>Uncol. Fee</span>
-          <div class="sort-icon" :class="getSortClass('uncolFee')"></div>
+          <div class="sort-icon" :class="getSortClass('uncolFee')"/>
         </div>
         <!--div
           class="header-cell fee-cell-header sortable"
@@ -77,15 +77,15 @@
         </div-->
         <div class="header-cell upnl-cell-header sortable" @click="sort('upnl')">
           <span>uPnL</span>
-          <div class="sort-icon" :class="getSortClass('upnl')"></div>
+          <div class="sort-icon" :class="getSortClass('upnl')"/>
         </div>
         <div
           class="header-cell range-cell-header sortable flex items-center"
           @click="sort('range')"
         >
           <span>Bins</span>
-          <div class="sort-icon" :class="getSortClass('range')"></div>
-          <div class="flex-1"></div>
+          <div class="sort-icon" :class="getSortClass('range')"/>
+          <div class="flex-1"/>
         </div>
       </div>
 
@@ -99,7 +99,7 @@
 
         <div v-else-if="error" class="error-state">
           <span>Error loading positions: {{ error }}</span>
-          <button @click="loadData" class="retry-button">Retry</button>
+          <button class="retry-button" @click="loadData">Retry</button>
         </div>
 
         <div
@@ -122,7 +122,7 @@
                   :src="group.icon"
                   :alt="group.label"
                   class="quote-group-icon"
-                />
+                >
                 <span class="quote-group-label">{{ group.label }}</span>
                 <span class="quote-group-count">{{ group.totals.count }}</span>
               </div>
@@ -132,7 +132,7 @@
                   :src="group.icon"
                   :alt="group.label"
                   class="value-icon mr-2"
-                />
+                >
                 <span class="group-total-value">{{ group.totals.value }}</span>
               </div>
               <div class="cell fee-cell">
@@ -143,10 +143,10 @@
                   {{ group.totals.upnl }}
                 </span>
               </div>
-              <div class="cell range-cell"></div>
+              <div class="cell range-cell"/>
             </div>
             <template v-for="position in group.positions" :key="position.id">
-              <div class="wallet-name" v-if="walletAddress === 'All wallets'">
+              <div v-if="walletAddress === 'All wallets'" class="wallet-name">
                 {{ position.walletName }}
               </div>
               <div class="table-row">
@@ -162,12 +162,12 @@
                         :src="position.token1?.icon"
                         :alt="position.token1?.symbol"
                         class="token-icon"
-                      />
+                      >
                       <img
                         :src="position.token2?.icon"
                         :alt="position.token2?.symbol"
                         class="token-icon token-icon-overlap"
-                      />
+                      >
                     </div>
                     <span
                       class="pair-name"
@@ -187,7 +187,7 @@
                   :src="position.token2?.icon"
                   :alt="position.token2?.symbol"
                   class="value-icon mr-2"
-                />
+                >
                 <span class="value-amount">{{ position.value }}</span>
               </div>
 
@@ -197,7 +197,7 @@
                     :src="position.token2?.icon"
                     :alt="position.token2?.symbol"
                     class="value-icon mr-2"
-                  />
+                  >
                   {{ position.uncolFee.amount }}
                 </div>
               </div>
@@ -228,19 +228,19 @@
               <div class="cell range-cell">
                 <BinRepresentation
                   v-if="position.binData?.length"
-                  :binData="position.binData"
-                  :positionKey="position.positionKey"
-                  :positionToken1="position.token1"
-                  :positionToken2="position.token2"
-                  :activePrice="position.poolActivePrice"
+                  :bin-data="position.binData"
+                  :position-key="position.positionKey"
+                  :position-token1="position.token1"
+                  :position-token2="position.token2"
+                  :active-price="position.poolActivePrice"
                 />
                 <PositionRangeBar
                   v-else
-                  :positionKey="position.positionKey"
-                  :minPrice="position.minPrice"
-                  :maxPrice="position.maxPrice"
-                  :activePrice="position.poolActivePrice"
-                  :isOutOfRange="!!position.isOutOfRange"
+                  :position-key="position.positionKey"
+                  :min-price="position.minPrice"
+                  :max-price="position.maxPrice"
+                  :active-price="position.poolActivePrice"
+                  :is-out-of-range="!!position.isOutOfRange"
                 />
               </div>
             </div>
@@ -299,7 +299,7 @@ const loadSavedSort = () => {
     const field = pickAllowed(parsed?.field, ALLOWED_SORT_FIELDS, 'upnl')
     const direction = parsed?.direction === 'desc' ? 'desc' : 'asc'
     return { field, direction }
-  } catch (error) {
+  } catch {
     return { field: 'upnl', direction: 'asc' }
   }
 }

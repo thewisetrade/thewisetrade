@@ -4,8 +4,8 @@
       class="share-btn"
       type="button"
       :disabled="disabled || generating"
-      @click="openShareCard"
       title="Generate share card"
+      @click="openShareCard"
     >
       <ShareIcon class="share-icon" />
       <span>Share</span>
@@ -24,7 +24,7 @@
         </div>
 
         <template v-else-if="previewUrl">
-          <img :src="previewUrl" alt="DLMM performance share card" class="preview" />
+          <img :src="previewUrl" alt="DLMM performance share card" class="preview" >
           <div class="modal-actions">
             <button class="action-btn x-btn" type="button" @click="shareOnX">
               Share on X
@@ -35,8 +35,8 @@
             <button
               class="action-btn secondary"
               type="button"
-              @click="copyCard"
               :disabled="!canCopy"
+              @click="copyCard"
             >
               {{ copied ? 'Copied!' : 'Copy image' }}
             </button>
@@ -191,7 +191,7 @@ const shareOnX = async () => {
       await copyDataUrlToClipboard(previewUrl.value)
       shareHint.value =
         'Card copied to clipboard — paste it into your post on X (Ctrl+V / Cmd+V).'
-    } catch (error) {
+    } catch {
       shareHint.value =
         'Post composer opened. Download the PNG and attach it to your post on X.'
     }
@@ -216,7 +216,7 @@ const copyCard = async () => {
     const { copyDataUrlToClipboard } = await shareCardApi()
     await copyDataUrlToClipboard(previewUrl.value)
     copied.value = true
-  } catch (error) {
+  } catch {
     copyError.value = 'Copy failed. Download the PNG instead.'
   }
 }
