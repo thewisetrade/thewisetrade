@@ -96,7 +96,14 @@ export default defineNuxtConfig({
 
   plugins: [{ src: '~/plugins/buffer', mode: 'client' }],
 
-  modules: ['@nuxtjs/seo'],
+  modules: ['@nuxtjs/seo', '@nuxt/eslint'],
+
+  eslint: {
+    config: {
+      // Formatting is Prettier's job, ESLint only reports real problems.
+      stylistic: false,
+    },
+  },
 
   site: {
     url: 'https://thewise.trade',

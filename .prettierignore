@@ -1,0 +1,9 @@
+.nuxt
+.output
+.nitro
+.cache
+dist
+node_modules
+public
+package-lock.json
+assets/images
