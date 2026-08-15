@@ -1,5 +1,8 @@
 const CACHE_TTL_MS = 15 * 60 * 1000
-const MIN_INTERVAL_MS = 5000
+// 30 requêtes/min, la limite documentée du palier gratuit GeckoTerminal. La file
+// est strictement série, donc le Nième graphe attend N × cet intervalle : à 5 s,
+// les 17 pools d'un filtre courant mettaient 85 s à afficher leurs vraies bougies.
+const MIN_INTERVAL_MS = 2000
 const RATE_LIMIT_COOLDOWN_MS = 60 * 1000
 
 const ohlcvCache = new Map()

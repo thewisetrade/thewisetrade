@@ -47,6 +47,10 @@ const chartCanvas = ref(null)
 const loading = ref(true)
 const error = ref(false)
 const priceData = ref([])
+// Index à partir duquel les points proviennent de vraies données. Tout ce qui
+// précède est extrapolé et sera tracé en pointillés gris. 0 = courbe entièrement
+// réelle, ce qui est le cas de l'OHLCV GeckoTerminal.
+const extrapolatedUntil = ref(0)
 const hasFetched = ref(false)
 let observer = null
 
@@ -94,13 +98,22 @@ const buildSyntheticPrices = (pair) => {
   if (anchors.length < 2) return null
 
   const oldest = anchors[anchors.length - 1]
+  const points = 72
+
+  // DexScreener ne remonte pas au-delà de h-24. Le graphe couvre 72 h, donc le
+  // segment plus ancien est comblé en répétant le prix de l'ancre la plus vieille
+  // — soit une droite parfaitement plate sur les deux tiers gauches. On mémorise
+  // l'index où commencent les données réellement connues pour que drawChart
+  // distingue les deux parties au lieu de les présenter comme une seule courbe.
+  const knownFromIndex =
+    oldest.hour < 72 ? Math.ceil(((72 - oldest.hour) / 72) * (points - 1)) : 0
+
   if (oldest.hour < 72) {
     anchors.push({ hour: 72, price: oldest.price })
   }
 
   anchors.sort((a, b) => b.hour - a.hour)
 
-  const points = 72
   const prices = []
 
   for (let i = 0; i < points; i++) {
@@ -122,12 +135,13 @@ const buildSyntheticPrices = (pair) => {
     prices.push(Math.exp(logPrice))
   }
 
-  return prices
+  return { prices, knownFromIndex }
 }
 
-const showPrices = async (prices) => {
+const showPrices = async (prices, knownFromIndex = 0) => {
   if (!prices?.length) return false
   priceData.value = prices
+  extrapolatedUntil.value = knownFromIndex
   loading.value = false
   error.value = false
   await nextTick()
@@ -153,7 +167,7 @@ const fetchPriceData = async () => {
       const pair = await getDexScreenerPairByAddress(props.pairAddress)
       synthetic = buildSyntheticPrices(pair)
       if (synthetic) {
-        await showPrices(synthetic)
+        await showPrices(synthetic.prices, synthetic.knownFromIndex)
       }
     } catch (err) {
       console.warn('DexScreener fallback failed:', err)
@@ -194,29 +208,50 @@ const drawChart = () => {
   const maxPrice = props.showMinus50Line ? rawMax : rawMax * 1.02
   const priceRange = maxPrice - minPrice || 1
 
-  const priceChange = prices[prices.length - 1] - prices[0]
+  // Borné : une donnée synthétique plus courte que prévu ne doit pas vider le
+  // segment réel, seul porteur de la couleur et du remplissage.
+  const known = Math.min(
+    Math.max(extrapolatedUntil.value, 0),
+    prices.length - 1,
+  )
+
+  const xAt = (index) => (index / (prices.length - 1)) * width
+  const yAt = (index) =>
+    height - ((prices[index] - minPrice) / priceRange) * height
+
+  // La tendance se lit sur les données réelles uniquement : inclure la partie
+  // extrapolée fausserait la couleur du graphe.
+  const priceChange = prices[prices.length - 1] - prices[known]
   const isPositive = priceChange >= 0
   const color = isPositive ? '#3DDC84' : '#FF4757'
+
+  if (known > 0) {
+    ctx.save()
+    ctx.strokeStyle = '#666'
+    ctx.lineWidth = 1
+    ctx.setLineDash([3, 3])
+    ctx.beginPath()
+    for (let index = 0; index <= known; index++) {
+      if (index === 0) ctx.moveTo(xAt(index), yAt(index))
+      else ctx.lineTo(xAt(index), yAt(index))
+    }
+    ctx.stroke()
+    ctx.restore()
+  }
 
   ctx.strokeStyle = color
   ctx.lineWidth = 2
   ctx.beginPath()
-
-  prices.forEach((price, index) => {
-    const x = (index / (prices.length - 1)) * width
-    const y = height - ((price - minPrice) / priceRange) * height
-
-    if (index === 0) {
-      ctx.moveTo(x, y)
-    } else {
-      ctx.lineTo(x, y)
-    }
-  })
-
+  for (let index = known; index < prices.length; index++) {
+    if (index === known) ctx.moveTo(xAt(index), yAt(index))
+    else ctx.lineTo(xAt(index), yAt(index))
+  }
   ctx.stroke()
 
+  // Le remplissage se referme sur le début du segment réel, pas sur le bord
+  // gauche, pour ne pas colorer la zone extrapolée.
   ctx.lineTo(width, height)
-  ctx.lineTo(0, height)
+  ctx.lineTo(xAt(known), height)
   ctx.closePath()
   ctx.fillStyle = isPositive
     ? 'rgba(61, 220, 132, 0.22)'
@@ -291,6 +326,7 @@ watch(
   () => {
     hasFetched.value = false
     priceData.value = []
+    extrapolatedUntil.value = 0
     loading.value = true
     error.value = false
     if (observer) {
