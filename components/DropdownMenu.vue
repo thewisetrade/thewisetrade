@@ -1,6 +1,10 @@
 <template>
   <div class="relative group">
-    <span class="cursor-pointer title text-purple font-bold text-darkblue">
+    <!-- Pas de classe de couleur : les titres héritent du blanc du body. Ils
+         portaient `text-darkblue` (violet #5e43f3) et `text-purple` (couleur
+         jamais définie dans @theme), deux règles restées sans effet tant que les
+         valeurs de @theme étaient citées, donc invalides comme couleurs. -->
+    <span class="cursor-pointer title font-bold">
       {{ title }}
     </span>
     <div
