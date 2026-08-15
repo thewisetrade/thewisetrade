@@ -20,9 +20,12 @@ body {
   font-family: Tahoma, sans-serif;
 }
 
-a {
-  color: var(--color-darkblue);
-}
+/* Pas de règle de couleur ici : le preflight Tailwind applique déjà
+   `a { color: inherit }`, donc les liens héritent du blanc du body. Cette règle
+   valait `var(--color-darkblue)` (#5e43f3) depuis le commit initial, mais la
+   valeur était citée donc invalide comme couleur — elle n'a jamais rien coloré.
+   Rendre les valeurs de @theme valides l'a réveillée et teinté tous les liens
+   du site en violet. */
 
 p {
   margin-top: 0.2em;
@@ -77,5 +80,7 @@ table td {
 
 .linkblock {
   @apply font-bold shadow p-2 rounded-md border;
-  color: var(--color-darkblue);
+  /* Même cas que la règle `a` plus haut : la couleur violette n'a jamais été
+     appliquée, ces blocs ont toujours été blancs. */
+  color: inherit;
 }

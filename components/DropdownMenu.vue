@@ -11,10 +11,15 @@
       class="submenu absolute mt-2 w-64 bg-paper rounded-md shadow-lg ring-1 ring-black ring-opacity-5 invisible group-hover:visible hover:visible opacity-0 group-hover:opacity-100 hover:opacity-100 transition-all duration-100 z-10"
     >
       <div class="py-1">
+        <!-- Aucune classe de couleur non plus : le gris 700 de Tailwind (#364153)
+             sur le fond #121212 du sous-menu est illisible. Les entrées héritent
+             du blanc, `.entry:hover` plus bas donne l'accent violet au survol.
+             Ne pas écrire le nom de la classe ici, le scanner Tailwind le
+             prendrait pour un usage et régénérerait l'utilitaire. -->
         <NuxtLink
           v-for="item in items"
           :key="item.to"
-          class="entry block px-4 py-2 text-sm text-gray-700"
+          class="entry block px-4 py-2 text-sm"
           :to="item.to"
           :target="item.external ? '_blank' : null"
         >
