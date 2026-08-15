@@ -50,12 +50,23 @@ const priceData = ref([])
 const hasFetched = ref(false)
 let observer = null
 
+// DexScreener renvoie des pourcentages aberrants sur les pools récents ou peu
+// profonds (relevé en production : h1 = 258302). Une seule ancre absurde suffit
+// à écraser l'échelle du graphe, puisque drawChart cale son min/max sur les
+// valeurs extrêmes — on borne donc l'écart au prix courant.
+const MAX_ANCHOR_RATIO = 20
+
 const priceFromChange = (currentPrice, changePct) => {
   if (!Number.isFinite(changePct)) return null
   const denominator = 1 + changePct / 100
   if (!Number.isFinite(denominator) || Math.abs(denominator) < 1e-9) return null
   const price = currentPrice / denominator
-  return price > 0 ? price : null
+  if (!(price > 0)) return null
+
+  const ratio = price / currentPrice
+  if (ratio > MAX_ANCHOR_RATIO || ratio < 1 / MAX_ANCHOR_RATIO) return null
+
+  return price
 }
 
 // DexScreener m5/h1/h6/h24 fallback when Gecko is rate-limited
@@ -65,6 +76,9 @@ const buildSyntheticPrices = (pair) => {
 
   const pc = pair?.priceChange || {}
   const anchors = [{ hour: 0, price: currentPrice }]
+  // Trié par `hour` croissant, et il doit le rester : `oldest` plus bas lit la
+  // dernière ancre poussée en supposant que c'est la plus ancienne. Les fenêtres
+  // absentes ou aberrantes sont écartées par priceFromChange sans casser l'ordre.
   const windows = [
     { hour: 5 / 60, change: pc.m5 },
     { hour: 1, change: pc.h1 },
@@ -294,6 +308,10 @@ watch(
       drawChart()
     }
   },
+  // `flush: 'post'` est obligatoire : en flush 'pre' (défaut), drawChart tourne
+  // avant que Vue applique le nouvel attribut `width` du canvas, et affecter
+  // canvas.width réinitialise le bitmap — le tracé serait effacé aussitôt.
+  { flush: 'post' },
 )
 </script>
 
