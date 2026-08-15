@@ -35,7 +35,6 @@ const loadData = async () => {
       name: item.name || item.domain || item.address,
       domain: item.domain,
       address: item.address,
-      groupTag: item.groupTag || null,
     }))
   } catch (error) {
     console.error('Error loading data:', error)

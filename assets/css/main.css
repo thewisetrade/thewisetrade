@@ -5,12 +5,7 @@
    The values must not be quoted: a quoted hex is a string, not a color. */
 @theme {
   --color-blue: #1a1625;
-  --color-beige: #2f2b3a;
-  --color-grey: #ece8dd;
   --color-paper: #121212;
-  --color-paperlight: #2f2b3a;
-  --color-paperlighter: #fffdf8;
-  --color-greyblue: #aebdca;
   --color-darkblue: #5e43f3;
 }
 

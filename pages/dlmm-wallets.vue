@@ -15,25 +15,10 @@
     </div>
 
     <div class="wallets-section">
-      <div
-        v-if="filteredWallets.length === 0 && !loading"
-        class="no-wallets-message"
-      >
+      <div v-if="wallets.length === 0 && !loading" class="no-wallets-message">
         <div class="no-wallets-content">
-          <h3>
-            {{
-              selectedGroupFilter && selectedGroupFilter !== 'all'
-                ? 'No wallets in this group'
-                : 'No wallets found'
-            }}
-          </h3>
-          <p>
-            {{
-              selectedGroupFilter && selectedGroupFilter !== 'all'
-                ? "This group doesn't have any wallets yet."
-                : 'Start by adding your first wallet.'
-            }}
-          </p>
+          <h3>No wallets found</h3>
+          <p>Start by adding your first wallet.</p>
           <button class="button" @click="showAddWallet = true">
             Add Wallet
           </button>
@@ -42,11 +27,7 @@
 
       <!-- Wallets List -->
       <div v-else class="wallets-list">
-        <div
-          v-for="wallet in filteredWallets"
-          :key="wallet.id"
-          class="wallet-item"
-        >
+        <div v-for="wallet in wallets" :key="wallet.id" class="wallet-item">
           <div class="wallet-info">
             <div class="wallet-name">
               {{ wallet.name }}
@@ -59,12 +40,6 @@
               >
                 - {{ wallet.domain }}</span
               >
-            </div>
-            <div
-              v-if="wallet.groupTag !== 'none' && wallet.groupTag !== null"
-              class="wallet-group-tag"
-            >
-              {{ wallet.groupTag }}
             </div>
           </div>
           <button
@@ -91,15 +66,6 @@
             <label>Wallet Address</label>
             <WalletAddress @wallet-address-changed="updateWalletAddress" />
           </div>
-          <!--div class="form-group">
-            <label>Group</label>
-            <select v-model="newWallet.groupTag">
-              <option value="">No Group</option>
-              <option v-for="group in groups" :key="group.id" :value="group.groupTag">
-                {{ group.groupTag }}
-              </option>
-            </select>
-          </div-->
           <div class="modal-actions">
             <button type="button" class="cancel-btn" @click="closeModal">
               Cancel
@@ -112,117 +78,32 @@
         </form>
       </div>
     </div>
-
-    <!-- Create Group Modal -->
-    <div v-if="showCreateGroup" class="modal-overlay" @click="closeModal">
-      <div class="modal create-group-modal" @click.stop>
-        <h3>Create New Group</h3>
-        <form @submit.prevent="addGroups">
-          <div class="form-group">
-            <label>Group Name</label>
-            <input
-              v-model="newGroup.name"
-              type="text"
-              placeholder="Enter group name"
-              required
-            />
-          </div>
-
-          <div class="form-group">
-            <label>Select Wallets for this Group</label>
-            <div class="wallet-selection">
-              <div
-                v-for="wallet in wallets"
-                :key="wallet.id"
-                class="wallet-checkbox-item"
-              >
-                <label class="checkbox-label">
-                  <input
-                    v-model="newGroup.selectedWallets"
-                    type="checkbox"
-                    :value="wallet.id"
-                    class="wallet-checkbox"
-                  />
-                  <div class="wallet-item-info">
-                    <div class="wallet-name-small">{{ wallet.name }}</div>
-                    <div class="wallet-address-small">
-                      {{ formatAddress(wallet.address) }}
-                    </div>
-                  </div>
-                </label>
-              </div>
-
-              <div v-if="wallets.length === 0" class="no-wallets">
-                No wallets available. Add some wallets first.
-              </div>
-            </div>
-          </div>
-
-          <div class="modal-actions">
-            <button type="button" class="cancel-btn" @click="closeModal">
-              Cancel
-            </button>
-            <button type="submit" class="button">Create Group</button>
-          </div>
-        </form>
-      </div>
-    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 
 import { TrashIcon } from '@heroicons/vue/24/solid'
-import {
-  addAddress,
-  addGroup,
-  deleteAddress,
-  getAllAddresses,
-  getAllGroups,
-  updateAddress,
-} from '@/utils/wallets'
+import { addAddress, deleteAddress, getAllAddresses } from '@/utils/wallets'
 
 definePageMeta({
   layout: 'app',
 })
 
-const groups = ref([])
 const wallets = ref([])
 const showAddWallet = ref(false)
-const showCreateGroup = ref(false)
 const loading = ref(true)
-const selectedGroupFilter = ref(null)
 const addingWalletErrorMessage = ref(null)
 
 const newWallet = ref({
   name: '',
   address: '',
   domain: '',
-  groupTag: '',
-})
-
-const newGroup = ref({
-  name: '',
-  selectedWallets: [],
 })
 
 onMounted(async () => {
   await loadData()
-})
-
-const filteredWallets = computed(() => {
-  if (!selectedGroupFilter.value) {
-    return wallets.value
-  }
-
-  if (selectedGroupFilter.value === 'all') {
-    return wallets.value
-  }
-
-  return wallets.value.filter(
-    (wallet) => wallet.groupTag === selectedGroupFilter.value,
-  )
 })
 
 // Two statements, so this stays a named handler: an inline `a = 1; b = 2`
@@ -253,20 +134,7 @@ const loadData = async () => {
       name: item.name || item.domain || item.address,
       domain: item.domain,
       address: item.address,
-      groupTag: item.groupTag || null,
     }))
-
-    const groupsData = await getAllGroups()
-    groups.value = groupsData
-      .filter((group) => group.groupTag && group.groupTag !== 'none') // Filter out 'none' groups
-      .map((group) => ({
-        id: group.id,
-        name: group.groupTag,
-        groupTag: group.groupTag,
-        walletCount: wallets.value.filter(
-          (wallet) => wallet.groupTag === group.groupTag,
-        ).length,
-      }))
   } catch (error) {
     console.error('Error loading data:', error)
     console.error(
@@ -277,36 +145,6 @@ const loadData = async () => {
   }
 }
 
-const updateGroupWalletCounts = () => {
-  groups.value.forEach((group) => {
-    group.walletCount = wallets.value.filter(
-      (wallet) => wallet.groupTag === group.groupTag,
-    ).length
-  })
-}
-
-// Wallet groups are only half-wired: the "Create New Group" modal and the
-// group-filter branches of `filteredWallets` exist in the template, but nothing
-// calls the handlers below, so the modal can never open and the filter is stuck
-// at null. Kept as-is until the buttons that drive them are added.
-/* eslint-disable @typescript-eslint/no-unused-vars */
-const createGroup = () => {
-  showCreateGroup.value = true
-}
-
-const selectGroup = (group) => {
-  selectedGroupFilter.value = group.groupTag
-}
-
-const selectAllWallets = () => {
-  selectedGroupFilter.value = 'all'
-}
-
-const clearGroupFilter = () => {
-  selectedGroupFilter.value = null
-}
-/* eslint-enable @typescript-eslint/no-unused-vars */
-
 const addWallet = async () => {
   addingWalletErrorMessage.value = null
   if (newWallet.value.address) {
@@ -315,18 +153,15 @@ const addWallet = async () => {
         name: newWallet.value.name || newWallet.value.domain,
         domain: newWallet.value.domain,
         address: newWallet.value.address,
-        groupTag: newWallet.value.groupTag || null,
       }
       const newId = await addAddress(walletData)
       walletData.id = newId
       wallets.value.push(walletData)
-      updateGroupWalletCounts()
 
       newWallet.value = {
         name: '',
         domain: '',
         address: '',
-        groupTag: '',
       }
       closeModal()
     } catch (error) {
@@ -341,49 +176,10 @@ const addWallet = async () => {
   }
 }
 
-const addGroups = async () => {
-  if (newGroup.value.name) {
-    try {
-      const groupTag = newGroup.value.name
-      const newId = await addGroup(groupTag)
-
-      if (newGroup.value.selectedWallets.length > 0) {
-        for (const walletId of newGroup.value.selectedWallets) {
-          const walletIndex = wallets.value.findIndex((w) => w.id === walletId)
-          if (walletIndex !== -1) {
-            await updateAddress(walletId, { groupTag: newGroup.value.name })
-            wallets.value[walletIndex].groupTag = newGroup.value.name
-          }
-        }
-      }
-
-      const group = {
-        id: newId,
-        name: newGroup.value.name,
-        groupTag: newGroup.value.name,
-        walletCount: newGroup.value.selectedWallets.length,
-      }
-
-      groups.value.push(group)
-      updateGroupWalletCounts()
-
-      newGroup.value = {
-        name: '',
-        selectedWallets: [],
-      }
-
-      closeModal()
-    } catch (error) {
-      console.error('Error adding group:', error)
-    }
-  }
-}
-
 const deleteWallet = async (walletId) => {
   try {
     await deleteAddress(walletId)
     wallets.value = wallets.value.filter((w) => w.id !== walletId)
-    updateGroupWalletCounts()
   } catch (error) {
     console.error('Error deleting wallet:', error)
   }
@@ -391,41 +187,15 @@ const deleteWallet = async (walletId) => {
 
 const closeModal = () => {
   showAddWallet.value = false
-  showCreateGroup.value = false
 
   newWallet.value = {
     name: '',
     address: '',
-    groupTag: '',
-  }
-
-  newGroup.value = {
-    name: '',
-    selectedWallets: [],
   }
 }
 </script>
 
 <style scoped>
-.wallet-groups {
-  background: #0a0a0a;
-  color: white;
-  padding: 24px;
-  font-family:
-    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  min-width: 820px;
-  height: 78vh;
-  overflow-y: auto;
-  /* Parent prevents scrolling */
-  display: flex;
-  flex-direction: column;
-}
-
-/* Hide scrollbar for webkit browsers (Chrome, Safari, Edge) */
-.wallet-groups::-webkit-scrollbar {
-  display: none;
-}
-
 /* Header */
 .header {
   display: flex;
@@ -442,85 +212,6 @@ const closeModal = () => {
   font-size: 16px;
   color: #888;
   margin: 0;
-}
-
-.create-group-btn {
-  background: white;
-  color: black;
-  border: none;
-  padding: 8px 18px;
-  border-radius: 24px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.create-group-btn:hover {
-  background: #f0f0f0;
-  transform: translateY(-1px);
-}
-
-/* Groups Grid */
-.groups-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 16px;
-  margin-bottom: 48px;
-}
-
-.group-card {
-  background: #1a1a1a;
-  border: 1px solid #333;
-  border-radius: 16px;
-  padding: 12px;
-  cursor: pointer;
-  transition: all 0.2s;
-  height: 60px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.group-card:hover {
-  border-color: #555;
-  transform: translateY(-2px);
-}
-
-.group-card.active {
-  border-color: white;
-  background: #2a2a2a;
-}
-
-.group-card.active .wallet-count {
-  background: white;
-  color: #0a0a0a;
-}
-
-.wallet-count {
-  background: #333;
-  color: #ccc;
-  padding: 6px 12px;
-  border-radius: 20px;
-  font-size: 14px;
-  align-self: flex-start;
-  margin-bottom: 16px;
-}
-
-.group-name {
-  font-size: 20px;
-  font-weight: 600;
-  color: white;
-}
-
-.custom-group .group-content {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.group-arrow {
-  font-size: 20px;
-  color: #888;
 }
 
 .wallets-section {
@@ -546,23 +237,6 @@ const closeModal = () => {
   display: flex;
   gap: 12px;
   align-items: center;
-}
-
-.clear-filter-btn {
-  background: none;
-  color: #ccc;
-  border: 1px solid #333;
-  padding: 8px 16px;
-  border-radius: 20px;
-  font-size: 14px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.clear-filter-btn:hover {
-  border-color: #555;
-  color: white;
-  background: #333;
 }
 
 .section-info h2 {
@@ -619,16 +293,6 @@ const closeModal = () => {
   font-size: 14px;
   color: #888;
   font-family: 'Monaco', 'Menlo', monospace;
-}
-
-.wallet-group-tag {
-  font-size: 12px;
-  color: #aaa;
-  background: #333;
-  padding: 2px 8px;
-  border-radius: 10px;
-  margin-top: 4px;
-  display: inline-block;
 }
 
 /* No wallets message */
@@ -702,12 +366,6 @@ const closeModal = () => {
   width: 90%;
 }
 
-.create-group-modal {
-  max-width: 500px;
-  max-height: 80vh;
-  overflow-y: auto;
-}
-
 .modal h3 {
   margin: 0 0 24px 0;
   color: white;
@@ -725,8 +383,7 @@ const closeModal = () => {
   font-weight: 500;
 }
 
-.form-group input,
-.form-group select {
+.form-group input {
   width: 100%;
   padding: 12px;
   background: #0a0a0a;
@@ -737,78 +394,14 @@ const closeModal = () => {
   transition: border 0.3s ease;
 }
 
-.form-group input:focus,
-.form-group select:focus {
+.form-group input:focus {
   outline: none;
   border: 2px solid #607cf6;
-}
-
-/* Wallet Selection Styles */
-.wallet-selection {
-  max-height: 200px;
-  overflow-y: auto;
-  border: 1px solid #333;
-  border-radius: 8px;
-  padding: 12px;
-  background: #0a0a0a;
-}
-
-.wallet-checkbox-item {
-  margin-bottom: 12px;
-}
-
-.wallet-checkbox-item:last-child {
-  margin-bottom: 0;
-}
-
-.checkbox-label {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  cursor: pointer;
-  padding: 8px;
-  border-radius: 6px;
-  transition: background-color 0.2s;
-}
-
-.checkbox-label:hover {
-  background: #333;
-}
-
-.wallet-checkbox {
-  flex: 1;
-  margin-right: 12px;
-  transform: scale(1.2);
-  accent-color: white;
-}
-
-.wallet-item-info {
-  flex: 1;
-}
-
-.wallet-name-small {
-  font-size: 14px;
-  font-weight: 600;
-  color: white;
-  margin-bottom: 2px;
 }
 
 .wallet-domain {
   font-size: 12px;
   color: #888;
-}
-
-.wallet-address-small {
-  font-size: 12px;
-  color: #888;
-  font-family: 'Monaco', 'Menlo', monospace;
-}
-
-.no-wallets {
-  text-align: center;
-  color: #888;
-  font-style: italic;
-  padding: 20px;
 }
 
 .modal-actions {
@@ -879,10 +472,6 @@ const closeModal = () => {
     flex-direction: column;
     gap: 16px;
     align-items: stretch;
-  }
-
-  .groups-grid {
-    grid-template-columns: 1fr;
   }
 }
 </style>

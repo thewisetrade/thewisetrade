@@ -8,6 +8,16 @@ class AddressDatabase extends Dexie {
       addresses: '++id, &address, domain, name, groupTag',
       group: '++id, &groupTag, walletCount',
     })
+
+    // v2 retire la notion de groupe : `group: null` supprime la table et
+    // `groupTag` n'est plus indexé sur les adresses. La v1 doit rester déclarée,
+    // sinon Dexie ne sait pas migrer les bases déjà créées chez les visiteurs.
+    // Les valeurs `groupTag` des enregistrements existants restent en base, plus
+    // personne ne les lit.
+    this.version(2).stores({
+      addresses: '++id, &address, domain, name',
+      group: null,
+    })
   }
 }
 
@@ -19,7 +29,7 @@ const resetDatabase = async () => {
   return db
 }
 
-async function storeAddress(name, address, domain, groupTag) {
+async function storeAddress(name, address, domain) {
   try {
     const existing = await db.addresses.where('address').equals(address).first()
     if (!existing) {
@@ -27,10 +37,8 @@ async function storeAddress(name, address, domain, groupTag) {
         name: name,
         address: address,
         domain: domain || null,
-        groupTag: groupTag,
         createdAt: new Date(),
       })
-      addGroup(groupTag)
     }
   } catch (error) {
     console.error('Error storing address:', error)
@@ -60,28 +68,10 @@ async function deleteAddress(addressId) {
   await db.addresses.delete(addressId)
 }
 
-async function addGroup(group) {
-  try {
-    const id = await db.group.add({
-      groupTag: group,
-      walletCount: 0,
-    })
-    return id
-  } catch (error) {
-    console.error('Error storing groupTag', error)
-  }
-}
-
-async function getAllGroups() {
-  return await db.group.toArray()
-}
-
 export {
   resetDatabase,
   storeAddress,
   getAllAddresses,
-  addGroup,
-  getAllGroups,
   addAddress,
   updateAddress,
   deleteAddress,
