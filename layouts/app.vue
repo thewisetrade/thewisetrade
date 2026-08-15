@@ -1,7 +1,7 @@
 <template>
   <div class="flex flex-col h-screen main">
     <Navigation />
-    <div class="content" ref="contentDiv">
+    <div ref="contentDiv" class="content">
       <div
         class="apps-navigation flex-column gap-3 grid py-2 pl-2 left-0 fixed"
       >

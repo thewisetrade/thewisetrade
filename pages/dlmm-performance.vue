@@ -10,6 +10,7 @@
       <WalletSelector v-model="selectedWallet" with-all-wallets />
       <template v-if="isWalletAddressValid">
         <ToggleButtons
+          v-model="quoteToken"
           class="filter"
           label="Quote token"
           :values="[
@@ -17,41 +18,40 @@
             { text: 'USDC', value: 'USDC' },
             { text: 'EURC', value: 'EURC' },
           ]"
-          v-model="quoteToken"
         />
         <ToggleButtons
+          v-model="sortBy"
           class="filter"
           label="Sort by"
           :values="[
             { text: 'Profit', value: 'profit' },
             { text: 'Date', value: 'date' },
           ]"
-          v-model="sortBy"
         />
         <ToggleButtons
+          v-model="sortOrder"
           class="filter"
           label="Sort order"
           :values="[
             { text: 'Asc.', value: 'asc' },
             { text: 'Desc.', value: 'desc' },
           ]"
-          v-model="sortOrder"
         />
         <ToggleButtons
+          v-model="groupBy"
           class="filter"
           label="Group by"
           :values="[
             { text: 'Position', value: 'position' },
             { text: 'Pair', value: 'pair' },
           ]"
-          v-model="groupBy"
         />
         <Dropdown
           v-if="!isDataVisible"
+          v-model="timePeriod"
           compact
           class="filter"
           :values="timePeriodOptions"
-          v-model="timePeriod"
         />
       </template>
     </div>
@@ -60,18 +60,15 @@
       <p>Please select a wallet to view its performance</p>
     </div>
 
-    <div
-      class="chart-panel"
-      v-if="isDataVisible"
-    >
+    <div v-if="isDataVisible" class="chart-panel">
       <div class="chart-header">
         <div class="chart-header-top">
           <div class="chart-period-row">
             <Dropdown
+              v-model="timePeriod"
               compact
               class="chart-time-range"
               :values="timePeriodOptions"
-              v-model="timePeriod"
             />
             <div class="chart-period">{{ dateRange }}</div>
           </div>
@@ -89,10 +86,7 @@
         <div class="chart-stats">
           <div class="stat-card">
             <span class="stat-label">Win rate</span>
-            <span
-              class="stat-value"
-              :style="winRateStyle"
-            >
+            <span class="stat-value" :style="winRateStyle">
               {{ (winRate * 100).toFixed(2) }}%
             </span>
           </div>
@@ -123,14 +117,15 @@
         :quote-symbol="quoteToken"
       />
       <p v-if="isDataVisible" class="api-limit-note">
-        Portfolio history loads page by page from Meteora
-        (<template v-if="portfolioTotalCount">
+        Portfolio history loads page by page from Meteora (<template
+          v-if="portfolioTotalCount"
+        >
           {{ apiPoolCount }} / {{ portfolioTotalCount }} pools
         </template>
-        <template v-else>{{ apiPoolCount }} pools</template>,
-        last 365 days<template v-if="portfolioTotalPositions">
-          · {{ portfolioTotalPositions }} closed positions
-        </template>).
+        <template v-else>{{ apiPoolCount }} pools</template>, last 365
+        days<template v-if="portfolioTotalPositions">
+          · {{ portfolioTotalPositions }} closed positions </template
+        >).
         <template v-if="localPoolCount > apiPoolCount">
           {{ localPoolCount }} pools in local cache, including older history.
         </template>
@@ -141,7 +136,7 @@
       <p v-if="loadError" class="api-limit-note">{{ loadError }}</p>
     </div>
 
-    <div class="position-list-panel mt-8" v-if="isWalletAddressValid">
+    <div v-if="isWalletAddressValid" class="position-list-panel mt-8">
       <div class="list-header">
         <span class="list-header-cell pair-col">Pair</span>
         <span class="list-header-cell profit-col">P&L</span>
@@ -173,9 +168,9 @@
 
         <div v-else class="transaction-list">
           <div
-            class="position-item"
-            :key="positionKey(position)"
             v-for="position in positions"
+            :key="positionKey(position)"
+            class="position-item"
           >
             <div
               class="position-row"
@@ -184,7 +179,10 @@
             >
               <div
                 class="cell pair-col"
-                :class="{ 'with-wallet': walletAddress === 'All wallets' && position.wallet_name }"
+                :class="{
+                  'with-wallet':
+                    walletAddress === 'All wallets' && position.wallet_name,
+                }"
               >
                 <ChevronRightIcon
                   v-if="!collapsedPositions[positionKey(position)]"
@@ -204,12 +202,12 @@
               </div>
               <div class="cell profit-col">
                 <ChevronDoubleUpIcon
-                  class="profit-icon positive"
                   v-if="position.profit > 0"
+                  class="profit-icon positive"
                 />
                 <ChevronDoubleDownIcon
-                  class="profit-icon negative"
                   v-else-if="position.profit < 0"
+                  class="profit-icon negative"
                 />
                 <span
                   class="stat-value"
@@ -237,8 +235,8 @@
               </div>
             </div>
             <div
-              class="position-transactions"
               v-show="collapsedPositions[positionKey(position)]"
+              class="position-transactions"
             >
               <div
                 v-if="loadingDetails[positionKey(position)]"
@@ -254,7 +252,7 @@
                     <th scope="col" class="deposit">Deposit</th>
                     <th scope="col" class="withdrawal">Withdrawal</th>
                     <th scope="col" class="fee">Fee</th>
-                    <th scope="col"></th>
+                    <th scope="col" />
                   </tr>
                 </thead>
                 <tbody>
@@ -307,10 +305,7 @@
           </div>
         </div>
 
-        <div
-          v-if="isSyncing && positions.length"
-          class="list-sync-footer"
-        >
+        <div v-if="isSyncing && positions.length" class="list-sync-footer">
           <Loader />
           <span class="loading-message">{{
             loadingProgress || 'Syncing portfolio...'
@@ -379,9 +374,7 @@ const quoteToken = ref(
   pickAllowed(route.query.quote, ALLOWED_QUOTE_TOKENS, 'SOL'),
 )
 const sortBy = ref(pickAllowed(route.query.sort, ALLOWED_SORT_BY, 'profit'))
-const sortOrder = ref(
-  pickAllowed(route.query.dir, ALLOWED_SORT_ORDER, 'asc'),
-)
+const sortOrder = ref(pickAllowed(route.query.dir, ALLOWED_SORT_ORDER, 'asc'))
 const groupBy = ref(pickAllowed(route.query.group, ALLOWED_GROUP_BY, 'pair'))
 
 const rawPositions = shallowRef([])
@@ -412,9 +405,11 @@ const timePeriod = ref(allTimePeriod)
 
 const buildQuarterPeriod = (year, quarter) => {
   const startMonth = (quarter - 1) * 3 + 1
-  const start = DateTime.fromObject({ year, month: startMonth, day: 1 }).startOf(
-    'day',
-  )
+  const start = DateTime.fromObject({
+    year,
+    month: startMonth,
+    day: 1,
+  }).startOf('day')
   const quarterEnd = start.plus({ months: 3 }).minus({ days: 1 }).endOf('day')
   const end = DateTime.min(quarterEnd, DateTime.now().endOf('day'))
   return {
@@ -610,7 +605,7 @@ const refreshWalletLabel = async (address) => {
     const wallet = wallets.find((item) => item.address === address)
     walletLabel.value =
       wallet?.name || wallet?.domain || formatWalletLabel(address)
-  } catch (error) {
+  } catch {
     walletLabel.value = formatWalletLabel(address)
   }
 }
@@ -721,7 +716,7 @@ const applyCachedPortfolio = async (requestId) => {
 
   if (walletAddress.value === ALL_WALLETS) {
     const wallets = await getAllAddresses()
-    let cachedPositions = []
+    const cachedPositions = []
     let cachedPoolCount = 0
     let anyShown = false
 
@@ -849,12 +844,14 @@ const useWallet = async () => {
           timePeriod.value,
           onProgress,
         )
-        const positionsForWallet = (result?.positions || []).map((position) => ({
-          ...position,
-          wallet_address: wallet.address,
-          wallet_name: label,
-          wallet_addresses: [wallet.address],
-        }))
+        const positionsForWallet = (result?.positions || []).map(
+          (position) => ({
+            ...position,
+            wallet_address: wallet.address,
+            wallet_name: label,
+            wallet_addresses: [wallet.address],
+          }),
+        )
         perWalletFlat.push(...positionsForWallet)
         meta.syncIncomplete = meta.syncIncomplete || !!result?.syncIncomplete
         meta.totalCount += result?.totalCount || 0
@@ -1025,12 +1022,12 @@ const ensurePositionDetails = async (position) => {
   }
 
   try {
-    const cacheWallet = (
-      position.wallet_addresses?.length
+    const cacheWallet =
+      (position.wallet_addresses?.length
         ? [...position.wallet_addresses].sort().join(',')
         : position.wallet_address ||
-          (walletAddress.value !== ALL_WALLETS ? walletAddress.value : '')
-    ) || null
+          (walletAddress.value !== ALL_WALLETS ? walletAddress.value : '')) ||
+      null
     const kind = position.is_pool_group ? 'pool' : 'position'
     const address = position.is_pool_group
       ? position.pool_address
@@ -1278,11 +1275,11 @@ useHead({
 }
 
 .stat-card .stat-value.positive {
-  color: #3DDC84;
+  color: #3ddc84;
 }
 
 .stat-card .stat-value.negative {
-  color: #FF4757;
+  color: #ff4757;
 }
 
 .api-limit-note {
@@ -1484,11 +1481,11 @@ useHead({
 }
 
 .positive {
-  color: #3DDC84;
+  color: #3ddc84;
 }
 
 .negative {
-  color: #FF4757;
+  color: #ff4757;
 }
 
 .position-transactions {

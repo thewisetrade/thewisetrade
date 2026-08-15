@@ -4,16 +4,13 @@
     class="dropdown-container relative"
     :class="{ compact: compact }"
   >
-    <span
-      v-if="label"
-      class="option-name"
-    >
+    <span v-if="label" class="option-name">
       {{ label }}
     </span>
     <button
       type="button"
-      @click="isOpen = !isOpen"
       class="dropdown-button flex items-center justify-between"
+      @click="isOpen = !isOpen"
     >
       <span class="dropdown-label">{{ selectedText }}</span>
       <svg
@@ -41,9 +38,9 @@
         v-for="(val, index) in props.values"
         :key="val.text || index"
         type="button"
-        @click="update(val.value)"
         class="option w-full text-left transition-colors"
         :class="{ 'active-option': isActive(val.value) }"
+        @click="update(val.value)"
       >
         {{ val.text }}
       </button>
@@ -88,8 +85,7 @@ const update = (value) => {
 
 const isActive = (value) => {
   return (
-    value === model.value ||
-    (value?.name && value.name === model.value?.name)
+    value === model.value || (value?.name && value.name === model.value?.name)
   )
 }
 

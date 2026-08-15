@@ -40,25 +40,22 @@ export function chunkArray<T>(array: T[], chunkSize: number): T[][] {
   return chunks
 }
 
-export function retryWithBackoff<T>(
+export async function retryWithBackoff<T>(
   fn: () => Promise<T>,
   maxRetries: number = 3,
   baseDelay: number = 1000,
 ): Promise<T> {
-  return new Promise(async (resolve, reject) => {
-    for (let i = 0; i <= maxRetries; i++) {
-      try {
-        const result = await fn()
-        resolve(result)
-        return
-      } catch (error) {
-        if (i === maxRetries) {
-          reject(error)
-          return
-        }
-        const delay = baseDelay * Math.pow(2, i)
-        await sleep(delay)
+  for (let i = 0; i <= maxRetries; i++) {
+    try {
+      return await fn()
+    } catch (error) {
+      if (i === maxRetries) {
+        throw error
       }
+      await sleep(baseDelay * Math.pow(2, i))
     }
-  })
+  }
+  // The loop always returns or throws on the last attempt; this only satisfies
+  // the compiler.
+  throw new Error('retryWithBackoff exhausted its retries')
 }

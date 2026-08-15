@@ -23,8 +23,7 @@ const update = (value) => {
 
 const isActive = (value) => {
   return (
-    value === model.value ||
-    (value?.name && value.name === model.value?.name)
+    value === model.value || (value?.name && value.name === model.value?.name)
   )
 }
 </script>

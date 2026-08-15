@@ -1,7 +1,9 @@
 const positionAnalyzisCaches = {}
 
 function loadPositionAnalyzisCache(walletAddress) {
-  const data = localStorage.getItem(`meteora-position-analyzis-${walletAddress}`)
+  const data = localStorage.getItem(
+    `meteora-position-analyzis-${walletAddress}`,
+  )
   positionAnalyzisCaches[walletAddress] = {}
   try {
     const parsedData = JSON.parse(data) || {}
@@ -16,7 +18,10 @@ function loadPositionAnalyzisCache(walletAddress) {
 
 function savePositionAnalyzisCache(walletAddress) {
   const cache = positionAnalyzisCaches[walletAddress]
-  localStorage.setItem(`meteora-position-analyzis-${walletAddress}`, JSON.stringify(cache))
+  localStorage.setItem(
+    `meteora-position-analyzis-${walletAddress}`,
+    JSON.stringify(cache),
+  )
 }
 
 function isPositionAnalyzisCached(walletAddress, position) {

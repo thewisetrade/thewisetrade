@@ -1,6 +1,6 @@
 <template>
   <div class="chart-toolbar">
-    <div class="toolbar-group" v-if="progressContext">
+    <div v-if="progressContext" class="toolbar-group">
       <button
         class="mode"
         :class="{ active: chartType === 'profit' }"
@@ -16,8 +16,8 @@
         Progress
       </button>
     </div>
-    <div class="flex-1"></div>
-    <div class="toolbar-group" v-if="props.sortBy === 'date'">
+    <div class="flex-1" />
+    <div v-if="props.sortBy === 'date'" class="toolbar-group">
       <button
         class="mode"
         :class="{ active: groupBy === 'day' }"
@@ -50,18 +50,18 @@
   </div>
   <div class="chart-canvas">
     <Line
-      ref="chartProgressRef"
+      v-if="chartType === 'progress' && progressContext"
       id="performance-progress-chart"
+      ref="chartProgressRef"
       :options="chartOptions"
       :data="chartData"
-      v-if="chartType === 'progress' && progressContext"
     />
     <Bar
-      ref="chartRef"
+      v-else
       id="performance-chart"
+      ref="chartRef"
       :options="chartOptions"
       :data="chartData"
-      v-else
     />
   </div>
 </template>
@@ -158,7 +158,7 @@ const getDateRange = () => {
   const firstBlockTime = Math.min(
     ...props.positions.map((position) => position.block_time),
   )
-  let currentDate = DateTime.fromMillis(firstBlockTime * 1000)
+  const currentDate = DateTime.fromMillis(firstBlockTime * 1000)
   let endDate = props.timePeriod.end
   if (endDate > DateTime.now()) {
     endDate = DateTime.now().plus({ days: 1 })
@@ -171,8 +171,10 @@ const getProfitLabels = (positions) => {
 }
 
 const getDateLabels = (props) => {
-  let dateLabels = []
-  let { currentDate, endDate } = getDateRange()
+  const dateLabels = []
+  const dateRange = getDateRange()
+  const endDate = dateRange.endDate
+  let currentDate = dateRange.currentDate
 
   let lastDate = null
   while (currentDate <= endDate) {
@@ -212,8 +214,10 @@ const getDateValues = () => {
     return acc
   }, {})
 
-  let { currentDate, endDate } = getDateRange()
-  let dateValues = []
+  const dateRange = getDateRange()
+  const endDate = dateRange.endDate
+  let currentDate = dateRange.currentDate
+  const dateValues = []
 
   if (chartType.value === 'progress') {
     let previousProfit = 0
@@ -296,6 +300,7 @@ const labels = computed(() => {
   } else if (props.sortBy === 'date') {
     return getDateLabels(props)
   }
+  return []
 })
 
 const data = computed(() => {
@@ -304,6 +309,7 @@ const data = computed(() => {
   } else if (props.sortBy === 'date') {
     return getDateValues()
   }
+  return []
 })
 
 const chartData = computed(() => ({
@@ -317,7 +323,8 @@ const chartData = computed(() => ({
         tokens: item.tokens,
       })),
       borderColor: CHART_POSITIVE_BORDER,
-      borderWidth: chartType.value === 'progress' && progressContext.value ? 1 : 0,
+      borderWidth:
+        chartType.value === 'progress' && progressContext.value ? 1 : 0,
       fill: true,
       pointRadius: 0,
       hoverBackgroundColor: (context) => {
@@ -388,7 +395,7 @@ const chartOptions = computed(() => ({
             return `${tooltipItems[0].label.toUpperCase()} - ${props.quoteSymbol}`
           }
         },
-        label: (context) => [],
+        label: () => [],
         footer: (tooltipItems) => {
           let text =
             `P&L: ${tooltipItems[0].raw.y.toFixed(2)} ${props.quoteSymbol} \n` +
@@ -509,7 +516,9 @@ defineExpose({
   border: none;
   border-radius: 6px;
   background: transparent;
-  transition: color 0.15s ease, background 0.15s ease;
+  transition:
+    color 0.15s ease,
+    background 0.15s ease;
 }
 
 .mode:hover {

@@ -1,4 +1,4 @@
-import { SanctumClient} from 'sanctum-js'
+import { SanctumClient } from 'sanctum-js'
 
 const sanctumClient = new SanctumClient()
 

@@ -376,18 +376,18 @@
     To select the fees amount per bin, you have to consider how wide will the
     movements be. The positions with a high percentage won't catch many
     transactions, but if the price movements are big they will be fully used and
-    that way gives you a lot of fees and cover you impermanent loss faster.
-    But if the range tends to move slowly, it's the opposite. With high fees,
-  you will catch very few transactions and potentially miss many opportunities.
-    In that case, bin with smaller fees will perform better.
+    that way gives you a lot of fees and cover you impermanent loss faster. But
+    if the range tends to move slowly, it's the opposite. With high fees, you
+    will catch very few transactions and potentially miss many opportunities. In
+    that case, bin with smaller fees will perform better.
   </p>
 
   <h3>Covered Range</h3>
 
   <p>
-  All pools can cover any range involving at most 1400 bins. But sometimes,
-  it's simpler to stick with the default range. The following table resume the
-  range covered by default positions proposed by Meteora:
+    All pools can cover any range involving at most 1400 bins. But sometimes,
+    it's simpler to stick with the default range. The following table resume the
+    range covered by default positions proposed by Meteora:
   </p>
 
   <table class="w-full my-4">
@@ -439,7 +439,7 @@
       <tr>
         <td>200</td>
         <td>-74.50% - 0</td>
-        <td>-49%  - +96.07%</td>
+        <td>-49% - +96.07%</td>
         <td>0 - +292.11%</td>
       </tr>
       <tr>
@@ -654,10 +654,9 @@
       </a>
     </li>
     <li>
-      <a
-        target="_blank"
-        href="https://tokleo.com"
-        >Highly active pairs finder</a>
+      <a target="_blank" href="https://tokleo.com"
+        >Highly active pairs finder</a
+      >
     </li>
     <li>
       <a
@@ -667,29 +666,25 @@
       >
     </li>
     <li>
-      <a target="_blank" href="https://app.lpagent.io/">Positions
-      performance</a>
+      <a target="_blank" href="https://app.lpagent.io/"
+        >Positions performance</a
+      >
     </li>
     <li>
       <a target="_blank" href="https://www.hawkfi.ag/">Automations</a>
     </li>
- </ul>
+  </ul>
 
   <h3>Resources</h3>
 
   <ul>
     <li>
-      <a
-        target="_blank"
-        href="https://www.youtube.com/@meteora-ag"
+      <a target="_blank" href="https://www.youtube.com/@meteora-ag"
         >Meteora Youtube Playlist: Bootcamps and JAM sessions</a
       >
     </li>
     <li>
-      <a
-        target="_blank"
-        href="https://www.lparmy.com/strategies"
-      >
+      <a target="_blank" href="https://www.lparmy.com/strategies">
         Advanced strategies
       </a>
     </li>
@@ -814,9 +809,7 @@
     </li>
     <li>Use only small capital amount.</li>
     <li>Stay in front of your computer during the process.</li>
-    <li>
-      Join a DLMM community like the LP Army and trade with them.
-    </li>
+    <li>Join a DLMM community like the LP Army and trade with them.</li>
     <li>
       These tokens can rug at any time, in that case, your funds are lost. This
       is why the risk is very high.
@@ -861,7 +854,9 @@
       <a href="https://discord.com/invite/meteora">The Meteora Community</a>
     </li>
     <li>
-      <a href="https://www.lparmy.com/">LP Army (Community for advanced users)</a>
+      <a href="https://www.lparmy.com/"
+        >LP Army (Community for advanced users)</a
+      >
     </li>
   </ul>
 </template>

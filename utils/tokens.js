@@ -26,7 +26,6 @@ export class TokenService {
           verified: token.verified || false,
         })
       })
-
     } catch (error) {
       console.error('Failed to load Jupiter tokens:', error)
       this.jupiterTokens = new Map()

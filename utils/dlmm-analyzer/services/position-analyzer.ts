@@ -1,10 +1,10 @@
 // src/services/position-analyzer.ts
 import BN from 'bn.js'
-import { PublicKey } from '@solana/web3.js'
-import { MeteoraService } from './meteora.js'
+import type { PublicKey } from '@solana/web3.js'
+import type { MeteoraService } from './meteora.js'
 import type { PositionData, PositionAnalysis } from '../types/position.js'
 import { calculateAge, formatTokenAmount } from '../utils/helpers.js'
-import { type LbPosition, type PositionInfo } from '@meteora-ag/dlmm'
+import type { LbPosition, PositionInfo } from '@meteora-ag/dlmm'
 
 export class PositionAnalyzer {
   private meteoraService: MeteoraService
@@ -126,6 +126,12 @@ export class PositionAnalyzer {
         initialValueUsd > 0 ? (upnlUsd / initialValueUsd) * 100 : 0
       const priceRange = this.meteoraService.getPriceRange(bins)
       const currentPrice = this.meteoraService.calculateBinPrice(bins)
+      if (!currentPrice) {
+        // No bins means no price to value the position against. This used to
+        // fall through and throw on `currentPrice!` below, so the position was
+        // dropped anyway — just without saying so.
+        return null
+      }
 
       const binsWithValue = bins.map((bin) => {
         const binValue =
@@ -138,15 +144,15 @@ export class PositionAnalyzer {
       })
 
       const value =
-        (currentValue.tokenX.toNumber() * currentPrice?.currentPrice! +
+        (currentValue.tokenX.toNumber() * currentPrice.currentPrice +
           currentValue.tokenY.toNumber()) /
         10 ** 9
       const collectedFeesValue =
-        (collectedFees.tokenX.toNumber() * currentPrice?.currentPrice! +
+        (collectedFees.tokenX.toNumber() * currentPrice.currentPrice +
           collectedFees.tokenY.toNumber()) /
         10 ** 9
       const unCollectedFeesValue =
-        (unCollectedFees.tokenX.toNumber() * currentPrice?.currentPrice! +
+        (unCollectedFees.tokenX.toNumber() * currentPrice.currentPrice +
           unCollectedFees.tokenY.toNumber()) /
         10 ** 9
 
@@ -203,7 +209,7 @@ export class PositionAnalyzer {
         priceRange: {
           minPrice: priceRange.minPrice,
           maxPrice: priceRange.maxPrice,
-          currentPrice: currentPrice!.currentPrice,
+          currentPrice: currentPrice.currentPrice,
         },
         collectedFeesValue,
         unCollectedFeesValue,

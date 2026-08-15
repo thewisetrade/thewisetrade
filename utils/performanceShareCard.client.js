@@ -31,7 +31,10 @@ const drawOverlayPanel = (ctx, x, y, width, height) => {
 const truncateText = (ctx, text, maxWidth) => {
   if (ctx.measureText(text).width <= maxWidth) return text
   let trimmed = text
-  while (trimmed.length > 1 && ctx.measureText(`${trimmed}...`).width > maxWidth) {
+  while (
+    trimmed.length > 1 &&
+    ctx.measureText(`${trimmed}...`).width > maxWidth
+  ) {
     trimmed = trimmed.slice(0, -1)
   }
   return `${trimmed}...`
@@ -128,7 +131,11 @@ const drawStatValue = (ctx, stat, statX, topY, statWidth) => {
   if (stat.pnlDirection) {
     const iconSize = 16
     const iconGap = 8
-    const valueText = truncateText(ctx, stat.value, maxWidth - iconSize - iconGap)
+    const valueText = truncateText(
+      ctx,
+      stat.value,
+      maxWidth - iconSize - iconGap,
+    )
     const textWidth = ctx.measureText(valueText).width
     const blockWidth = iconSize + iconGap + textWidth
     const blockStart = statX + (statWidth - blockWidth) / 2
@@ -153,7 +160,8 @@ const drawStatsRow = (ctx, stats, cardWidth, topY) => {
   const statWidth = 250
   const statHeight = 78
   const statGap = 14
-  const statsTotalWidth = stats.length * statWidth + (stats.length - 1) * statGap
+  const statsTotalWidth =
+    stats.length * statWidth + (stats.length - 1) * statGap
   const statsLeft = (cardWidth - statsTotalWidth) / 2
 
   stats.forEach((stat, index) => {
@@ -251,7 +259,12 @@ export const renderPerformanceShareCard = async ({
   ctx.fillStyle = topGradient
   ctx.fillRect(0, 0, SHARE_CARD_WIDTH, 260)
 
-  const bottomGradient = ctx.createLinearGradient(0, SHARE_CARD_HEIGHT - 90, 0, SHARE_CARD_HEIGHT)
+  const bottomGradient = ctx.createLinearGradient(
+    0,
+    SHARE_CARD_HEIGHT - 90,
+    0,
+    SHARE_CARD_HEIGHT,
+  )
   bottomGradient.addColorStop(0, 'rgba(6, 6, 8, 0)')
   bottomGradient.addColorStop(1, 'rgba(6, 6, 8, 0.82)')
   ctx.fillStyle = bottomGradient
@@ -284,7 +297,11 @@ export const renderPerformanceShareCard = async ({
   ctx.font = '500 14px ui-sans-serif, system-ui, sans-serif'
   const footer = 'thewise.trade/dlmm-performance'
   const footerWidth = ctx.measureText(footer).width
-  ctx.fillText(footer, (SHARE_CARD_WIDTH - footerWidth) / 2, SHARE_CARD_HEIGHT - 24)
+  ctx.fillText(
+    footer,
+    (SHARE_CARD_WIDTH - footerWidth) / 2,
+    SHARE_CARD_HEIGHT - 24,
+  )
 
   return canvas.toDataURL('image/png')
 }
@@ -299,7 +316,5 @@ export const downloadDataUrl = (dataUrl, filename) => {
 export const copyDataUrlToClipboard = async (dataUrl) => {
   const response = await fetch(dataUrl)
   const blob = await response.blob()
-  await navigator.clipboard.write([
-    new ClipboardItem({ 'image/png': blob }),
-  ])
+  await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })])
 }

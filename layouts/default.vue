@@ -1,8 +1,10 @@
 <template>
   <div class="flex flex-col h-screen main">
     <Navigation />
-    <div class="content" ref="contentDiv">
-      <div class="container max-w-screen-md mx-auto p-8 bg-paper shadow-md rounded-lg mt-8">
+    <div ref="contentDiv" class="content">
+      <div
+        class="container max-w-screen-md mx-auto p-8 bg-paper shadow-md rounded-lg mt-8"
+      >
         <slot />
         <Footer />
       </div>
@@ -35,10 +37,14 @@ router.beforeEach((to, from) => {
   saveScrollPosition(from.fullPath)
 })
 
-watch(() => route.fullPath, async (newPath) => {
-  await nextTick()
-  restoreScrollPosition(newPath)
-}, { immediate: true })
+watch(
+  () => route.fullPath,
+  async (newPath) => {
+    await nextTick()
+    restoreScrollPosition(newPath)
+  },
+  { immediate: true },
+)
 </script>
 
 <style scoped>

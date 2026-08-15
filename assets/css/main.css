@@ -1,25 +1,17 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
+/* Tailwind v4 exposes every @theme entry as a :root custom property, so these
+   double as the values behind `bg-paper`, `text-grey`, … and `var(--color-*)`.
+   The values must not be quoted: a quoted hex is a string, not a color. */
 @theme {
-  --color-blue: '#1a1625';
-  --color-beige: '#2f2b3a';
-  --color-grey: '#ECE8DD';
-  --color-paper: '#121212';
-  --color-paperlight: '#2f2b3a';
-  --color-paperlighter: '#FFFDF8';
-  --color-greyblue: '#AEBDCA';
-  --color-darkblue: '#5e43f3';
-}
-
-:root {
-  --color-blue: '#1a1625';
-  --color-beige: '#2f2b3a';
-  --color-grey: '#ECE8DD';
-  --color-paper: '#121212';
-  --color-paperlight: '#2f2b3a';
-  --color-paperlighter: '#FFFDF8';
-  --color-greyblue: '#AEBDCA';
-  --color-darkblue: '#5e43f3';
+  --color-blue: #1a1625;
+  --color-beige: #2f2b3a;
+  --color-grey: #ece8dd;
+  --color-paper: #121212;
+  --color-paperlight: #2f2b3a;
+  --color-paperlighter: #fffdf8;
+  --color-greyblue: #aebdca;
+  --color-darkblue: #5e43f3;
 }
 
 body {
@@ -28,13 +20,16 @@ body {
   font-family: Tahoma, sans-serif;
 }
 
-a {
-  color: var(--color-darkblue);
-}
+/* Pas de règle de couleur ici : le preflight Tailwind applique déjà
+   `a { color: inherit }`, donc les liens héritent du blanc du body. Cette règle
+   valait `var(--color-darkblue)` (#5e43f3) depuis le commit initial, mais la
+   valeur était citée donc invalide comme couleur — elle n'a jamais rien coloré.
+   Rendre les valeurs de @theme valides l'a réveillée et teinté tous les liens
+   du site en violet. */
 
 p {
-    margin-top: .2em;
-    margin-bottom: .8em;
+  margin-top: 0.2em;
+  margin-bottom: 0.8em;
 }
 
 h1 {
@@ -61,24 +56,20 @@ table td {
   font-size: 0.8em;
 }
 
-.bg-paper {
-  background: #121212;
-}
-
 .guide-link {
   @apply font-bold shadow rounded-xl text-center;
-  background: #2F2B4A;
+  background: #2f2b4a;
   box-shadow: 2px 2px 4px rgba(0, 0, 0, 1);
   height: 260px;
   min-width: 200px;
-  padding: 1em .4em 1em .4em;
+  padding: 1em 0.4em 1em 0.4em;
   color: white;
 }
 
 .guide-link img {
   max-width: 150px;
   margin: auto;
-  margin-bottom: .5em;
+  margin-bottom: 0.5em;
 }
 
 .guide-link:hover {
@@ -89,5 +80,7 @@ table td {
 
 .linkblock {
   @apply font-bold shadow p-2 rounded-md border;
-  color: var(--color-darkblue)
+  /* Même cas que la règle `a` plus haut : la couleur violette n'a jamais été
+     appliquée, ces blocs ont toujours été blancs. */
+  color: inherit;
 }

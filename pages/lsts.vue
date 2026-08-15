@@ -1,34 +1,42 @@
 <template>
-<div class="flex flex-col h-screen main-container">
-  <h1>Sanctum LST Interest Rates (APYs)</h1>
-  <div v-if="loading" class="loader-container">
-    <div class="loader"></div>
+  <div class="flex flex-col h-screen main-container">
+    <h1>Sanctum LST Interest Rates (APYs)</h1>
+    <div v-if="loading" class="loader-container">
+      <div class="loader" />
+    </div>
+    <div v-else class="table-container">
+      <table class="text-center">
+        <thead>
+          <tr>
+            <th />
+            <th>Name</th>
+            <th>Symbol</th>
+            <th>Apy</th>
+            <th>Ap5y</th>
+            <th>Ap10y</th>
+          </tr>
+        </thead>
+        <tbody class="tbody">
+          <tr v-for="lst in lsts" :key="lst.symbol">
+            <td><img :src="lst.logo_uri" width="32" /></td>
+            <td>{{ lst.name }}</td>
+            <td>{{ lst.symbol }}</td>
+            <td>{{ (apys[lst.mint] * 100 || 0).toFixed(2) }}%</td>
+            <td>
+              {{
+                ((Math.pow(apys[lst.mint] + 1, 5) - 1) * 100 || 0).toFixed(2)
+              }}%
+            </td>
+            <td>
+              {{
+                ((Math.pow(apys[lst.mint] + 1, 10) - 1) * 100 || 0).toFixed(2)
+              }}%
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   </div>
-  <div v-else class="table-container">
-    <table class="text-center">
-      <thead>
-        <tr>
-          <th></th>
-          <th>Name</th>
-          <th>Symbol</th>
-          <th>Apy</th>
-          <th>Ap5y</th>
-          <th>Ap10y</th>
-        </tr>
-      </thead>
-      <tbody class="tbody">
-        <tr v-for="lst in lsts" :key="lst.symbol">
-          <td><img :src="lst.logo_uri" width="32" /></td>
-          <td>{{ lst.name }}</td>
-          <td>{{ lst.symbol }}</td>
-          <td>{{ (apys[lst.mint] * 100 || 0).toFixed(2) }}%</td>
-          <td>{{ ((Math.pow((apys[lst.mint] + 1), 5) - 1) * 100 || 0).toFixed(2) }}%</td>
-          <td>{{ ((Math.pow((apys[lst.mint] + 1), 10) - 1) * 100 || 0).toFixed(2) }}%</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-</div>
 </template>
 
 <script setup>
@@ -67,7 +75,6 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-
 h1 {
   margin-top: 0;
 }
@@ -101,7 +108,8 @@ table {
   }
 }
 
-th, td {
+th,
+td {
   padding: 8px;
   text-align: left;
   border: none;
@@ -147,7 +155,11 @@ tbody {
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 </style>

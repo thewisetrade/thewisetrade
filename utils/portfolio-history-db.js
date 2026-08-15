@@ -102,11 +102,7 @@ const setPositionDetails = async (
 
 const getPoolPositions = async (wallet, poolAddress, quoteToken = '') => {
   if (!wallet || !poolAddress) return null
-  const row = await getDb().poolPositions.get([
-    wallet,
-    poolAddress,
-    quoteToken,
-  ])
+  const row = await getDb().poolPositions.get([wallet, poolAddress, quoteToken])
   return row?.positions || null
 }
 
@@ -130,7 +126,10 @@ const setPoolPositions = async (
 
 const getAllPoolPositionsMap = async (wallet, quoteToken = '') => {
   if (!wallet) return new Map()
-  const rows = await getDb().poolPositions.where('wallet').equals(wallet).toArray()
+  const rows = await getDb()
+    .poolPositions.where('wallet')
+    .equals(wallet)
+    .toArray()
   const map = new Map()
   rows
     .filter((row) => row.quoteToken === quoteToken && row.poolAddress)

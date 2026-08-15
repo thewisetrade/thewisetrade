@@ -1,40 +1,42 @@
 <template>
   <div class="container max-w-screen-md mx-auto">
     <p class="flex justify-center mt-16 flex-wrap">
-      <img class="rounded-lg shadow mr-5 mb-5" src="~/assets/images/defilogist.png" />
+      <img
+        class="rounded-lg shadow mr-5 mb-5"
+        src="~/assets/images/defilogist.png"
+      />
     </p>
 
     <h1>About me</h1>
 
     <p>
-      I'm DeFilogist, a deFi and NFT
-      enthusiast who made significant gains with
-      cryptos via providing liquidity with Pancakeswap.
-      I grew my portfolio from $4k to $50k,  then I cashed out half of it and
-      invested the rest in NFTs and small caps cryptos.
+      I'm DeFilogist, a deFi and NFT enthusiast who made significant gains with
+      cryptos via providing liquidity with Pancakeswap. I grew my portfolio from
+      $4k to $50k, then I cashed out half of it and invested the rest in NFTs
+      and small caps cryptos.
     </p>
 
     <p>
       From there, I made all the mistakes possible by trading shitcoins and
-      NFTs. I lost more than half of my remaining portfolio.
-      After these hard-earned lessons, I decided to look for options with a
-      better risk/reward ratio and to share what I found on this website.
+      NFTs. I lost more than half of my remaining portfolio. After these
+      hard-earned lessons, I decided to look for options with a better
+      risk/reward ratio and to share what I found on this website.
     </p>
 
     <p>
-      From the end of 2023 to 2024, a new bull-run started. The NFT
-      market took a serious hit but a new meta began with airdrop farming. My
-      priorities shifted to smart liquidity providing and airdrop chasing.
-      This strategy has been rewarding so far. I started with around $10k and
-      my portfolio value is now close to $130k.
+      From the end of 2023 to 2024, a new bull-run started. The NFT market took
+      a serious hit but a new meta began with airdrop farming. My priorities
+      shifted to smart liquidity providing and airdrop chasing. This strategy
+      has been rewarding so far. I started with around $10k and my portfolio
+      value is now close to $130k.
     </p>
 
     <p>
       The airdrop season is ended and now the market is slower, but liquidity
-      providing can still be rewarding. That's why in this website, I share
-      with you guides and tools to take the most out of it. We focus on two
-      aspects: token pools liquidity providing via Meteora DLMMs and SOL
-      staking via LSTs.
+      providing can still be rewarding. That's why in this website, I share with
+      you guides and tools to take the most out of it. We focus on two aspects:
+      token pools liquidity providing via Meteora DLMMs and SOL staking via
+      LSTs.
     </p>
 
     <h1 class="mt-12">Strategy for 2025</h1>
@@ -43,10 +45,10 @@
 
     <p>
       The crypto market is in pretty bad shape and geopolics are uncertain. So,
-      I decided to hold and stake my favorites tokens JUP and CLOUD.
-      Most of my portfolio was turned to USDC that I will try to grow through
-      liquidity providing for strong tokens. I also cashed out a siginificant
-      part to support personal needs.
+      I decided to hold and stake my favorites tokens JUP and CLOUD. Most of my
+      portfolio was turned to USDC that I will try to grow through liquidity
+      providing for strong tokens. I also cashed out a siginificant part to
+      support personal needs.
     </p>
 
     <h2>My Meteora DLMM activity</h2>
@@ -57,12 +59,12 @@
     >
       My Meteora P&L
     </a>
-
   </div>
 </template>
 
 <script setup>
-const description = 'Tips for Solana NFT trading, avoid mistakes and increase your chances of success'
+const description =
+  'Tips for Solana NFT trading, avoid mistakes and increase your chances of success'
 useHead({
   title: 'The Wise Trade | About',
   meta: [
@@ -70,7 +72,7 @@ useHead({
     { name: 'og:description', content: description },
     { name: 'og:image', content: 'https://thewise.trade/defilogist.png' },
     { name: 'og:type', content: 'website' },
-  ]
+  ],
 })
 </script>
 
