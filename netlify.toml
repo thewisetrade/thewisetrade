@@ -1,3 +1,9 @@
+# Sans déclaration explicite, Netlify retombe sur la version de Node figée à la
+# création du site. @nuxt/nitro-server exige ^22.19.0 et @nuxt/vite-builder
+# ^22.18.0, donc une valeur par défaut plus ancienne casse le build.
+[build.environment]
+  NODE_VERSION = "22.23.2"
+
 [[redirects]]
   from = "/api/meteora/*"
   to = "https://dlmm.datapi.meteora.ag/:splat"
