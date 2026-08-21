@@ -90,6 +90,7 @@
           <div class="sort-icon" :class="getSortClass('range')" />
           <div class="flex-1" />
         </div>
+        <div class="header-cell exclude-cell-header" />
       </div>
 
       <div class="table-content">
@@ -147,12 +148,16 @@
                 </span>
               </div>
               <div class="cell range-cell" />
+              <div class="cell exclude-cell" />
             </div>
             <template v-for="position in group.positions" :key="position.id">
               <div v-if="walletAddress === 'All wallets'" class="wallet-name">
                 {{ position.walletName }}
               </div>
-              <div class="table-row">
+              <div
+                class="table-row"
+                :class="{ 'excluded-row': isExcluded(position) }"
+              >
                 <div class="cell position-cell">
                   <a
                     class="flex flex-row bin-container"
@@ -248,6 +253,21 @@
                     :is-out-of-range="!!position.isOutOfRange"
                   />
                 </div>
+
+                <div class="cell exclude-cell">
+                  <button
+                    class="exclude-toggle"
+                    :class="{ active: isExcluded(position) }"
+                    :title="
+                      isExcluded(position)
+                        ? 'Include in group total'
+                        : 'Exclude from group total'
+                    "
+                    @click="toggleExcluded(position)"
+                  >
+                    {{ isExcluded(position) ? '+' : '−' }}
+                  </button>
+                </div>
               </div>
             </template>
           </template>
@@ -342,7 +362,35 @@ let enrichRequestId = 0
 const walletAddress = ref(null)
 const selectedWallet = ref(null)
 
+const EXCLUDED_STORAGE_KEY = 'positions:excluded'
+const excludedIds = ref(new Set())
+
+const loadExcludedIds = () => {
+  try {
+    const raw = localStorage.getItem(EXCLUDED_STORAGE_KEY)
+    if (raw) {
+      excludedIds.value = new Set(JSON.parse(raw))
+    }
+  } catch {
+    excludedIds.value = new Set()
+  }
+}
+
+const isExcluded = (position) => excludedIds.value.has(position.id)
+
+const toggleExcluded = (position) => {
+  const next = new Set(excludedIds.value)
+  if (next.has(position.id)) {
+    next.delete(position.id)
+  } else {
+    next.add(position.id)
+  }
+  excludedIds.value = next
+  localStorage.setItem(EXCLUDED_STORAGE_KEY, JSON.stringify([...next]))
+}
+
 onMounted(async () => {
+  loadExcludedIds()
   setSavedWalletAddress()
   syncPositionsQuery()
   setTimeout(() => {
@@ -502,10 +550,20 @@ const displayedPositionSections = computed(() => {
         return true
       })
 
+      const included = positions.filter(
+        (position) => !excludedIds.value.has(position.id),
+      )
+      const excluded = positions.filter((position) =>
+        excludedIds.value.has(position.id),
+      )
+
       return {
         ...section,
-        positions,
-        totals: computeSectionTotals(positions, section.id),
+        positions: [...included, ...excluded],
+        totals: {
+          ...computeSectionTotals(included, section.id),
+          count: positions.length,
+        },
       }
     })
     .filter((section) => section.positions.length > 0)
@@ -971,7 +1029,7 @@ watch(selectedWallet, (address) => {
 
 .table-header {
   display: grid;
-  grid-template-columns: 1.5fr 1fr 1fr 1fr 2fr;
+  grid-template-columns: 1.5fr 1fr 1fr 1fr 2fr 2rem;
   gap: 1rem;
   padding: 1rem 1.5rem;
   background: #1a1a20;
@@ -1035,7 +1093,7 @@ watch(selectedWallet, (address) => {
 
 .quote-group-summary {
   display: grid;
-  grid-template-columns: 1.5fr 1fr 1fr 1fr 2fr;
+  grid-template-columns: 1.5fr 1fr 1fr 1fr 2fr 2rem;
   gap: 1rem;
   padding: 0.75rem 1.5rem;
   background: #1f1f1f;
@@ -1084,7 +1142,7 @@ watch(selectedWallet, (address) => {
 
 .table-row {
   display: grid;
-  grid-template-columns: 1.5fr 1fr 1fr 1fr 2fr;
+  grid-template-columns: 1.5fr 1fr 1fr 1fr 2fr 2rem;
   gap: 1rem;
   padding: 1rem 1.5rem;
   border-bottom: 1px solid #2a2a2a;
@@ -1230,6 +1288,48 @@ watch(selectedWallet, (address) => {
   gap: 0.5rem;
   width: 100%;
   flex: 1;
+}
+
+.exclude-cell-header,
+.exclude-cell {
+  justify-content: center;
+  cursor: default;
+}
+
+.exclude-toggle {
+  width: 1.5rem;
+  height: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid #444;
+  border-radius: 50%;
+  color: #888;
+  font-size: 0.9rem;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    color 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.exclude-toggle:hover {
+  color: #fff;
+  border-color: #888;
+}
+
+.exclude-toggle.active {
+  color: #3ddc84;
+  border-color: #3ddc84;
+}
+
+.excluded-row {
+  opacity: 0.45;
+}
+
+.excluded-row:hover {
+  opacity: 0.8;
 }
 
 .range-bar {
