@@ -1,0 +1,5 @@
+# Same-origin proxies for the SPA. Duplicated from netlify.toml because the
+# deployed site does not get the toml redirect rules (file-based rules ship
+# with the published files, so they always apply).
+/api/meteora/*  https://dlmm.datapi.meteora.ag/:splat        200!
+/api/gecko/*    https://api.geckoterminal.com/api/v2/:splat  200!
