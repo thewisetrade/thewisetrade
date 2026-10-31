@@ -52,14 +52,12 @@
     <Line
       v-if="chartType === 'progress' && progressContext"
       id="performance-progress-chart"
-      ref="chartProgressRef"
       :options="chartOptions"
       :data="chartData"
     />
     <Bar
       v-else
       id="performance-chart"
-      ref="chartRef"
       :options="chartOptions"
       :data="chartData"
     />
@@ -446,28 +444,21 @@ watch(progressContext, () => {
   }
 })
 
-const chartRef = ref(null)
-const chartProgressRef = ref(null)
-
-const getActiveChart = () => {
-  if (chartType.value === 'progress' && progressContext.value) {
-    return chartProgressRef.value?.chart
-  }
-  return chartRef.value?.chart
-}
-
-// Horizontal room (screen px) a vertical label needs to stay readable
+// The share card is 1200x630 and draws the chart image full-bleed, with its
+// stats over the top and a footer over the bottom.
+const SHARE_WIDTH = 1200
+const SHARE_HEIGHT = 630
+const SHARE_PADDING = { top: 8, right: 24, bottom: 64, left: 8 }
+// Horizontal room a vertical label needs to stay readable
 const SHARE_LABEL_SLOT_PX = 14
 const SHARE_LABEL_FONT_SIZE = 11
 
 // The share card has no hover, so name as many bars as fit without
 // overlapping, biggest |P&L| first.
-const pickShareLabelIndexes = (chart) => {
-  const values = data.value || []
+const pickShareLabelIndexes = (values, plotWidth) => {
   const count = values.length
   if (!count) return new Set()
-  const width = chart.chartArea?.width || chart.width || 1
-  const slot = width / count
+  const slot = plotWidth / count
   const minGap = Math.max(1, Math.ceil(SHARE_LABEL_SLOT_PX / slot))
 
   const order = values
@@ -484,57 +475,72 @@ const pickShareLabelIndexes = (chart) => {
   return shown
 }
 
-const applyShareTicks = (chart) => {
-  if (props.sortBy !== 'profit') return () => {}
-  const xScale = chart.options.scales?.x
-  if (!xScale) return () => {}
-
-  const hadTicks = Object.prototype.hasOwnProperty.call(xScale, 'ticks')
-  const previousTicks = xScale.ticks
-  const shown = pickShareLabelIndexes(chart)
-  const names = labels.value
-
-  xScale.ticks = {
-    autoSkip: false,
-    maxRotation: 90,
-    minRotation: 0,
-    font: { size: SHARE_LABEL_FONT_SIZE },
-    callback: (_value, index) => (shown.has(index) ? names[index] : ''),
-  }
-
-  return () => {
-    if (hadTicks) xScale.ticks = previousTicks
-    else delete xScale.ticks
-  }
-}
-
+// Render a dedicated chart off-screen at the card's size rather than
+// capturing the on-screen one, whose size and labels depend on the viewport.
 const getChartImage = () => {
-  const chart = getActiveChart()
-  if (!chart) return null
+  if (typeof document === 'undefined') return null
+  const values = data.value || []
+  if (!values.length) return null
 
-  const restoreTicks = applyShareTicks(chart)
-  const previousPadding = chart.options.layout?.padding
-  chart.options.layout = {
-    ...chart.options.layout,
-    padding: {
-      top: 8,
-      right: 24,
-      bottom: 8,
-      left: 8,
+  const isProgress = chartType.value === 'progress' && progressContext.value
+  const names = [...labels.value]
+  let shown = new Set()
+
+  const baseOptions = chartOptions.value
+  const xTicks =
+    props.sortBy === 'profit'
+      ? {
+          autoSkip: false,
+          maxRotation: 90,
+          minRotation: 0,
+          font: { size: SHARE_LABEL_FONT_SIZE },
+          callback: (_value, index) => (shown.has(index) ? names[index] : ''),
+        }
+      : { font: { size: SHARE_LABEL_FONT_SIZE } }
+
+  const canvas = document.createElement('canvas')
+  canvas.width = SHARE_WIDTH
+  canvas.height = SHARE_HEIGHT
+
+  const chart = new ChartJS(canvas, {
+    type: isProgress ? 'line' : 'bar',
+    data: {
+      labels: names,
+      datasets: chartData.value.datasets.map((dataset) => ({
+        ...dataset,
+        data: dataset.data.map((point) => ({ ...point })),
+      })),
     },
+    options: {
+      ...baseOptions,
+      responsive: false,
+      animation: false,
+      devicePixelRatio: 2,
+      events: [],
+      layout: { padding: SHARE_PADDING },
+      plugins: {
+        ...baseOptions.plugins,
+        tooltip: { enabled: false },
+      },
+      scales: {
+        ...baseOptions.scales,
+        x: { ...baseOptions.scales.x, ticks: xTicks },
+      },
+    },
+  })
+
+  try {
+    if (props.sortBy === 'profit') {
+      const plotWidth =
+        chart.chartArea?.width ||
+        SHARE_WIDTH - SHARE_PADDING.left - SHARE_PADDING.right
+      shown = pickShareLabelIndexes(values, plotWidth)
+      chart.update('none')
+    }
+    return chart.toBase64Image('image/png', 1)
+  } finally {
+    chart.destroy()
   }
-  chart.update('none')
-
-  const image = chart.toBase64Image('image/png', 2)
-
-  chart.options.layout = {
-    ...chart.options.layout,
-    padding: previousPadding ?? 0,
-  }
-  restoreTicks()
-  chart.update('none')
-
-  return image
 }
 
 defineExpose({
