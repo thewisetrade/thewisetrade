@@ -456,10 +456,63 @@ const getActiveChart = () => {
   return chartRef.value?.chart
 }
 
+// Horizontal room (screen px) a vertical label needs to stay readable
+const SHARE_LABEL_SLOT_PX = 14
+const SHARE_LABEL_FONT_SIZE = 11
+
+// The share card has no hover, so name as many bars as fit without
+// overlapping, biggest |P&L| first.
+const pickShareLabelIndexes = (chart) => {
+  const values = data.value || []
+  const count = values.length
+  if (!count) return new Set()
+  const width = chart.chartArea?.width || chart.width || 1
+  const slot = width / count
+  const minGap = Math.max(1, Math.ceil(SHARE_LABEL_SLOT_PX / slot))
+
+  const order = values
+    .map((_, index) => index)
+    .sort((a, b) => Math.abs(values[b].y) - Math.abs(values[a].y))
+
+  const shown = new Set()
+  order.forEach((index) => {
+    for (let near = index - minGap + 1; near < index + minGap; near++) {
+      if (shown.has(near)) return
+    }
+    shown.add(index)
+  })
+  return shown
+}
+
+const applyShareTicks = (chart) => {
+  if (props.sortBy !== 'profit') return () => {}
+  const xScale = chart.options.scales?.x
+  if (!xScale) return () => {}
+
+  const hadTicks = Object.prototype.hasOwnProperty.call(xScale, 'ticks')
+  const previousTicks = xScale.ticks
+  const shown = pickShareLabelIndexes(chart)
+  const names = labels.value
+
+  xScale.ticks = {
+    autoSkip: false,
+    maxRotation: 90,
+    minRotation: 0,
+    font: { size: SHARE_LABEL_FONT_SIZE },
+    callback: (_value, index) => (shown.has(index) ? names[index] : ''),
+  }
+
+  return () => {
+    if (hadTicks) xScale.ticks = previousTicks
+    else delete xScale.ticks
+  }
+}
+
 const getChartImage = () => {
   const chart = getActiveChart()
   if (!chart) return null
 
+  const restoreTicks = applyShareTicks(chart)
   const previousPadding = chart.options.layout?.padding
   chart.options.layout = {
     ...chart.options.layout,
@@ -478,6 +531,7 @@ const getChartImage = () => {
     ...chart.options.layout,
     padding: previousPadding ?? 0,
   }
+  restoreTicks()
   chart.update('none')
 
   return image
