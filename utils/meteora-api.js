@@ -121,16 +121,68 @@ const meteoraFetch = async (path, params = {}) =>
     throw lastError
   })
 
+// days_back is counted from now, so a past period (e.g. last month) needs
+// every day between its start and today, not just its own length.
 const daysBackFromPeriod = (timePeriod) => {
-  if (!timePeriod?.start || !timePeriod?.end) return MAX_DAYS_BACK
-  if (typeof timePeriod.end.diff !== 'function') return MAX_DAYS_BACK
-  try {
-    const days = Math.ceil(timePeriod.end.diff(timePeriod.start, 'days').days)
-    if (!Number.isFinite(days) || days <= 0) return MAX_DAYS_BACK
-    return Math.min(MAX_DAYS_BACK, Math.max(1, days))
-  } catch {
+  if (!timePeriod?.start || typeof timePeriod.start.toMillis !== 'function') {
     return MAX_DAYS_BACK
   }
+  const days = Math.ceil((Date.now() - timePeriod.start.toMillis()) / 86400000)
+  if (!Number.isFinite(days) || days <= 0) return 1
+  return Math.min(MAX_DAYS_BACK, days + 1)
+}
+
+const periodStartSeconds = (timePeriod) => {
+  if (!timePeriod?.start || typeof timePeriod.start.toMillis !== 'function') {
+    return 0
+  }
+  if (timePeriod.name === 'All') return 0
+  return Math.floor(timePeriod.start.toMillis() / 1000)
+}
+
+// Pool aggregates from /portfolio cover the pool's whole lifetime, so pair
+// totals for a period must be rebuilt from the positions closed in it.
+const aggregatePositionsByPool = (positions) => {
+  const byPool = new Map()
+  ;(positions || []).forEach((position) => {
+    const key = position.pool_address
+    const row = {
+      signature: position.position_address,
+      block_time: position.block_time,
+      deposit: position.deposit,
+      withdrawal: position.withdrawal,
+      fee_amount: position.fee_amount,
+    }
+    const existing = byPool.get(key)
+    if (!existing) {
+      byPool.set(key, {
+        ...position,
+        position_address: key,
+        signature: key,
+        transactions: [row],
+        events_loaded: true,
+        is_pool_group: true,
+        position_count: 1,
+      })
+      return
+    }
+    existing.deposit += position.deposit || 0
+    existing.withdrawal += position.withdrawal || 0
+    existing.fee_amount += position.fee_amount || 0
+    existing.profit += position.profit || 0
+    existing.block_time = Math.max(
+      existing.block_time || 0,
+      position.block_time || 0,
+    )
+    existing.transactions.push(row)
+    existing.position_count += 1
+  })
+  return [...byPool.values()].map((pool) => ({
+    ...pool,
+    transactions: pool.transactions.sort(
+      (a, b) => (a.block_time || 0) - (b.block_time || 0),
+    ),
+  }))
 }
 
 const isSolMint = (mint) =>
@@ -153,38 +205,6 @@ const quoteSymbolFromMint = (mint, fallbackSymbol) => {
 
 const pickQuoteAmount = (usdValue, solValue, quoteToken) =>
   quoteToken === 'SOL' ? toNumber(solValue) : toNumber(usdValue)
-
-const mapPoolToPosition = (pool, quoteToken) => {
-  const quoteSymbol = quoteSymbolFromMint(pool.tokenYMint, pool.tokenY)
-  return {
-    position_address: pool.poolAddress,
-    pool_address: pool.poolAddress,
-    signature: pool.poolAddress,
-    base_symbol: pool.tokenX,
-    quote_symbol: quoteSymbol,
-    token_x_mint: pool.tokenXMint,
-    token_y_mint: pool.tokenYMint,
-    token_x_icon: pool.tokenXIcon,
-    token_y_icon: pool.tokenYIcon,
-    deposit: pickQuoteAmount(
-      pool.totalDeposit,
-      pool.totalDepositSol,
-      quoteToken,
-    ),
-    withdrawal: pickQuoteAmount(
-      pool.totalWithdrawal,
-      pool.totalWithdrawalSol,
-      quoteToken,
-    ),
-    fee_amount: pickQuoteAmount(pool.totalFee, pool.totalFeeSol, quoteToken),
-    profit: pickQuoteAmount(pool.pnlUsd, pool.pnlSol, quoteToken),
-    block_time: toBlockTimeSeconds(pool.lastClosedAt),
-    position_is_open: false,
-    transactions: [],
-    events_loaded: false,
-    is_pool_group: true,
-  }
-}
 
 const mapPnlPosition = (position, pool, quoteToken) => {
   const quoteSymbol = quoteSymbolFromMint(
@@ -455,19 +475,6 @@ const loadCachedClosedPortfolio = async (
     const stored = await getStoredPools(user)
     const quotePools = filterPoolsForQuote(stored, quoteToken)
 
-    if (groupBy === 'pair') {
-      const positions = filterPositionsForPeriod(
-        quotePools.map((pool) => mapPoolToPosition(pool, quoteToken)),
-        timePeriod,
-      )
-      return {
-        positions,
-        poolCount: quotePools.length,
-        positionCount: positions.length,
-        fromCache: true,
-      }
-    }
-
     const cacheByPool = await getAllPoolPositionsMap(user, quoteToken)
     const positions = []
     quotePools.forEach((pool) => {
@@ -477,10 +484,12 @@ const loadCachedClosedPortfolio = async (
       }
     })
 
+    const inPeriod = filterPositionsForPeriod(positions, timePeriod)
     return {
-      positions: filterPositionsForPeriod(positions, timePeriod),
+      positions:
+        groupBy === 'pair' ? aggregatePositionsByPool(inPeriod) : inPeriod,
       poolCount: quotePools.length,
-      positionCount: positions.length,
+      positionCount: inPeriod.length,
       fromCache: true,
     }
   } catch (error) {
@@ -542,23 +551,15 @@ const loadPortfolioAsPairs = async (
   timePeriod,
   onProgress,
 ) => {
-  const daysBack = daysBackFromPeriod(timePeriod)
-  const result = await syncPortfolioPools(user, { daysBack, onProgress })
-  const allMapped = (result.pools || [])
-    .filter((pool) => pool?.poolAddress)
-    .map((pool) => mapPoolToPosition(pool, quoteToken))
-  const positions = allMapped.filter(
-    (position) => position.quote_symbol === quoteToken,
+  const result = await loadPortfolioAsPositions(
+    user,
+    quoteToken,
+    timePeriod,
+    onProgress,
   )
   return {
-    positions,
-    allMappedCount: allMapped.length,
-    capped: result.syncIncomplete,
-    syncIncomplete: result.syncIncomplete,
-    totalCount: result.totalCount,
-    totalPositions: result.totalPositions,
-    apiPoolCount: result.apiPoolCount,
-    localPoolCount: result.localPoolCount,
+    ...result,
+    positions: aggregatePositionsByPool(result.positions),
   }
 }
 
@@ -586,7 +587,14 @@ const loadPortfolioAsPositions = async (
     storedPools,
   })
 
-  const quotePools = filterPoolsForQuote(result.pools, quoteToken)
+  // A pool whose last close is before the period has nothing to report in it
+  const startSeconds = periodStartSeconds(timePeriod)
+  const quotePools = filterPoolsForQuote(result.pools, quoteToken).filter(
+    (pool) =>
+      !startSeconds ||
+      !pool.lastClosedAt ||
+      toBlockTimeSeconds(pool.lastClosedAt) >= startSeconds,
+  )
 
   let completed = 0
   let positionsLoaded = 0
@@ -644,7 +652,7 @@ const loadPortfolioAsPositions = async (
   })
 
   return {
-    positions: nested.flat(),
+    positions: filterPositionsForPeriod(nested.flat(), timePeriod),
     allMappedCount: quotePools.length,
     capped: result.syncIncomplete,
     syncIncomplete: result.syncIncomplete,
@@ -903,7 +911,6 @@ export {
   loadPortfolioAsPositions,
   loadOpenPositions,
   loadPositionEvents,
-  mapPoolToPosition,
   mapPnlPosition,
   applySortBy,
   applySortOrder,

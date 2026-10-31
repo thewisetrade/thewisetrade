@@ -505,6 +505,7 @@ const timePeriodOptions = computed(() => {
         name: DateTime.now().toFormat('MMMM'),
         start: DateTime.now().startOf('month'),
         end: DateTime.now().endOf('month'),
+        month: true,
       },
     },
     {
@@ -513,6 +514,7 @@ const timePeriodOptions = computed(() => {
         name: DateTime.now().minus({ month: 1 }).toFormat('MMMM'),
         start: DateTime.now().minus({ month: 1 }).startOf('month'),
         end: DateTime.now().minus({ month: 1 }).endOf('month'),
+        month: true,
       },
     },
     {
@@ -521,6 +523,7 @@ const timePeriodOptions = computed(() => {
         name: DateTime.now().minus({ month: 2 }).toFormat('MMMM'),
         start: DateTime.now().minus({ month: 2 }).startOf('month'),
         end: DateTime.now().minus({ month: 2 }).endOf('month'),
+        month: true,
       },
     },
     {
@@ -529,6 +532,7 @@ const timePeriodOptions = computed(() => {
         name: DateTime.now().minus({ month: 3 }).toFormat('MMMM'),
         start: DateTime.now().minus({ month: 3 }).startOf('month'),
         end: DateTime.now().minus({ month: 3 }).endOf('month'),
+        month: true,
       },
     },
     {
@@ -647,6 +651,9 @@ const dateRange = computed(() => {
 })
 
 const sharePeriodLabel = computed(() => {
+  if (timePeriod.value?.month) {
+    return timePeriod.value.start.setLocale('en').toFormat('MMMM yyyy')
+  }
   const periodName = timePeriod.value?.name || 'All'
   return `${periodName} · ${dateRange.value}`
 })
@@ -934,8 +941,7 @@ const mergePairPositions = (items) => {
           position.wallet_addresses?.length > 1
             ? `${position.wallet_addresses.length} wallets`
             : position.wallet_name,
-        events_loaded: false,
-        transactions: [],
+        transactions: [...(position.transactions || [])],
       })
       return
     }
@@ -956,8 +962,11 @@ const mergePairPositions = (items) => {
       existing.wallet_addresses.length > 1
         ? `${existing.wallet_addresses.length} wallets`
         : position.wallet_name || existing.wallet_name
-    existing.events_loaded = false
-    existing.transactions = []
+    existing.events_loaded = existing.events_loaded && position.events_loaded
+    existing.transactions = [
+      ...existing.transactions,
+      ...(position.transactions || []),
+    ].sort((a, b) => (a.block_time || 0) - (b.block_time || 0))
   })
   return [...byPool.values()]
 }
@@ -978,7 +987,7 @@ const resetPositions = () => {
   let filtered = source.filter((position) => {
     const profit = Number(position.profit)
     if (!Number.isFinite(profit)) return false
-    return profit > 0.005 || profit < -0.005
+    return profit > 0.001 || profit < -0.001
   })
   try {
     filtered = applyTimePeriod(timePeriod.value, filtered)
@@ -1086,8 +1095,9 @@ const ensurePositionDetails = async (position) => {
           })
         })
       }
-      position.transactions = rows.sort(
-        (a, b) => (a.block_time || 0) - (b.block_time || 0),
+      position.transactions = applyTimePeriod(
+        timePeriod.value,
+        rows.sort((a, b) => (a.block_time || 0) - (b.block_time || 0)),
       )
     } else {
       position.transactions = await loadPositionEvents(
