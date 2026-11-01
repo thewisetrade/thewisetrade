@@ -125,6 +125,8 @@ const CHART_NEGATIVE = '#FF4757'
 const CHART_NEGATIVE_HOVER = '#FF6B7A'
 const CHART_PROGRESS_INNER = '#1B4D32'
 const CHART_PROGRESS_OUTER = '#0D1110'
+const CHART_PROGRESS_NEGATIVE = '#5A1E26'
+const CHART_NEGATIVE_BORDER = '#E11D48'
 
 const getDateKey = (date) => {
   if (groupBy.value === 'week') {
@@ -321,9 +323,19 @@ const chartData = computed(() => ({
         tokens: item.tokens,
       })),
       borderColor: CHART_POSITIVE_BORDER,
+      // Progress line: red below zero, both for the stroke and the area
+      segment: {
+        borderColor: (context) =>
+          context.p0.parsed.y < 0 || context.p1.parsed.y < 0
+            ? CHART_NEGATIVE_BORDER
+            : CHART_POSITIVE_BORDER,
+      },
       borderWidth:
         chartType.value === 'progress' && progressContext.value ? 1 : 0,
-      fill: true,
+      fill:
+        chartType.value === 'progress' && progressContext.value
+          ? { target: 'origin', below: CHART_PROGRESS_NEGATIVE }
+          : true,
       pointRadius: 0,
       hoverBackgroundColor: (context) => {
         const value = context.raw ? context.raw.y : 0
